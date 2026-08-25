@@ -35,7 +35,7 @@ export const initialApiKeys: ApiKey[] = [
     fullKey: 'sk-test-5b13de77fa90c2214m66p8c2d',
     permissions: ['检索问答'],
     createdAt: '2024-05-20',
-    createdBy: '陈晨',
+    createdBy: '陈可',
     lastCallAt: '昨天 16:40',
     status: '生效中',
   },

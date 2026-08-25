@@ -34,7 +34,7 @@ export const dailyTaskDefs: DailyTaskDef[] = [
 export const TASK_SKIP_REASONS = ['今天没有时间处理', '任务与当前目标无关', '已由其他人跟进', '其他原因']
 
 /** 转交候选成员 */
-export const TRANSFER_MEMBERS = ['李娜', '王磊', '赵敏']
+export const TRANSFER_MEMBERS = ['李娜', '王强', '赵敏']
 
 export interface TrendPoint {
   date: string

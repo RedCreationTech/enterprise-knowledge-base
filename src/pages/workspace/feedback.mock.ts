@@ -26,23 +26,23 @@ export const knowledgeIssues: KnowledgeIssueItem[] = [
   { id: 'ki-1', type: '无答案', question: '私有化部署的详细报价是多少？', askCount: 7, affectedUsers: 5, priority: '高', owner: null, recommendedOwner: '李娜', lastAskedAt: '今天 09:12', status: '待处理', action: '补充答案' },
   { id: 'ki-2', type: '无答案', question: '是否支持国产数据库？', askCount: 7, affectedUsers: 4, priority: '高', owner: '李娜', lastAskedAt: '今天 08:40', status: '待处理', action: '上传资料' },
   { id: 'ki-3', type: '冲突', question: '2024 与 2026 报价政策折扣不一致', askCount: 5, affectedUsers: 6, priority: '高', owner: '张伟', lastAskedAt: '昨天 16:40', status: '待处理', action: '对比版本' },
-  { id: 'ki-4', type: '过期', question: '差旅住宿标准（旧版被引用）', askCount: 4, affectedUsers: 8, priority: '中', owner: '王磊', lastAskedAt: '昨天 15:02', status: '待处理', action: '更新版本' },
+  { id: 'ki-4', type: '过期', question: '差旅住宿标准（旧版被引用）', askCount: 4, affectedUsers: 8, priority: '中', owner: '王强', lastAskedAt: '昨天 15:02', status: '待处理', action: '更新版本' },
   { id: 'ki-5', type: '无答案', question: '发票申请需要哪些材料？', askCount: 3, affectedUsers: 3, priority: '中', owner: null, recommendedOwner: '李娜', lastAskedAt: '06-01 10:18', status: '待处理', action: '指派处理' },
   { id: 'ki-6', type: '低质量', question: '年假计算规则答案不完整', askCount: 2, affectedUsers: 2, priority: '低', owner: '李娜', lastAskedAt: '05-31 14:55', status: '待处理', action: '查看答案' },
   { id: 'ki-7', type: '引用失败', question: 'API 调用频率限制（文档缺章节）', askCount: 2, affectedUsers: 3, priority: '中', owner: '张伟', lastAskedAt: '05-30 11:08', status: '待处理', action: '修复引用' },
   { id: 'ki-8', type: '无答案', question: '试用期结束后数据会保留吗？', askCount: 6, affectedUsers: 5, priority: '高', owner: null, recommendedOwner: '李娜', lastAskedAt: '今天 08:15', status: '待处理', action: '补充答案' },
-  { id: 'ki-9', type: '无答案', question: '支持与企业微信通讯录双向同步吗？', askCount: 5, affectedUsers: 4, priority: '中', owner: '王磊', lastAskedAt: '昨天 17:26', status: '待处理', action: '上传资料' },
+  { id: 'ki-9', type: '无答案', question: '支持与企业微信通讯录双向同步吗？', askCount: 5, affectedUsers: 4, priority: '中', owner: '王强', lastAskedAt: '昨天 17:26', status: '待处理', action: '上传资料' },
   { id: 'ki-10', type: '无答案', question: '知识库可以按项目隔离吗？', askCount: 4, affectedUsers: 3, priority: '中', owner: null, recommendedOwner: '赵敏', lastAskedAt: '昨天 14:48', status: '待处理', action: '补充答案' },
-  { id: 'ki-11', type: '无答案', question: '海外分支访问速度慢怎么办？', askCount: 3, affectedUsers: 2, priority: '低', owner: null, recommendedOwner: '王磊', lastAskedAt: '06-01 09:37', status: '待处理', action: '指派处理' },
+  { id: 'ki-11', type: '无答案', question: '海外分支访问速度慢怎么办？', askCount: 3, affectedUsers: 2, priority: '低', owner: null, recommendedOwner: '王强', lastAskedAt: '06-01 09:37', status: '待处理', action: '指派处理' },
   { id: 'ki-12', type: '无答案', question: 'SSO 登录支持钉钉扫码吗？', askCount: 3, affectedUsers: 3, priority: '中', owner: '张伟', lastAskedAt: '05-31 16:20', status: '待处理', action: '补充答案' },
   { id: 'ki-13', type: '无答案', question: '历史版本答案可以回溯吗？', askCount: 2, affectedUsers: 2, priority: '低', owner: '李娜', lastAskedAt: '05-30 15:44', status: '待处理', action: '补充答案' },
   { id: 'ki-14', type: '低质量', question: '报销发票要求回答过于笼统', askCount: 5, affectedUsers: 6, priority: '中', owner: '李娜', lastAskedAt: '今天 07:58', status: '待处理', action: '查看答案' },
   { id: 'ki-15', type: '低质量', question: '请假审批流程缺少特殊情形说明', askCount: 3, affectedUsers: 4, priority: '中', owner: null, recommendedOwner: '赵敏', lastAskedAt: '昨天 13:32', status: '待处理', action: '查看答案' },
-  { id: 'ki-16', type: '低质量', question: '产品 X 部署方式回答未区分 SaaS 与本地化', askCount: 3, affectedUsers: 3, priority: '中', owner: '王磊', lastAskedAt: '06-01 11:05', status: '待处理', action: '查看答案' },
+  { id: 'ki-16', type: '低质量', question: '产品 X 部署方式回答未区分 SaaS 与本地化', askCount: 3, affectedUsers: 3, priority: '中', owner: '王强', lastAskedAt: '06-01 11:05', status: '待处理', action: '查看答案' },
   { id: 'ki-17', type: '低质量', question: '售后质保范围回答引用了过期条款', askCount: 2, affectedUsers: 2, priority: '低', owner: '李娜', lastAskedAt: '05-29 10:42', status: '待处理', action: '查看答案' },
   { id: 'ki-18', type: '冲突', question: '年假顺延规则与考勤制度 v2.3 不一致', askCount: 4, affectedUsers: 5, priority: '高', owner: '赵敏', lastAskedAt: '昨天 10:14', status: '待处理', action: '对比版本' },
   { id: 'ki-19', type: '冲突', question: '售前授权折扣口径两个空间不一致', askCount: 3, affectedUsers: 4, priority: '中', owner: '张伟', lastAskedAt: '05-31 09:26', status: '待处理', action: '对比版本' },
-  { id: 'ki-20', type: '过期', question: '2023 团建方案仍被检索命中', askCount: 2, affectedUsers: 3, priority: '低', owner: '王磊', lastAskedAt: '05-30 18:09', status: '待处理', action: '更新版本' },
+  { id: 'ki-20', type: '过期', question: '2023 团建方案仍被检索命中', askCount: 2, affectedUsers: 3, priority: '低', owner: '王强', lastAskedAt: '05-30 18:09', status: '待处理', action: '更新版本' },
   { id: 'ki-21', type: '过期', question: '旧版差旅城市分级表被引用', askCount: 2, affectedUsers: 4, priority: '中', owner: null, recommendedOwner: '李娜', lastAskedAt: '05-29 14:51', status: '待处理', action: '更新版本' },
   { id: 'ki-22', type: '权限', question: '渠道底价表被无权限成员问到（已拒答）', askCount: 4, affectedUsers: 2, priority: '高', owner: '张伟', lastAskedAt: '昨天 09:48', status: '待处理', action: '核查权限' },
   { id: 'ki-23', type: '权限', question: '新入职成员反馈看不到售前空间内容', askCount: 3, affectedUsers: 3, priority: '中', owner: '赵敏', lastAskedAt: '05-31 17:33', status: '待处理', action: '核查权限' },
@@ -83,7 +83,7 @@ export interface UserFeedbackItem {
 
 export const baseFeedbacks: UserFeedbackItem[] = [
   { id: 'uf-1', sentiment: 'down', question: '私有化部署报价', answerExcerpt: '没有找到足够可靠的企业知识…', user: '李娜', time: '今天 09:12', reason: '没有引用', converted: false, source: 'AI 助手' },
-  { id: 'uf-2', sentiment: 'down', question: '差旅住宿标准', answerExcerpt: '一线城市住宿标准 450 元/晚…', user: '王磊', time: '昨天 16:40', reason: '使用了旧版本', converted: false, source: '知识网站' },
+  { id: 'uf-2', sentiment: 'down', question: '差旅住宿标准', answerExcerpt: '一线城市住宿标准 450 元/晚…', user: '王强', time: '昨天 16:40', reason: '使用了旧版本', converted: false, source: '知识网站' },
   { id: 'uf-3', sentiment: 'up', question: '报价折扣审批流程', answerExcerpt: '需要销售总监审批。…', user: '赵敏', time: '昨天 15:02', converted: false, source: 'AI 助手' },
   { id: 'uf-4', sentiment: 'down', question: 'API 频率限制', answerExcerpt: '默认 5,000 次/月…', user: '刘洋', time: '06-01 10:18', reason: '内容不完整', converted: false, source: '知识网站' },
   { id: 'uf-5', sentiment: 'up', question: '请假审批天数', answerExcerpt: '3 天以内由直属主管审批…', user: '周杰', time: '05-31 14:55', converted: false, source: 'AI 助手' },
@@ -204,4 +204,4 @@ export const closureStats = { closed: 14, inProgress: 6, verifying: 3, overdue: 
 
 export const healthScore = { score: 86, delta: '+3' }
 
-export const OWNERS = ['张伟', '李娜', '王磊', '赵敏']
+export const OWNERS = ['张伟', '李娜', '王强', '赵敏']

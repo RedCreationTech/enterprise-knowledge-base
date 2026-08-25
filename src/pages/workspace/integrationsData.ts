@@ -196,7 +196,7 @@ export const integrationLogs: IntegrationLog[] = [
 /** SSO 登录日志（查看登录日志） */
 export const ssoLoginLogs: IntegrationLog[] = [
   { time: '今天 10:15', level: 'INFO', content: '张伟 通过 SSO 登录成功 · IP 10.12.3.41' },
-  { time: '今天 09:58', level: 'INFO', content: '陈晨 通过 SSO 登录成功 · IP 10.12.3.87' },
+  { time: '今天 09:58', level: 'INFO', content: '陈可 通过 SSO 登录成功 · IP 10.12.3.87' },
   { time: '今天 09:31', level: 'WARN', content: '刘洋 连续 2 次密码错误，已触发二次验证' },
   { time: '今天 09:00', level: 'INFO', content: 'SSO 每日验证通过 · 覆盖 62 人' },
   { time: '昨天 19:22', level: 'INFO', content: '王芳 通过 SSO 登录成功 · IP 10.12.5.19' },
@@ -215,4 +215,4 @@ export const defaultFallbackPolicy = {
 }
 
 export const FALLBACK_THRESHOLD_OPTIONS = ['3 次', '5 次', '10 次'] as const
-export const FALLBACK_NOTIFY_OPTIONS = ['张伟（系统管理员）', '陈晨（渠道负责人）', '王芳（运维值班）'] as const
+export const FALLBACK_NOTIFY_OPTIONS = ['张伟（系统管理员）', '陈可（渠道负责人）', '王芳（运维值班）'] as const

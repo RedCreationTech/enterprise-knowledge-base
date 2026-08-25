@@ -85,12 +85,12 @@ export const MAP_DOCS: DocNode[] = [
   },
   {
     id: 'd9', name: 'API 集成指南', category: 'API文档', asked: 29, cited: 11,
-    owner: '陈晨', version: 'v1.5', validity: '正常', validityNote: '复审到期 2024-10-01 · 状态 正常',
+    owner: '陈可', version: 'v1.5', validity: '正常', validityNote: '复审到期 2024-10-01 · 状态 正常',
     topQuestions: ['API 集成需要哪些权限？'],
   },
   {
     id: 'd10', name: 'Webhook 配置手册', category: 'API文档', asked: 15, cited: 5,
-    owner: '陈晨', version: 'v1.1', validity: '复审将到期', validityNote: '复审到期 2024-06-08 · 状态 复审将到期',
+    owner: '陈可', version: 'v1.1', validity: '复审将到期', validityNote: '复审到期 2024-06-08 · 状态 复审将到期',
     topQuestions: ['Webhook 支持哪些事件？'],
   },
   {
@@ -141,7 +141,7 @@ export const ORPHAN_DOCS: OrphanDoc[] = [
   { id: 'o4', name: '会议室使用规范 v1', category: '常见问题', uploadedAt: '2023-05-30', owner: '李娜', reason: '近 90 天无检索命中' },
   { id: 'o5', name: '旧版产品报价单 2023', category: '产品介绍', uploadedAt: '2023-01-12', owner: '赵敏', reason: '近 90 天无检索命中' },
   { id: 'o6', name: '行政采购指引 2021', category: '使用指南', uploadedAt: '2021-12-03', owner: '李娜', reason: '近 90 天无检索命中' },
-  { id: 'o7', name: '团建活动方案 2023', category: '常见问题', uploadedAt: '2023-06-18', owner: '陈晨', reason: '近 90 天无检索命中' },
+  { id: 'o7', name: '团建活动方案 2023', category: '常见问题', uploadedAt: '2023-06-18', owner: '陈可', reason: '近 90 天无检索命中' },
   { id: 'o8', name: '旧版考勤制度 v1', category: '使用指南', uploadedAt: '2022-04-25', owner: '李娜', reason: '近 90 天无检索命中' },
 ]
 
@@ -178,7 +178,7 @@ export interface QuestionRecord {
 
 /** 关联问题的问答记录（SideDrawer mock，确定性生成） */
 export function questionRecordsFor(doc: DocNode, question: string): QuestionRecord[] {
-  const askers = ['张伟', '李娜', '陈晨']
+  const askers = ['张伟', '李娜', '陈可']
   const times = ['今天 09:52', '昨天 15:26', '06-01 11:08']
   const results = ['已回答 · 引用本文档', '已回答 · 反馈答案正确', '已回答 · 引用本文档']
   return askers.map((asker, i) => ({

@@ -75,11 +75,11 @@ export interface TopDoc {
 }
 
 export const topDocs: TopDoc[] = [
-  { name: '《差旅费用报销管理办法》', citations: 41, views: 96, owner: '王磊' },
+  { name: '《差旅费用报销管理办法》', citations: 41, views: 96, owner: '王强' },
   { name: '《销售管理制度》', citations: 38, views: 88, owner: '张伟' },
   { name: '《产品 X 白皮书》', citations: 31, views: 102, owner: '张伟' },
   { name: '《价格管理办法》', citations: 24, views: 55, owner: '李娜' },
-  { name: '《API 接入指南》', citations: 19, views: 73, owner: '王磊' },
+  { name: '《API 接入指南》', citations: 19, views: 73, owner: '王强' },
 ]
 
 export interface ValueMetric {
@@ -109,11 +109,11 @@ export interface ActiveUser {
 export const activeUserRanking: ActiveUser[] = [
   { rank: 1, name: '张伟', dept: '销售部', questions: 46, approvalRate: 92, lastActive: '今天 10:12' },
   { rank: 2, name: '李娜', dept: '人事部', questions: 38, approvalRate: 90, lastActive: '今天 09:48' },
-  { rank: 3, name: '王磊', dept: 'IT 部', questions: 33, approvalRate: 88, lastActive: '今天 09:20' },
+  { rank: 3, name: '王强', dept: 'IT 部', questions: 33, approvalRate: 88, lastActive: '今天 09:20' },
   { rank: 4, name: '赵敏', dept: '销售部', questions: 29, approvalRate: 91, lastActive: '今天 08:55' },
   { rank: 5, name: '刘洋', dept: '售前团队', questions: 24, approvalRate: 86, lastActive: '昨天 17:36' },
   { rank: 6, name: '周杰', dept: '客服部', questions: 21, approvalRate: 85, lastActive: '昨天 16:02' },
-  { rank: 7, name: '陈晨', dept: 'IT 部', questions: 17, approvalRate: 82, lastActive: '昨天 14:25' },
+  { rank: 7, name: '陈可', dept: 'IT 部', questions: 17, approvalRate: 82, lastActive: '昨天 14:25' },
   { rank: 8, name: '吴倩', dept: '客服部', questions: 12, approvalRate: 84, lastActive: '05-28 15:31' },
   { rank: 9, name: '郑凯', dept: '市场部', questions: 8, approvalRate: 80, lastActive: '05-28 11:15' },
 ]

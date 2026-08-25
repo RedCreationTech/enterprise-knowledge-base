@@ -124,14 +124,14 @@ const SPACE_META: Record<string, Omit<SpaceItem, 'name' | 'docs'>> = {
     desc: '系统使用与故障处理手册（建设中）',
     questions: 15,
     members: 5,
-    owner: '陈晨',
+    owner: '陈可',
     ownerAvatar: '陈',
     updatedAt: '05-26 09:18',
     scope: '仅成员私有',
     createdAt: '2024-05-20',
     policy: { cycle: 'SOP 类 90 天', onExpire: '降权并提醒 Owner', notify: true },
     memberRows: [
-      { name: '陈晨', role: '管理员', joinedAt: '2024-05-20' },
+      { name: '陈可', role: '管理员', joinedAt: '2024-05-20' },
       { name: '张伟', role: '可编辑', joinedAt: '2024-05-21' },
       { name: '其余 3 人', role: '可问答', joinedAt: '—', aggregate: true },
     ],
@@ -248,7 +248,7 @@ export const VALIDITY_OPTIONS = [
   { value: 365, hint: '适合 FAQ 与长期有效知识' },
 ] as const
 
-export const OWNER_OPTIONS = ['张伟', '李娜', '王强', '赵敏', '陈晨']
+export const OWNER_OPTIONS = ['张伟', '李娜', '王强', '赵敏', '陈可']
 
 /** 成员角色选项 */
 export const MEMBER_ROLE_OPTIONS = ['管理员', '可编辑', '可问答'] as const
@@ -270,13 +270,13 @@ export const SPACE_DOCS: Record<string, SpaceDoc[]> = {
     { id: 'sd-all-1', title: '《销售管理制度》', version: 'v2.1', owner: '张伟', updatedAt: '今天 10:20' },
     { id: 'sd-all-2', title: '《产品 X 白皮书》', version: 'v1.5', owner: '张伟', updatedAt: '05-30 14:12' },
     { id: 'sd-all-3', title: '《客服 FAQ 汇编》', version: 'v3.2', owner: '李娜', updatedAt: '今天 09:58' },
-    { id: 'sd-all-4', title: '《重点客户案例集（2024）》', version: 'v1.2', owner: '王磊', updatedAt: '05-27 15:44' },
+    { id: 'sd-all-4', title: '《重点客户案例集（2024）》', version: 'v1.2', owner: '王强', updatedAt: '05-27 15:44' },
   ],
   policy: [
     { id: 'sd-p1', title: '《销售管理制度》', version: 'v2.1', owner: '张伟', updatedAt: '今天 10:20' },
     { id: 'sd-p2', title: '《审批权限矩阵表》', version: 'v3.0', owner: '张伟', updatedAt: '昨天 11:08' },
-    { id: 'sd-p3', title: '《差旅费用报销管理办法》', version: 'v2.0', owner: '王磊', updatedAt: '06-01 09:30' },
-    { id: 'sd-p4', title: '《新品发布会执行 SOP》', version: 'v1.0', owner: '王磊', updatedAt: '05-29 10:05' },
+    { id: 'sd-p3', title: '《差旅费用报销管理办法》', version: 'v2.0', owner: '王强', updatedAt: '06-01 09:30' },
+    { id: 'sd-p4', title: '《新品发布会执行 SOP》', version: 'v1.0', owner: '王强', updatedAt: '05-29 10:05' },
   ],
   product: [
     { id: 'sd-pr1', title: '《产品 X 白皮书》', version: 'v1.5', owner: '张伟', updatedAt: '05-30 14:12' },
@@ -287,11 +287,11 @@ export const SPACE_DOCS: Record<string, SpaceDoc[]> = {
     { id: 'sd-s1', title: '《价格管理办法》', version: 'v1.3', owner: '李娜', updatedAt: '昨天 16:45' },
     { id: 'sd-s2', title: '《2024 报价政策》', version: 'v1.0', owner: '李娜', updatedAt: '05-31 18:22' },
     { id: 'sd-s3', title: '《渠道价格政策（外部版）》', version: 'v1.1', owner: '李娜', updatedAt: '05-28 10:11' },
-    { id: 'sd-s4', title: '《重点客户案例集（2024）》', version: 'v1.2', owner: '王磊', updatedAt: '05-27 15:44' },
+    { id: 'sd-s4', title: '《重点客户案例集（2024）》', version: 'v1.2', owner: '王强', updatedAt: '05-27 15:44' },
   ],
   'it-sop': [
-    { id: 'sd-i1', title: '《VPN 接入与故障排查 SOP》', version: 'v0.9', owner: '陈晨', updatedAt: '05-26 09:18' },
-    { id: 'sd-i2', title: '《新员工账号开通指引》', version: 'v1.0', owner: '陈晨', updatedAt: '05-23 14:02' },
+    { id: 'sd-i1', title: '《VPN 接入与故障排查 SOP》', version: 'v0.9', owner: '陈可', updatedAt: '05-26 09:18' },
+    { id: 'sd-i2', title: '《新员工账号开通指引》', version: 'v1.0', owner: '陈可', updatedAt: '05-23 14:02' },
   ],
 }
 
@@ -333,7 +333,7 @@ export const SPACE_ANALYTICS: Record<string, SpaceAnalytics> = {
     contributors: [
       { name: '李娜', answers: 18 },
       { name: '张伟', answers: 12 },
-      { name: '王磊', answers: 6 },
+      { name: '王强', answers: 6 },
     ],
   },
   product: {
@@ -382,7 +382,7 @@ export const SPACE_ANALYTICS: Record<string, SpaceAnalytics> = {
       { week: 'W23', questions: 15, docs: 12 },
     ],
     contributors: [
-      { name: '陈晨', answers: 8 },
+      { name: '陈可', answers: 8 },
       { name: '张伟', answers: 4 },
     ],
   },

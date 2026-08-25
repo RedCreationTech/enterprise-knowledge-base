@@ -132,7 +132,7 @@ export const CONVERSATIONS: Conversation[] = [
     ],
   },
   {
-    id: 'c4', user: '陈晨', dept: 'IT 部', avatar: '陈', channel: '知识网站',
+    id: 'c4', user: '陈可', dept: 'IT 部', avatar: '陈', channel: '知识网站',
     firstQuestion: 'API 集成需要哪些权限？', msgCount: 8, time: '昨天 17:36', feedback: 'down',
     feedbackReason: '使用了旧版本',
     settledFaq: false, governed: false,

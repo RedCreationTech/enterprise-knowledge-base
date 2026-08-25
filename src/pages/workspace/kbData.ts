@@ -106,7 +106,7 @@ export function makeDocuments(): DocRow[] {
     {
       id: 'd4', title: '《差旅费用报销管理办法》', version: 'v2.0', category: '制度流程', type: 'Word',
       status: '待复审', statusNote: '复审到期 06-15：该文档已过复审期，回答权重已降低',
-      size: '1.8 MB', pages: 22, owner: '王磊', updatedAt: '06-01 09:30',
+      size: '1.8 MB', pages: 22, owner: '王强', updatedAt: '06-01 09:30',
       space: '制度与流程', source: '企业网盘',
       validFrom: '2025-06-01', reviewDueAt: '2026-06-15', expiresAt: '2026-12-01',
       riskLevel: '低', sourceOfTruth: '企业网盘 / 财务部 / 差旅报销办法.docx', permScope: '全体成员可见',
@@ -140,7 +140,7 @@ export function makeDocuments(): DocRow[] {
     },
     {
       id: 'd7', title: '《新品发布会执行 SOP》', version: 'v1.0', category: 'IT-SOP', type: 'PPT',
-      status: '已发布', size: '0.9 MB', pages: 12, owner: '王磊', updatedAt: '05-29 10:05',
+      status: '已发布', size: '0.9 MB', pages: 12, owner: '王强', updatedAt: '05-29 10:05',
       space: 'IT·SOP', source: '飞书文档',
       validFrom: '2025-05-15', reviewDueAt: '2025-08-15', expiresAt: '2026-05-15',
       riskLevel: '低', sourceOfTruth: '飞书文档 / 新品发布会执行SOP', permScope: '市场与产品团队',
@@ -171,7 +171,7 @@ export function makeDocuments(): DocRow[] {
     },
     {
       id: 'd10', title: '《重点客户案例集（2024）》', version: 'v1.2', category: '客户案例', type: 'PPT',
-      status: '已发布', size: '4.2 MB', pages: 38, owner: '王磊', updatedAt: '05-27 15:44',
+      status: '已发布', size: '4.2 MB', pages: 38, owner: '王强', updatedAt: '05-27 15:44',
       space: '销售弹药库', source: '本地上传',
       validFrom: '2025-01-01', reviewDueAt: '2025-07-01', expiresAt: '2026-01-01',
       riskLevel: '低', sourceOfTruth: '本地上传 / 重点客户案例集.pptx', permScope: '销售与售前团队',
@@ -188,7 +188,7 @@ export function makeDocuments(): DocRow[] {
 const FILLER_TITLES = [
   '管理办法', '操作指引', '实施细则', '白皮书', 'FAQ 汇编', '培训讲义', '检查清单', '复盘报告',
 ]
-const FILLER_OWNERS = ['张伟', '李娜', '王磊', '赵敏', '陈晨']
+const FILLER_OWNERS = ['张伟', '李娜', '王强', '赵敏', '陈可']
 const FILLER_TYPES: DocRow['type'][] = ['PDF', 'Word', '表格', 'PPT', 'PDF', 'Word']
 const FILLER_SOURCES: DocRow['source'][] = ['企业网盘', '飞书文档', '本地上传']
 const FILLER_CATEGORY: Record<string, DocRow['category']> = {

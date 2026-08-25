@@ -20,12 +20,12 @@ function person(id: string, name: string, team: string, contact: string, status:
 
 const SENT = '今天 10:28'
 
-/** 销售团队 14 人（陈晨待处理；蒋欣/沈涛为发送失败演示位） */
+/** 销售团队 14 人（陈可待处理；蒋欣/沈涛为发送失败演示位） */
 const SALES: Invitee[] = [
   person('s01', '张伟', '销售团队', 'zhangwei@example.com', '已发送', SENT),
   person('s02', '李娜', '销售团队', 'lina@example.com', '已发送', SENT),
-  person('s03', '王磊', '销售团队', '138 0000 0001', '已发送', SENT),
-  person('s04', '陈晨', '销售团队', 'chenchen@example.com', '待处理', null),
+  person('s03', '王强', '销售团队', '138 0000 0001', '已发送', SENT),
+  person('s04', '陈可', '销售团队', 'chenchen@example.com', '待处理', null),
   person('s05', '孙倩', '销售团队', 'sunqian@example.com', '已发送', SENT),
   person('s06', '吴昊', '销售团队', 'wuhao@example.com', '已发送', SENT),
   person('s07', '郑凯', '销售团队', 'zhengkai@example.com', '已发送', SENT),
