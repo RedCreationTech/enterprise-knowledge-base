@@ -1,5 +1,5 @@
 /** MetricCard — 图标 + 指标名称 + 核心数字 + 环比/状态；一卡一数字；数字滚动 600ms（design.md §5/§7） */
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import type { ReactNode } from 'react'
 import { TrendingDown, TrendingUp } from 'lucide-react'
 import { animate } from 'framer-motion'
@@ -34,22 +34,21 @@ export function MetricCard({
 }: MetricCardProps) {
   const numeric = typeof value === 'number'
   const [display, setDisplay] = useState(0)
-  const playedRef = useRef(false)
+  const [animated, setAnimated] = useState(false)
 
+  // 首挂载滚动 0→value；动画完成后直接展示 value（后续 value 变化不再重复滚动）
   useEffect(() => {
-    if (!numeric) return
-    if (playedRef.current) {
-      setDisplay(value as number)
-      return
-    }
-    playedRef.current = true
+    if (!numeric || animated) return
     const controls = animate(0, value as number, {
       duration: 0.6,
       ease: [0.2, 0.8, 0.2, 1],
       onUpdate: (v) => setDisplay(Math.round(v)),
+      onComplete: () => setAnimated(true),
     })
     return () => controls.stop()
-  }, [numeric, value])
+  }, [numeric, value, animated])
+
+  const shown = numeric && animated ? (value as number) : display
 
   const DeltaIcon = deltaDirection === 'up' ? TrendingUp : TrendingDown
 
@@ -70,7 +69,7 @@ export function MetricCard({
       </div>
       <div className="mt-2 flex items-baseline gap-1">
         <span className="text-metric-lg text-neutral-950">
-          {numeric ? display.toLocaleString('en-US') : value}
+          {numeric ? shown.toLocaleString('en-US') : value}
         </span>
         {suffix && <span className="text-body-sm text-neutral-500">{suffix}</span>}
       </div>

@@ -16,36 +16,17 @@ import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
 import { Bell, FolderOpen, Search, Sparkles, Zap } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { NAV_FULL } from '@/components/layout/WorkspaceShell'
+import {
+  TOUR_DONE_KEY,
+  TOUR_EXIT_KEY,
+  TOUR_START_EVENT,
+  TOUR_STATE_EVENT,
+  TOUR_VERSION,
+  TOUR_VERSION_KEY,
+} from './tour'
 
 /** 导航真实功能入口数（从 NAV_FULL 派生，避免文案与实际导航不一致） */
 const NAV_ENTRY_COUNT = NAV_FULL.reduce((n, g) => n + g.items.length, 0)
-
-// ---------- 对外常量与工具 ----------
-
-export const TOUR_DONE_KEY = 'kb.tour.done'
-export const TOUR_VERSION_KEY = 'kb.tour.version'
-export const TOUR_EXIT_KEY = 'kb.tour.exit'
-export const TOUR_VERSION = 'v1.3'
-export const TOUR_START_EVENT = 'ekb:start-tour'
-/** 导览状态写入后广播（供新手任务清单等联动刷新） */
-export const TOUR_STATE_EVENT = 'ekb:tour-state'
-
-/** 全局重开导览（忽略 done 标记） */
-export function startProductTour() {
-  window.dispatchEvent(new Event(TOUR_START_EVENT))
-}
-
-/** 是否满足自动启动条件（§2.1 / F14-5：未完成或版本落后均重播一次） */
-export function shouldAutoStartTour() {
-  try {
-    return (
-      localStorage.getItem(TOUR_DONE_KEY) !== '1' ||
-      localStorage.getItem(TOUR_VERSION_KEY) !== TOUR_VERSION
-    )
-  } catch {
-    return false
-  }
-}
 
 /** 完成与跳过均写 done=1（§2.3） */
 function writeTourState(exit: string) {
@@ -430,15 +411,21 @@ export function ProductTour({ onOpenQuickConfig }: ProductTourProps) {
   const [spot, setSpot] = useState<Spot | null>(null)
   const [cardSize, setCardSize] = useState({ w: 380, h: 340 })
   const [viewport, setViewport] = useState({ w: window.innerWidth, h: window.innerHeight })
-  const [announcement, setAnnouncement] = useState('')
 
   const cardRef = useRef<HTMLDivElement>(null)
   const titleRef = useRef<HTMLHeadingElement>(null)
   const triggerRef = useRef<HTMLElement | null>(null)
   const onOpenQuickConfigRef = useRef(onOpenQuickConfig)
-  onOpenQuickConfigRef.current = onOpenQuickConfig
   const liveRef = useRef({ active: false, stepIndex: 0 })
-  liveRef.current = { active, stepIndex }
+
+  // 最新回调/导览状态写入 ref（供卸载清理与防抖回调读取），放在 effect 中避免渲染期写 ref
+  useEffect(() => {
+    onOpenQuickConfigRef.current = onOpenQuickConfig
+  }, [onOpenQuickConfig])
+
+  useEffect(() => {
+    liveRef.current = { active, stepIndex }
+  }, [active, stepIndex])
 
   const step = STEPS[stepIndex]
   const centered = !step.target
@@ -498,13 +485,12 @@ export function ProductTour({ onOpenQuickConfig }: ProductTourProps) {
       idx += 1
     }
     if (idx !== stepIndex) {
-      setStepIndex(idx)
+      // 目标缺失需跳步：setState 移出同步 effect 体（微任务中应用，避免级联渲染）
+      queueMicrotask(() => setStepIndex(idx))
       return
     }
     const s = STEPS[idx]
-    setAnnouncement(`第 ${idx + 1} 步，共 ${STEPS.length} 步：${s.title}`)
     if (!s.target) {
-      setSpot(null)
       const t = setTimeout(() => titleRef.current?.focus(), reduced ? 30 : 160)
       return () => clearTimeout(t)
     }
@@ -617,8 +603,13 @@ export function ProductTour({ onOpenQuickConfig }: ProductTourProps) {
 
   // ---------- 渲染 ----------
 
+  // 聚光位置：居中步（无 target）恒为 null，目标步使用实测 spot（渲染期派生，替代 effect 内 setSpot(null)）
+  const effectiveSpot = step.target ? spot : null
+  // 屏幕阅读播报文案（渲染期派生，替代 effect 内 setAnnouncement）
+  const announcement = `第 ${stepIndex + 1} 步，共 ${STEPS.length} 步：${step.title}`
+
   const cardW = centered ? 400 : 380
-  const pos = computeCardPos(spot, step.placement, step.align, cardW, cardSize.h, viewport.w, viewport.h)
+  const pos = computeCardPos(effectiveSpot, step.placement, step.align, cardW, cardSize.h, viewport.w, viewport.h)
   const titleId = `ekb-tour-title-${stepIndex}`
   const narrow = viewport.w < 1280
   const Art = step.art
@@ -651,11 +642,11 @@ export function ProductTour({ onOpenQuickConfig }: ProductTourProps) {
               <defs>
                 <mask id="ekb-tour-hole">
                   <rect width="100%" height="100%" fill="white" />
-                  {spot && (
+                  {effectiveSpot && (
                     <motion.rect
                       fill="black"
-                      initial={{ x: spot.x, y: spot.y, width: spot.width, height: spot.height, rx: spot.radius }}
-                      animate={{ x: spot.x, y: spot.y, width: spot.width, height: spot.height, rx: spot.radius }}
+                      initial={{ x: effectiveSpot.x, y: effectiveSpot.y, width: effectiveSpot.width, height: effectiveSpot.height, rx: effectiveSpot.radius }}
+                      animate={{ x: effectiveSpot.x, y: effectiveSpot.y, width: effectiveSpot.width, height: effectiveSpot.height, rx: effectiveSpot.radius }}
                       transition={spotTransition}
                     />
                   )}
@@ -665,26 +656,26 @@ export function ProductTour({ onOpenQuickConfig }: ProductTourProps) {
             </motion.svg>
 
             {/* 聚光高亮环（§3.1，z-1001）：1.5px #2F74FF + shadow-focus */}
-            {spot && (
+            {effectiveSpot && (
               <motion.div
                 key="tour-spotlight"
                 aria-hidden="true"
                 className="pointer-events-none fixed left-0 top-0 z-[1001] border-[1.5px] border-brand-500 shadow-focus"
                 initial={{
                   opacity: 0,
-                  x: spot.x,
-                  y: spot.y,
-                  width: spot.width,
-                  height: spot.height,
-                  borderRadius: spot.radius,
+                  x: effectiveSpot.x,
+                  y: effectiveSpot.y,
+                  width: effectiveSpot.width,
+                  height: effectiveSpot.height,
+                  borderRadius: effectiveSpot.radius,
                 }}
                 animate={{
                   opacity: 1,
-                  x: spot.x,
-                  y: spot.y,
-                  width: spot.width,
-                  height: spot.height,
-                  borderRadius: spot.radius,
+                  x: effectiveSpot.x,
+                  y: effectiveSpot.y,
+                  width: effectiveSpot.width,
+                  height: effectiveSpot.height,
+                  borderRadius: effectiveSpot.radius,
                 }}
                 exit={{ opacity: 0, transition: { duration: 0.18 } }}
                 transition={spotTransition}

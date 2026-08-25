@@ -164,5 +164,6 @@ export {
   NavigationMenuLink,
   NavigationMenuIndicator,
   NavigationMenuViewport,
+  // eslint-disable-next-line react-refresh/only-export-components -- navigationMenuTriggerStyle 为公开触发样式函数
   navigationMenuTriggerStyle,
 }

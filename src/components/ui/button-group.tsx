@@ -79,5 +79,6 @@ export {
   ButtonGroup,
   ButtonGroupSeparator,
   ButtonGroupText,
+  // eslint-disable-next-line react-refresh/only-export-components -- buttonGroupVariants 为 ButtonGroup 公开样式变体 API
   buttonGroupVariants,
 }

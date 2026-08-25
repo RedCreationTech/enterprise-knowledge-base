@@ -5,7 +5,7 @@
  * - PageTitle（H1 28px + 副标题 14px）
  * （P1-9：页面级 Toast 实现已删除，全局统一为 sonner —— 见 src/lib/toast.ts 与 App.tsx 的 <Toaster/>）
  */
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import type { ReactNode } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { ArrowLeft, ArrowRight, CalendarCheck, CloudUpload, FileText, ShieldCheck, Users, X } from 'lucide-react'
@@ -137,10 +137,12 @@ const DEMO_STEPS = [
 export function DemoModal({ open, onClose }: { open: boolean; onClose: () => void }) {
   const [step, setStep] = useState(0)
 
-  // 每次打开回到第 1 步
-  useEffect(() => {
+  // 每次打开回到第 1 步（渲染期比对 open，替代 effect 内同步 setState）
+  const [prevOpen, setPrevOpen] = useState(open)
+  if (open !== prevOpen) {
+    setPrevOpen(open)
     if (open) setStep(0)
-  }, [open])
+  }
 
   const current = DEMO_STEPS[step]
   const isFirst = step === 0

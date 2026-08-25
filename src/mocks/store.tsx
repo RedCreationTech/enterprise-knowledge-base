@@ -5,6 +5,7 @@
  * 页面代理用法：
  *   const { state, submitApplication, pushMessage, setReplyScript, ... } = useAppStore()
  */
+/* eslint-disable react-refresh/only-export-components -- AppStore 模块同时导出 Provider 组件与类型/常量/工具函数，Fast Refresh 仅适用于纯组件文件 */
 import {
   createContext,
   useCallback,

@@ -43,4 +43,5 @@ function Badge({
   )
 }
 
+// eslint-disable-next-line react-refresh/only-export-components -- badgeVariants 为 Badge 公开样式变体 API
 export { Badge, badgeVariants }

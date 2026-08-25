@@ -279,7 +279,6 @@ export default function TrialApply() {
   // 发送后联系方式被修改 → 需要重新获取并校验验证码
   useEffect(() => {
     if (otpSent && contactValue !== otpTargetRef.current) resetOtp()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [contactValue, otpSent])
 
   // 重发倒计时
@@ -684,7 +683,7 @@ export default function TrialApply() {
               <ol className="space-y-3">
                 {TERMS_DOCS[termsDoc].articles.map((article, i) => (
                   <li key={i} className="text-body-sm leading-6 text-neutral-700">
-                    <span className="font-semibold text-neutral-950">第 {i + 1} 条　</span>
+                    <span className="font-semibold text-neutral-950">第 {i + 1} 条 </span>
                     {article}
                   </li>
                 ))}

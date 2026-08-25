@@ -56,20 +56,16 @@ import { TrendChart } from '@/pages/workspace/TrendChart'
 import { SideDrawer } from '@/pages/workspace/SideDrawer'
 import { useAppToast } from '@/lib/toast'
 import { KEY_NAMESPACE, loadLSArray, saveLS } from '@/lib/storage'
+import { QuickConfigDrawer } from '@/pages/workspace/QuickConfigDrawer'
+import { LOCAL_UPLOAD_BASE, LOCAL_UPLOAD_EVENT, readLocalUploads } from '@/pages/workspace/quickConfigUploads'
+import { ProductTour } from '@/components/tour/ProductTour'
 import {
-  LOCAL_UPLOAD_BASE,
-  LOCAL_UPLOAD_EVENT,
-  QuickConfigDrawer,
-  readLocalUploads,
-} from '@/pages/workspace/QuickConfigDrawer'
-import {
-  ProductTour,
   TOUR_DONE_KEY,
   TOUR_START_EVENT,
   TOUR_STATE_EVENT,
   shouldAutoStartTour,
   startProductTour,
-} from '@/components/tour/ProductTour'
+} from '@/components/tour/tour'
 
 // ---------- 页面扩展 mock（design/dashboard.md §5，页面级数据，不改全局 store） ----------
 
@@ -440,7 +436,11 @@ function DataSourceCard({ onSynced }: { onSynced: () => void }) {
   /** 本地上传份数与 QuickConfigDrawer 同源（localStorage 计数 + 事件联动） */
   const [localUploads, setLocalUploads] = useState(readLocalUploads)
   const onSyncedRef = useRef(onSynced)
-  onSyncedRef.current = onSynced
+
+  // 最新回调写入 ref（供 10s 同步完成定时器读取），放在 effect 中避免渲染期写 ref
+  useEffect(() => {
+    onSyncedRef.current = onSynced
+  }, [onSynced])
 
   useEffect(() => {
     if (!syncing) return

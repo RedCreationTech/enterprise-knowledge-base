@@ -36,7 +36,10 @@ export function AssistantConfigDrawer({ assistant, onClose, onToast, onSave }: A
   const [suggested, setSuggested] = useState<string[]>([])
   const [showChecks, setShowChecks] = useState(false)
 
-  useEffect(() => {
+  // 打开抽屉时用 assistant 数据回填表单（渲染期比对 assistant 引用，替代 effect 内同步 setState）
+  const [prevAssistant, setPrevAssistant] = useState<AssistantItem | null>(null)
+  if (assistant !== prevAssistant) {
+    setPrevAssistant(assistant)
     if (assistant) {
       setName(assistant.name.replace('（草稿）', ''))
       setDesc(assistant.desc)
@@ -55,7 +58,7 @@ export function AssistantConfigDrawer({ assistant, onClose, onToast, onSave }: A
       setSuggested([...assistant.suggested])
       setShowChecks(false)
     }
-  }, [assistant])
+  }
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {

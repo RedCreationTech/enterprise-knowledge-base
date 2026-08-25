@@ -56,6 +56,7 @@ interface NavGroup {
 }
 
 /** 正式版全量导航（5 组 18 项）；export 供 ProductTour 等派生真实入口数 */
+// eslint-disable-next-line react-refresh/only-export-components -- NAV_FULL 为公开导航常量（供 ProductTour 派生入口数）
 export const NAV_FULL: NavGroup[] = [
   {
     section: '工作台',

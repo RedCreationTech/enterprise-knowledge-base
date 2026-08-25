@@ -102,14 +102,17 @@ export default function Feedback() {
   useEffect(() => () => timersRef.current.forEach(clearTimeout), [])
 
   // URL 深链：?filter=no-answer / ?type=unanswered → 知识问题 Tab + 无答案筛选
-  useEffect(() => {
+  // 渲染期比对 searchParams（useSearchParams 按 location.search 记忆化），替代 effect 内同步 setState
+  const [prevSearchParams, setPrevSearchParams] = useState<URLSearchParams | null>(null)
+  if (prevSearchParams !== searchParams) {
+    setPrevSearchParams(searchParams)
     const filter = searchParams.get('filter')
     const type = searchParams.get('type')
     if (filter === 'no-answer' || type === 'unanswered') {
       setTab('issues')
       setTypeFilter('无答案')
     }
-  }, [searchParams])
+  }
 
   const feedbackCards: UserFeedbackItem[] = useMemo(
     () => [

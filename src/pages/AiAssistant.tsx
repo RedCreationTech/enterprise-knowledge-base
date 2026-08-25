@@ -24,6 +24,7 @@ import {
   X,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { uid } from '@/lib/id'
 import { METRICS, useAppStore, me } from '@/mocks'
 import { AnswerCard } from '@/components/common/AnswerCard'
 import { CitationCard } from '@/components/common/CitationCard'
@@ -295,7 +296,7 @@ export default function AiAssistant() {
   const createAssistant = (templateKey: string) => {
     const tpl = assistantTemplates.find((t) => t.key === templateKey)!
     const item: AssistantItem = {
-      id: `asst-new-${Date.now()}`,
+      id: uid(),
       icon: '✨',
       name: `${tpl.name}（草稿）`,
       status: '草稿',

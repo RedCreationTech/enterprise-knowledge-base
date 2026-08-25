@@ -625,7 +625,7 @@ ${sections}
                 <div className="min-w-0 flex-1 rounded-lg border border-neutral-200 bg-white">
                   <div className="flex items-center justify-between border-b border-neutral-100 px-4 py-3">
                     <p className="text-body-sm font-medium text-neutral-950">
-                      {doc?.name} {doc?.version}　{doc?.page}
+                      {doc?.name} {doc?.version} {doc?.page}
                     </p>
                     <button
                       type="button"
@@ -649,7 +649,7 @@ ${sections}
                       <div className="mt-3 space-y-3">
                         {(docContent?.sections ?? []).map((s) => (
                           <p key={s.heading} className="text-body leading-6 text-neutral-700">
-                            <span className="font-medium text-neutral-800">{s.heading}　</span>
+                            <span className="font-medium text-neutral-800">{s.heading} </span>
                             {s.highlight ? (
                               <motion.span
                                 initial={{ backgroundColor: 'rgba(255,244,194,0)' }}
