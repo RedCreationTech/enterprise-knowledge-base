@@ -45,24 +45,6 @@ import type { Integration, LogLevel } from '@/pages/workspace/integrationsData'
 
 const CONFIG_TABS = ['知识范围', '目标用户', '身份映射', '消息推送'] as const
 
-/** 卸载集成持久化：刷新后不再复活 */
-const UNINSTALLED_KEY = 'ekb-uninstalled-integrations'
-function readUninstalled(): string[] {
-  try {
-    const v = JSON.parse(localStorage.getItem(UNINSTALLED_KEY) ?? '[]')
-    return Array.isArray(v) ? v.filter((x) => typeof x === 'string') : []
-  } catch {
-    return []
-  }
-}
-function writeUninstalled(ids: string[]) {
-  try {
-    localStorage.setItem(UNINSTALLED_KEY, JSON.stringify(ids))
-  } catch {
-    /* ignore */
-  }
-}
-
 const LOG_LEVELS: ('全部' | LogLevel)[] = ['全部', 'INFO', 'WARN', 'ERROR']
 
 function Switch({ on, onChange, disabled }: { on: boolean; onChange: () => void; disabled?: boolean }) {
@@ -92,7 +74,7 @@ function Switch({ on, onChange, disabled }: { on: boolean; onChange: () => void;
 export default function Integrations() {
   const navigate = useNavigate()
   const toast = useAppToast()
-  const { state } = useAppStore()
+  const { state, uninstallApp } = useAppStore()
   // 冷启动空态：未载入演示数据时展示引导空态（评审 P1-N1）
   const demoOff = state.demoData === false
   const [selectedId, setSelectedId] = useState('feishu-qa')
@@ -102,7 +84,6 @@ export default function Integrations() {
   const [reauthLoading, setReauthLoading] = useState(false)
   const [authExpiry, setAuthExpiry] = useState('2024-06-15')
   const [authWarning, setAuthWarning] = useState(true)
-  const [uninstalled, setUninstalled] = useState<string[]>(readUninstalled)
   const [uninstallTarget, setUninstallTarget] = useState<Integration | null>(null)
   const [uninstallWord, setUninstallWord] = useState('')
   const [autoFallback, setAutoFallback] = useState(true)
@@ -134,7 +115,9 @@ export default function Integrations() {
   const menuRef = useRef<HTMLDivElement>(null)
 
   const selected = integrations.find((i) => i.id === selectedId) ?? integrations[0]
-  const visibleIntegrations = integrations.filter((i) => !uninstalled.includes(i.id))
+  const visibleIntegrations = integrations.filter((i) => !state.journey.uninstalledApps.includes(i.id))
+  /** 已安装集成计数：与 store.installedApps 同源（应用中心「已安装」口径一致） */
+  const installedCount = integrations.filter((i) => state.journey.installedApps.includes(i.id)).length
 
   // 点击外部关闭 ⋯ 菜单
   useEffect(() => {
@@ -226,7 +209,7 @@ export default function Integrations() {
       <PageHeader
         crumbs={['应用与集成', '集成管理']}
         title="集成管理"
-        subtitle={`${integrationMetrics.installed} 个集成 · ${integrationMetrics.normal} 个运行正常 · ${integrationMetrics.warning} 个需要关注 · 本周渠道使用 ${integrationMetrics.weeklyUsage} 次`}
+        subtitle={`${installedCount} 个集成 · ${integrationMetrics.normal} 个运行正常 · ${integrationMetrics.warning} 个需要关注 · 本周渠道使用 ${integrationMetrics.weeklyUsage} 次`}
         actions={
           <>
             <button
@@ -279,7 +262,7 @@ export default function Integrations() {
       {/* Row 1：渠道运行概览 */}
       <div className="grid grid-cols-2 gap-4 xl:grid-cols-4">
         {[
-          { icon: <Puzzle className="h-4 w-4" />, name: '已安装集成', value: integrationMetrics.installed, suffix: '个', hint: `${integrationMetrics.normal} 正常 · ${integrationMetrics.warning} 告警` },
+          { icon: <Puzzle className="h-4 w-4" />, name: '已安装集成', value: installedCount, suffix: '个', hint: `${integrationMetrics.normal} 正常 · ${integrationMetrics.warning} 告警` },
           { icon: <Send className="h-4 w-4" />, name: '本周渠道使用', value: integrationMetrics.weeklyUsage, suffix: '次', hint: integrationMetrics.usageSplit },
           { icon: <Users className="h-4 w-4" />, name: '渠道可访问人数', value: integrationMetrics.reachable, suffix: '人', hint: '覆盖 12 名成员的 3 个渠道' },
           { icon: <AlertTriangle className="h-4 w-4" />, name: '渠道告警', value: authWarning ? integrationMetrics.alerts : 0, suffix: '条', hint: authWarning ? '飞书授权 16 天后到期' : '暂无待处理告警' },
@@ -965,11 +948,8 @@ export default function Integrations() {
                 type="button"
                 disabled={uninstallWord !== '卸载'}
                 onClick={() => {
-                  setUninstalled((prev) => {
-                    const next = prev.includes(uninstallTarget.id) ? prev : [...prev, uninstallTarget.id]
-                    writeUninstalled(next)
-                    return next
-                  })
+                  // 单源：从 store.installedApps 移除并记入 uninstalledApps（persist 到 ekb-store-v1，刷新不丢）
+                  uninstallApp(uninstallTarget.id)
                   setUninstallTarget(null)
                   toast.warning(`「${uninstallTarget.name}」已卸载，审计记录已保留`)
                 }}

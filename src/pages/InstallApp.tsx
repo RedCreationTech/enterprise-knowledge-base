@@ -44,7 +44,6 @@ import { Modal } from '@/pages/activation/ui'
 import { SideDrawer } from '@/pages/workspace/SideDrawer'
 import { PageHeader } from '@/pages/workspace/PageHeader'
 import { useAppToast } from '@/lib/toast'
-import { KEY_NAMESPACE, loadLSArray, saveLS } from '@/lib/storage'
 import {
   APP_DOCS,
   APP_TABS,
@@ -61,15 +60,6 @@ import type { AppExtra, AppSettings } from '@/pages/activation/apps-data'
 
 const EASE: [number, number, number, number] = [0.2, 0.8, 0.2, 1]
 const PAGE = '/workspace/apps'
-
-/** 卸载持久化：刷新后已卸载应用不再「复活」，可重新安装 */
-const UNINSTALLED_KEY = KEY_NAMESPACE.installApp.uninstalled
-function readUninstalled(): string[] {
-  return loadLSArray(UNINSTALLED_KEY, (x): x is string => typeof x === 'string')
-}
-function writeUninstalled(ids: string[]) {
-  saveLS(UNINSTALLED_KEY, ids)
-}
 
 type SettingsTab = 'scope' | 'notify' | 'auth' | 'danger'
 const SETTINGS_TABS: { key: SettingsTab; label: string }[] = [
@@ -127,7 +117,7 @@ interface DisplayApp {
 
 export default function InstallApp() {
   const toast = useAppToast()
-  const { state, installApp, skipApps, addFeedback, pushAssistantMessage, setReplyScript } = useAppStore()
+  const { state, installApp, uninstallApp, skipApps, addFeedback, pushAssistantMessage, setReplyScript } = useAppStore()
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   /** V1.3：从 Stepper / 邀请页进入时带 ?from=trial（提示条带返回旅程语义） */
@@ -139,9 +129,6 @@ export default function InstallApp() {
   const [selectedId, setSelectedId] = useState('feishu-qa')
   const [tab, setTab] = useState<string>('全部')
   const [query, setQuery] = useState('')
-  const [installedIds, setInstalledIds] = useState<string[]>(() =>
-    state.journey.installedApps.filter((id) => !readUninstalled().includes(id)),
-  )
   const [highlightApi, setHighlightApi] = useState(false)
   const [detailOpen, setDetailOpen] = useState(false)
   const [aiStripOpen, setAiStripOpen] = useState(false)
@@ -212,14 +199,14 @@ export default function InstallApp() {
     () =>
       baseApps.map((a) => {
         const extra = appExtras.find((e) => e.id === a.id)!
-        const status: AppStatus = readUninstalled().includes(a.id)
-          ? '可试用'
-          : installedIds.includes(a.id)
-            ? '已安装'
-            : a.status
+        const status: AppStatus = state.journey.installedApps.includes(a.id)
+          ? '已安装'
+          : a.status === '需要授权'
+            ? '需要授权'
+            : '可试用'
         return { id: a.id, name: a.name, logo: a.logo, status, extra }
       }),
-    [installedIds],
+    [state.journey.installedApps],
   )
 
   const filtered = useMemo(
@@ -319,13 +306,7 @@ export default function InstallApp() {
   }
 
   const finishInstall = () => {
-    if (installedIds.includes(modalApp.id)) {
-      closeInstall()
-      return // 幂等：不重复创建 AppInstall
-    }
-    setInstalledIds((prev) => [...prev, modalApp.id])
-    // 重新安装：从卸载持久化列表移除
-    writeUninstalled(readUninstalled().filter((id) => id !== modalApp.id))
+    // 单源：installApp 幂等加入 installedApps，同时从 uninstalledApps 移除（重新安装）
     installApp(modalApp.id)
     toast.success(`${modalApp.name}已安装`)
     closeInstall()
@@ -349,10 +330,8 @@ export default function InstallApp() {
 
   const doUninstall = () => {
     if (uninstallWord !== '卸载') return
-    setInstalledIds((prev) => prev.filter((id) => id !== modalApp.id))
-    // 卸载持久化：刷新后不再复活，卡片回到「可试用」可重新安装
-    const next = readUninstalled()
-    if (!next.includes(modalApp.id)) writeUninstalled([...next, modalApp.id])
+    // 单源：从 store.installedApps 移除并记入 uninstalledApps（persist 到 ekb-store-v1，刷新不丢）
+    uninstallApp(modalApp.id)
     toast.success(`${modalApp.name}已卸载，操作已记录审计日志`)
     setUninstallWord('')
     setSettingsOpen(false)

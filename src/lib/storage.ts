@@ -21,9 +21,6 @@ export const KEY_NAMESPACE = {
     faqCreated: `${LS_PREFIX}faq-created`,
     testsetAdded: `${LS_PREFIX}testset-added`,
   },
-  installApp: {
-    uninstalled: `${LS_PREFIX}uninstalled-apps`,
-  },
   apiDev: {
     keys: `${LS_PREFIX}api-keys`,
   },

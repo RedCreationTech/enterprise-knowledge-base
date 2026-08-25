@@ -129,9 +129,8 @@ export const channelHealth = [
 
 export const recommendApps = ['官网客服组件', '钉钉机器人', '知识日报', '飞书文档插件']
 
-/** 渠道运行概览 MetricCard 口径（328 = 212 + 96 + 20） */
+/** 渠道运行概览 MetricCard 口径（328 = 212 + 96 + 20；「已安装集成」计数由 store.installedApps 派生） */
 export const integrationMetrics = {
-  installed: 4,
   normal: 3,
   warning: 1,
   weeklyUsage: 328,

@@ -15,7 +15,7 @@ import {
   useRef,
 } from 'react'
 import type { ReactNode } from 'react'
-import { daily, invitees, me } from './base.mock'
+import { apps, daily, invitees, me } from './base.mock'
 
 // ---------- 类型 ----------
 
@@ -27,7 +27,10 @@ export interface JourneyState {
   answerAccepted: boolean
   invitesSent: boolean
   appsSkipped: boolean
+  /** 已安装应用（单源权威）：安装/卸载都只改这一个字段 + uninstalledApps */
   installedApps: string[]
+  /** 显式卸载的应用（集成管理页据此隐藏已卸载项；重新安装时清除） */
+  uninstalledApps: string[]
   dailyDone: boolean
   activated: boolean
   trialDays: number
@@ -161,6 +164,11 @@ function nowDateTime(): string {
   return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`
 }
 
+/** 默认已安装应用 id（与 base.mock apps[] 的「已安装」状态同源：企业微信 / 自定义 API / SSO） */
+const DEFAULT_INSTALLED_APPS: string[] = apps
+  .filter((a) => a.status === '已安装')
+  .map((a) => a.id)
+
 export const initialJourney: JourneyState = {
   currentStep: 1,
   applied: false,
@@ -168,7 +176,8 @@ export const initialJourney: JourneyState = {
   answerAccepted: false,
   invitesSent: false,
   appsSkipped: false,
-  installedApps: [],
+  installedApps: [...DEFAULT_INSTALLED_APPS],
+  uninstalledApps: [],
   dailyDone: false,
   activated: false,
   trialDays: 7,
@@ -211,7 +220,7 @@ export function starterTasks(): TaskItem[] {
 
 export function createInitialState(): AppState {
   return {
-    journey: { ...initialJourney, installedApps: [] },
+    journey: { ...initialJourney, installedApps: [...DEFAULT_INSTALLED_APPS], uninstalledApps: [] },
     chatMessages: initialChatMessages(),
     feedbacks: [],
     // 冷启动真实空态：不预置成熟运营任务，仅保留新手引导
@@ -283,22 +292,76 @@ function reducer(state: AppState, action: Action): AppState {
 
 const STORAGE_KEY = 'ekb-store-v1'
 
+/** Task 6 前的旧双源卸载键（单源化后仅用于一次性迁移，迁移后清除） */
+const LEGACY_UNINSTALLED_KEYS = ['ekb-uninstalled-apps', 'ekb-uninstalled-integrations']
+
+function readLegacyUninstalled(): Set<string> {
+  const ids = new Set<string>()
+  for (const key of LEGACY_UNINSTALLED_KEYS) {
+    try {
+      const raw = localStorage.getItem(key)
+      if (raw === null) continue
+      const parsed: unknown = JSON.parse(raw)
+      if (Array.isArray(parsed)) {
+        for (const id of parsed) {
+          if (typeof id === 'string') ids.add(id)
+        }
+      }
+    } catch {
+      // 损坏数据跳过
+    }
+  }
+  return ids
+}
+
+function clearLegacyUninstalledKeys(): void {
+  for (const key of LEGACY_UNINSTALLED_KEYS) {
+    try {
+      localStorage.removeItem(key)
+    } catch {
+      // 存储不可用时静默降级
+    }
+  }
+}
+
 function loadState(): AppState {
   try {
     const raw = localStorage.getItem(STORAGE_KEY)
-    if (!raw) return createInitialState()
-    const parsed = JSON.parse(raw) as Partial<AppState>
     const base = createInitialState()
+    const parsed = raw ? (JSON.parse(raw) as Partial<AppState>) : null
     // 迁移：老用户的已存状态缺少 demoData 字段 → 视为已载入演示数据（true），保持数据连续；新访客默认 false
-    const demoData = typeof parsed.demoData === 'boolean' ? parsed.demoData : true
+    const demoData = parsed ? (typeof parsed.demoData === 'boolean' ? parsed.demoData : true) : base.demoData
+    const persistedJourney: Partial<JourneyState> = parsed?.journey ?? {}
+    const legacyUninstalled = readLegacyUninstalled()
+    let installedApps: string[]
+    let uninstalledApps: string[]
+    if (Array.isArray(persistedJourney.uninstalledApps)) {
+      // 新 schema：installedApps/uninstalledApps 均已在 ekb-store-v1 内，直接采用
+      installedApps = Array.isArray(persistedJourney.installedApps)
+        ? persistedJourney.installedApps.filter((id) => typeof id === 'string')
+        : [...DEFAULT_INSTALLED_APPS]
+      uninstalledApps = persistedJourney.uninstalledApps.filter((id) => typeof id === 'string')
+    } else {
+      // 旧 schema 一次性迁移：默认已安装 ∪ 旧 installedApps − 旧卸载键
+      const installed = new Set<string>(DEFAULT_INSTALLED_APPS)
+      if (Array.isArray(persistedJourney.installedApps)) {
+        for (const id of persistedJourney.installedApps) {
+          if (typeof id === 'string') installed.add(id)
+        }
+      }
+      for (const id of legacyUninstalled) installed.delete(id)
+      installedApps = [...installed]
+      uninstalledApps = [...legacyUninstalled]
+    }
+    clearLegacyUninstalledKeys()
     return {
-      journey: { ...base.journey, ...(parsed.journey ?? {}) },
-      chatMessages: Array.isArray(parsed.chatMessages) && parsed.chatMessages.length > 0
+      journey: { ...base.journey, ...persistedJourney, installedApps, uninstalledApps },
+      chatMessages: parsed && Array.isArray(parsed.chatMessages) && parsed.chatMessages.length > 0
         ? parsed.chatMessages
         : base.chatMessages,
-      feedbacks: Array.isArray(parsed.feedbacks) ? parsed.feedbacks : [],
+      feedbacks: parsed && Array.isArray(parsed.feedbacks) ? parsed.feedbacks : [],
       tasks:
-        Array.isArray(parsed.tasks) && parsed.tasks.length > 0
+        parsed && Array.isArray(parsed.tasks) && parsed.tasks.length > 0
           ? parsed.tasks
           : demoData
             ? initialTasks()
@@ -326,6 +389,7 @@ export interface AppStore {
   acceptAnswer: () => void
   sendInvites: () => void
   installApp: (appId: string) => void
+  uninstallApp: (appId: string) => void
   skipApps: () => void
   completeDaily: () => void
   activate: () => void
@@ -412,6 +476,14 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
           installedApps: state.journey.installedApps.includes(appId)
             ? state.journey.installedApps
             : [...state.journey.installedApps, appId],
+          uninstalledApps: state.journey.uninstalledApps.filter((id) => id !== appId),
+        }),
+      uninstallApp: (appId: string) =>
+        setJourney({
+          installedApps: state.journey.installedApps.filter((id) => id !== appId),
+          uninstalledApps: state.journey.uninstalledApps.includes(appId)
+            ? state.journey.uninstalledApps
+            : [...state.journey.uninstalledApps, appId],
         }),
       skipApps: () => setJourney({ appsSkipped: true }),
       completeDaily: () => setJourney({ dailyDone: true }),
@@ -435,6 +507,7 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
         } catch {
           // ignore
         }
+        clearLegacyUninstalledKeys()
         if (replyTimerRef.current) clearTimeout(replyTimerRef.current)
         replyScriptRef.current = DEFAULT_REPLY
         dispatch({ type: 'RESET_DEMO_DATA' })
@@ -445,6 +518,7 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
         } catch {
           // ignore
         }
+        clearLegacyUninstalledKeys()
         if (replyTimerRef.current) clearTimeout(replyTimerRef.current)
         replyScriptRef.current = DEFAULT_REPLY
         dispatch({ type: 'RESET' })
