@@ -255,7 +255,7 @@ export default function Integrations() {
 
       {/* 渠道异常通栏（mock 演示：降级恢复） */}
       {channelDown && (
-        <div className="mb-4 flex items-center justify-between gap-3 rounded-lg border border-warning/40 bg-warning-bg px-4 py-3">
+        <div className="mb-4 flex items-center justify-between gap-3 rounded-lg border border-warning-accent/40 bg-warning-bg px-4 py-3">
           <p className="flex items-center gap-2 text-body-sm text-neutral-800">
             <AlertTriangle className="h-4 w-4 shrink-0 text-warning" />
             企业微信消息推送失败 3 次，已进入自动降级
@@ -381,7 +381,7 @@ export default function Integrations() {
                     <div className="flex items-center justify-between text-body-sm">
                       <dt className="text-neutral-400">渠道状态</dt>
                       <dd className="flex items-center gap-1.5 text-neutral-800">
-                        <span className={cn('h-1.5 w-1.5 rounded-full', isDisconnected ? 'bg-neutral-300' : channelDown && app.id === 'wecom-qa' ? 'bg-warning' : 'bg-success')} />
+                        <span className={cn('h-1.5 w-1.5 rounded-full', isDisconnected ? 'bg-neutral-300' : channelDown && app.id === 'wecom-qa' ? 'bg-warning-accent' : 'bg-success')} />
                         {isDisconnected ? '已断开' : channelDown && app.id === 'wecom-qa' ? '异常（已降级）' : app.channelStatus}
                       </dd>
                     </div>
@@ -460,7 +460,7 @@ export default function Integrations() {
                 >
                   {t}
                   {t === '身份映射' && unmapped.length > 0 && (
-                    <span className="ml-1 inline-flex h-4 min-w-4 items-center justify-center rounded-pill bg-warning px-1 text-[10px] font-semibold text-white">
+                    <span className="ml-1 inline-flex h-4 min-w-4 items-center justify-center rounded-pill bg-warning-accent px-1 text-[10px] font-semibold text-white">
                       {unmapped.length}
                     </span>
                   )}
@@ -525,7 +525,7 @@ export default function Integrations() {
                   <span className="shrink-0 text-body-sm text-neutral-700">
                     映射覆盖率 <span className="font-semibold text-neutral-950">{mapped}/{integrationConfig.mapping.total}</span>
                   </span>
-                  <ProgressBar value={mappedPct} className="flex-1" barClassName={mappedPct < 100 ? 'bg-warning' : undefined} />
+                  <ProgressBar value={mappedPct} className="flex-1" barClassName={mappedPct < 100 ? 'bg-warning-accent' : undefined} />
                   <span className="shrink-0 text-caption text-neutral-400">{mappedPct}%</span>
                 </div>
                 {unmapped.length > 0 ? (
@@ -588,7 +588,7 @@ export default function Integrations() {
               initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.24, delay: 0.18, ease: [0.2, 0.8, 0.2, 1] }}
-              className="rounded-xl border border-warning/40 bg-warning-bg p-5 shadow-card"
+              className="rounded-xl border border-warning-accent/40 bg-warning-bg p-5 shadow-card"
             >
               <div className="flex items-start gap-2.5">
                 <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-warning" />

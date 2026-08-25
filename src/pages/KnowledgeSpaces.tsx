@@ -514,7 +514,7 @@ export default function KnowledgeSpaces() {
                     </span>
                   )}
                   {openConflicts.length > 0 && (s.id === 'policy' || s.id === 'sales' || s.id === 'all') && (
-                    <span className="absolute right-3 top-3 h-2 w-2 rounded-full bg-warning" title="存在待处理冲突" />
+                    <span className="absolute right-3 top-3 h-2 w-2 rounded-full bg-warning-accent" title="存在待处理冲突" />
                   )}
                   <div className="flex items-start gap-3">
                     <SpaceIcon icon={s.icon} />
@@ -598,7 +598,7 @@ export default function KnowledgeSpaces() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -8 }}
                 transition={{ duration: 0.24 }}
-                className="rounded-xl border border-warning/30 bg-warning-bg p-5"
+                className="rounded-xl border border-warning-accent/30 bg-warning-bg p-5"
               >
                 <div className="flex items-center gap-2">
                   <TriangleAlert className="h-5 w-5 text-warning" />
@@ -1101,7 +1101,7 @@ export default function KnowledgeSpaces() {
                   </p>
                 ) : (
                   <>
-                    <div className="rounded-lg border border-warning/40 bg-warning-bg/40 p-4">
+                    <div className="rounded-lg border border-warning-accent/40 bg-warning-bg/40 p-4">
                       <p className="flex items-center gap-1.5 text-body-sm font-medium text-neutral-950">
                         <Archive className="h-4 w-4 text-warning" />
                         归档空间
@@ -1109,7 +1109,7 @@ export default function KnowledgeSpaces() {
                       <p className="mt-1 text-caption text-neutral-500">归档后空间从列表隐藏，文档保留在知识库中，可随时联系管理员恢复。</p>
                       <button
                         type="button"
-                        className="mt-2.5 h-9 rounded-md border border-warning/50 bg-white px-3.5 text-body-sm font-medium text-warning transition-colors duration-micro ease-brand hover:bg-warning-bg"
+                        className="mt-2.5 h-9 rounded-md border border-warning-accent/50 bg-white px-3.5 text-body-sm font-medium text-warning transition-colors duration-micro ease-brand hover:bg-warning-bg"
                         onClick={() => {
                           setArchiveFor(manageSpace)
                           setArchiveAck(false)
@@ -1556,7 +1556,7 @@ export default function KnowledgeSpaces() {
                   </div>
                   <div className="mt-2.5 h-1.5 overflow-hidden rounded-full bg-neutral-100">
                     <div
-                      className={cn('h-full rounded-full', h.score >= 85 ? 'bg-success' : h.score >= 70 ? 'bg-warning' : 'bg-danger')}
+                      className={cn('h-full rounded-full', h.score >= 85 ? 'bg-success' : h.score >= 70 ? 'bg-warning-accent' : 'bg-danger')}
                       style={{ width: `${h.score}%` }}
                     />
                   </div>

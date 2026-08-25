@@ -521,7 +521,7 @@ ${sections}
                     initial={{ opacity: 0, y: 8 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.18, ease: [0.2, 0.8, 0.2, 1] }}
-                    className="rounded-lg border border-warning/40 bg-warning-bg p-4"
+                    className="rounded-lg border border-warning-accent/40 bg-warning-bg p-4"
                   >
                     <p className="text-body-sm font-medium text-neutral-800">诊断摘要</p>
                     <p className="mt-1 text-body-sm text-neutral-700">

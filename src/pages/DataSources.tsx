@@ -425,7 +425,7 @@ export default function DataSources() {
                           <span className="text-neutral-500">ACL 覆盖率</span>
                           <span className={cn('font-medium', (c.aclCoverage ?? 100) < 90 ? 'text-warning' : 'text-neutral-800')}>{c.aclCoverage}%</span>
                         </div>
-                        <ProgressBar value={c.aclCoverage ?? 0} barClassName={(c.aclCoverage ?? 100) < 90 ? 'bg-warning' : undefined} />
+                        <ProgressBar value={c.aclCoverage ?? 0} barClassName={(c.aclCoverage ?? 100) < 90 ? 'bg-warning-accent' : undefined} />
                       </div>
                       <div className="flex items-center justify-between pt-1">
                         <span className="text-neutral-500">增量同步</span>
@@ -562,7 +562,7 @@ export default function DataSources() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -8 }}
                 transition={{ duration: 0.24 }}
-                className="rounded-xl border border-warning/30 bg-warning-bg p-5"
+                className="rounded-xl border border-warning-accent/30 bg-warning-bg p-5"
               >
                 <h3 className="flex items-center gap-1.5 text-h3 text-neutral-950">
                   <TriangleAlert className="h-5 w-5 text-warning" />

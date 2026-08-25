@@ -139,7 +139,7 @@ const CHANNEL_USAGE = [
   { name: '知识网站', logo: '', count: 158 },
 ]
 
-const RANK_COLORS = ['bg-warning text-white', 'bg-warning text-white', 'bg-brand-500 text-white', 'bg-neutral-200 text-neutral-500', 'bg-neutral-200 text-neutral-500']
+const RANK_COLORS = ['bg-warning-accent text-white', 'bg-warning-accent text-white', 'bg-brand-500 text-white', 'bg-neutral-200 text-neutral-500', 'bg-neutral-200 text-neutral-500']
 
 /** 高频问题 Drawer「创建 FAQ」「加入测试集」幂等记录（localStorage） */
 const FAQ_CREATED_KEY = KEY_NAMESPACE.dashboard.faqCreated
@@ -930,7 +930,7 @@ ${channelRows}
                 return (
                   <li key={d.name} className="flex items-center gap-3">
                     <span className="w-20 shrink-0 text-caption text-neutral-500">{d.name}</span>
-                    <ProgressBar value={pct} className="flex-1" barClassName={low ? 'bg-warning' : undefined} />
+                    <ProgressBar value={pct} className="flex-1" barClassName={low ? 'bg-warning-accent' : undefined} />
                     <span className={cn('w-12 shrink-0 text-right text-caption', low ? 'font-medium text-warning' : 'text-neutral-500')}>
                       {d.score}/{d.max}
                     </span>
@@ -1074,7 +1074,7 @@ ${channelRows}
                     <span className="mt-0.5 block text-caption text-neutral-500">{demoOff ? f.emptyDesc : f.desc}</span>
                   </span>
                   {!demoOff && f.count > 0 && (
-                    <span className="absolute right-2.5 top-2.5 flex h-4 min-w-4 items-center justify-center rounded-pill bg-warning px-1 text-[10px] font-semibold text-white">
+                    <span className="absolute right-2.5 top-2.5 flex h-4 min-w-4 items-center justify-center rounded-pill bg-warning-accent px-1 text-[10px] font-semibold text-white">
                       {f.count}
                     </span>
                   )}

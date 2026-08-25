@@ -128,7 +128,7 @@ const DEMO_STEPS = [
   },
   {
     icon: CalendarCheck,
-    tone: 'from-warning to-danger',
+    tone: 'from-warning-accent to-danger',
     title: '第 5 步 · 激活上线',
     desc: ['7 天试用目标达成后一键激活，资料、知识与助手原地升级为正式对象。', '升级后数据与配置全部保留，团队无缝继续使用。'],
   },

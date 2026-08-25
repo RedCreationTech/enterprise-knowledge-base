@@ -518,7 +518,7 @@ export default function KnowledgeBase() {
                       <span className={cn('text-caption', active ? 'text-brand-500' : 'text-neutral-400')}>{countOf(s.name)} 份文档</span>
                     </span>
                     <span
-                      className={cn('h-2 w-2 shrink-0 rounded-full', healthy ? 'bg-success' : 'bg-warning')}
+                      className={cn('h-2 w-2 shrink-0 rounded-full', healthy ? 'bg-success' : 'bg-warning-accent')}
                       title={healthy ? '健康' : `待复审 ${s.reviewCount} 份`}
                     />
                   </button>

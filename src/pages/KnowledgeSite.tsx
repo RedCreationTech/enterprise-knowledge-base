@@ -91,8 +91,8 @@ const ALL_UPDATES = [
 ]
 
 const RANK_COLORS = [
-  'bg-warning text-white',
-  'bg-warning text-white',
+  'bg-warning-accent text-white',
+  'bg-warning-accent text-white',
   'bg-brand-500 text-white',
   'bg-neutral-200 text-neutral-500',
   'bg-neutral-200 text-neutral-500',

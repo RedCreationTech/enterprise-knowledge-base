@@ -501,7 +501,7 @@ export default function Settings() {
                           <span>试用进度</span>
                           <span className="text-warning">剩余 2 天</span>
                         </div>
-                        <ProgressBar value={86} barClassName="bg-warning" />
+                        <ProgressBar value={86} barClassName="bg-warning-accent" />
                       </div>
                     </div>
                     <div className="mt-4 flex gap-2">
@@ -583,7 +583,7 @@ export default function Settings() {
                                 </span>
                               ) : (
                                 <span className="inline-flex items-center gap-1.5 text-body-sm text-warning">
-                                  <span className="h-1.5 w-1.5 rounded-full bg-warning" />
+                                  <span className="h-1.5 w-1.5 rounded-full bg-warning-accent" />
                                   待激活
                                 </span>
                               )}
@@ -654,7 +654,7 @@ export default function Settings() {
                           </p>
                           {u.pct !== null && (
                             <div className="mt-2.5">
-                              <ProgressBar value={u.pct} barClassName={warn ? 'bg-warning' : undefined} />
+                              <ProgressBar value={u.pct} barClassName={warn ? 'bg-warning-accent' : undefined} />
                             </div>
                           )}
                           {u.warning && (
@@ -795,7 +795,7 @@ export default function Settings() {
                     }
                   >
                     {newKey && (
-                      <div className="mb-3 rounded-lg border border-warning bg-warning-bg p-3.5">
+                      <div className="mb-3 rounded-lg border border-warning-accent bg-warning-bg p-3.5">
                         <p className="text-body-sm font-medium text-neutral-900">新 Key 仅展示一次，请立即保存：</p>
                         <div className="mt-2 flex items-center gap-2">
                           <code className="flex-1 truncate rounded-md bg-white px-3 py-2 text-body-sm text-neutral-800">{newKey}</code>

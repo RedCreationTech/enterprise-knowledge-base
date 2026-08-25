@@ -545,7 +545,7 @@ export default function Permissions() {
                 企微映射 <span className="font-semibold text-neutral-950">{mappedCount >= 402 ? '201/201' : identityMapping.wecom}</span>
                 <span className="mx-2 text-neutral-300">·</span>共 {unmapped.length} 人待映射
               </span>
-              <ProgressBar value={mappingPct} className="flex-1" barClassName={mappingPct < 100 ? 'bg-warning' : undefined} />
+              <ProgressBar value={mappingPct} className="flex-1" barClassName={mappingPct < 100 ? 'bg-warning-accent' : undefined} />
               <span className="shrink-0 text-caption text-neutral-400">{mappingPct}%</span>
             </div>
             {unmapped.length > 0 ? (
@@ -745,7 +745,7 @@ export default function Permissions() {
                                 : on
                                   ? 'border-brand-600 bg-brand-600 text-white hover:bg-brand-500'
                                   : 'border-neutral-300 bg-white hover:border-brand-300',
-                              changed && 'ring-2 ring-warning/50',
+                              changed && 'ring-2 ring-warning-accent/50',
                             )}
                           >
                             {on && <Check className="h-3.5 w-3.5" />}

@@ -263,7 +263,7 @@ export function UploadDrawer({ open, onClose, linkedDoc, onToast }: UploadDrawer
                 transition={{ duration: 0.18 }}
                 className={cn(
                   'rounded-lg border p-3',
-                  it.status === 'DUPLICATE' ? 'border-warning/50 bg-warning-bg/40' : it.status === 'LOCKED' || it.status === 'FAILED' ? 'border-danger-border bg-danger-bg/40' : 'border-neutral-200 bg-white',
+                  it.status === 'DUPLICATE' ? 'border-warning-accent/50 bg-warning-bg/40' : it.status === 'LOCKED' || it.status === 'FAILED' ? 'border-danger-border bg-danger-bg/40' : 'border-neutral-200 bg-white',
                 )}
               >
                 <div className="flex items-center gap-2">
@@ -302,7 +302,7 @@ export function UploadDrawer({ open, onClose, linkedDoc, onToast }: UploadDrawer
                   <div className="mt-2">
                     <p className="text-caption text-warning">{it.note}</p>
                     {dupResolveFor === it.id ? (
-                      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mt-2 rounded-md border border-warning/40 bg-white p-3">
+                      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mt-2 rounded-md border border-warning-accent/40 bg-white p-3">
                         <div className="grid grid-cols-2 gap-2 text-caption">
                           <div className="rounded-md bg-neutral-50 p-2">
                             <p className="font-semibold text-neutral-800">现有版本</p>
@@ -331,7 +331,7 @@ export function UploadDrawer({ open, onClose, linkedDoc, onToast }: UploadDrawer
                       <button
                         type="button"
                         onClick={() => setDupResolveFor(it.id)}
-                        className="mt-1.5 h-7 rounded-md border border-warning/50 bg-white px-2.5 text-caption font-medium text-warning transition-colors duration-micro ease-brand hover:bg-warning-bg"
+                        className="mt-1.5 h-7 rounded-md border border-warning-accent/50 bg-white px-2.5 text-caption font-medium text-warning transition-colors duration-micro ease-brand hover:bg-warning-bg"
                       >
                         解决重复
                       </button>

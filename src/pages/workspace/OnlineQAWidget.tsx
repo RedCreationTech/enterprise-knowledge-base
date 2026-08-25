@@ -104,7 +104,7 @@ function nextId() {
 const FEEDBACK_BTNS: { type: FeedbackType; label: string; icon: typeof ThumbsUp; activeCls: string }[] = [
   { type: 'correct', label: '答案正确', icon: ThumbsUp, activeCls: 'border-success bg-success-bg text-success' },
   { type: 'wrong', label: '答案有问题', icon: ThumbsDown, activeCls: 'border-danger bg-danger-bg text-danger' },
-  { type: 'expired', label: '内容已过期', icon: FileQuestion, activeCls: 'border-warning bg-warning-bg text-warning' },
+  { type: 'expired', label: '内容已过期', icon: FileQuestion, activeCls: 'border-warning-accent bg-warning-bg text-warning' },
 ]
 
 export interface OnlineQAWidgetProps {
@@ -292,7 +292,7 @@ export function OnlineQAWidget({ state, onMinimize, onClose, onReopen, externalQ
                       transition={{ duration: 0.18 }}
                       className="flex flex-col items-start"
                     >
-                      <div className={cn('max-w-[90%] rounded-xl px-3 py-2', m.noAnswer ? 'border border-warning/30 bg-warning-bg' : 'bg-surface-assistant')}>
+                      <div className={cn('max-w-[90%] rounded-xl px-3 py-2', m.noAnswer ? 'border border-warning-accent/30 bg-warning-bg' : 'bg-surface-assistant')}>
                         <p className="whitespace-pre-line text-body-sm text-neutral-800">{m.content}</p>
                         {m.noAnswer && (
                           <div className="mt-2 rounded-md bg-white/70 p-2 text-caption text-neutral-500">

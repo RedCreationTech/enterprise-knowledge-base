@@ -31,7 +31,7 @@ function StepDot({ state, index }: { state: StepState; index: number }) {
   }
   if (state === 'BLOCKED') {
     return (
-      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-warning text-white">
+      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-warning-accent text-white">
         <AlertTriangle className="h-4 w-4" />
       </span>
     )

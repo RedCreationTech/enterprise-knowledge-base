@@ -505,7 +505,7 @@ export default function InviteTeam() {
 
           {/* 发送失败批量重试提示条（仅本会话实际发送后出现） */}
           {sentThisSession && failedCount > 0 && (
-            <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-warning/30 bg-warning-bg px-4 py-2.5">
+            <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-warning-accent/30 bg-warning-bg px-4 py-2.5">
               <p className="flex items-center gap-2 text-body-sm text-neutral-800">
                 <AlertTriangle className="h-4 w-4 shrink-0 text-warning" />
                 {failedCount} 名成员邀请发送失败，可在表格中逐条重试，或一键全部重试。
@@ -514,7 +514,7 @@ export default function InviteTeam() {
                 type="button"
                 onClick={retryAllFailed}
                 disabled={resendingId !== null}
-                className="inline-flex h-8 shrink-0 items-center gap-1.5 rounded-md bg-warning px-3 text-body-sm font-medium text-white transition-colors duration-micro ease-brand hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-60"
+                className="inline-flex h-8 shrink-0 items-center gap-1.5 rounded-md bg-warning-accent px-3 text-body-sm font-medium text-white transition-colors duration-micro ease-brand hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 <RefreshCw className={cn('h-3.5 w-3.5', resendingId === '__all__' && 'animate-spin')} />
                 {resendingId === '__all__' ? '正在全部重试…' : '全部重试'}
@@ -524,7 +524,7 @@ export default function InviteTeam() {
 
           {/* 席位超限预警条（P1-3）：名单区顶部 */}
           {overLimit && (
-            <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-warning/30 bg-warning-bg px-4 py-2.5">
+            <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-warning-accent/30 bg-warning-bg px-4 py-2.5">
               <p className="flex items-center gap-2 text-body-sm text-neutral-800">
                 <AlertTriangle className="h-4 w-4 shrink-0 text-warning" />
                 已选 {selectedCount} 人，超出试用席位 {overBy} 人（试用席位 {TRIAL_SEAT_LIMIT}，已激活 {ACTIVATED_MEMBERS}）。请减少邀请人数，或升级套餐扩容。
@@ -532,7 +532,7 @@ export default function InviteTeam() {
               <button
                 type="button"
                 onClick={() => navigate('/workspace/settings')}
-                className="inline-flex h-8 shrink-0 items-center rounded-md border border-warning/60 bg-white px-3 text-body-sm font-medium text-warning transition-colors duration-micro ease-brand hover:bg-warning-bg"
+                className="inline-flex h-8 shrink-0 items-center rounded-md border border-warning-accent/60 bg-white px-3 text-body-sm font-medium text-warning transition-colors duration-micro ease-brand hover:bg-warning-bg"
               >
                 升级套餐
               </button>

@@ -747,7 +747,7 @@ export default function Instructions() {
             actions={
               dirty ? (
                 <span className="inline-flex items-center gap-1.5 text-caption font-medium text-warning">
-                  <span className="h-1.5 w-1.5 rounded-full bg-warning" />
+                  <span className="h-1.5 w-1.5 rounded-full bg-warning-accent" />
                   有未保存修改
                 </span>
               ) : undefined
@@ -1014,7 +1014,7 @@ export default function Instructions() {
                     initial={{ opacity: 0, y: 8 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.18 }}
-                    className="rounded-lg border border-warning/30 bg-warning-bg p-3.5"
+                    className="rounded-lg border border-warning-accent/30 bg-warning-bg p-3.5"
                   >
                     <p className="text-body-sm font-semibold text-neutral-950">{previewRefusal.reason}</p>
                     <p className="mt-2 text-body-sm text-neutral-700">
