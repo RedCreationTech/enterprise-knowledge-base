@@ -30,6 +30,10 @@ export const KEY_NAMESPACE = {
   trialApply: {
     draft: `${LS_PREFIX}trial-apply-draft`,
   },
+  knowledge: {
+    /** 知识空间单一事实源：KnowledgeSpaces 与 KnowledgeBase 共用（刷新/重启不丢） */
+    spaces: `${LS_PREFIX}spaces`,
+  },
 } as const
 
 /** 读取并 JSON.parse；key 不存在或解析失败/损坏时返回 fallback */

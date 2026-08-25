@@ -5,7 +5,7 @@
  * + UploadDrawer 上传队列状态机（「开始理解」后 READY 文档真实入表）+ DocDetailDrawer 文档详情 + 空状态。
  */
 import { useMemo, useState } from 'react'
-import { useNavigate } from 'react-router'
+import { useNavigate, useSearchParams } from 'react-router'
 import { motion } from 'framer-motion'
 import {
   ChevronDown,
@@ -31,10 +31,12 @@ import { PageHeader } from '@/pages/workspace/PageHeader'
 import { Modal } from '@/pages/workspace/Modal'
 import { SideDrawer } from '@/pages/workspace/SideDrawer'
 import { useAppToast } from '@/lib/toast'
+import { KEY_NAMESPACE, loadLSArray } from '@/lib/storage'
 import { UploadDrawer } from '@/pages/workspace/UploadDrawer'
 import { DocDetailDrawer } from '@/pages/workspace/DocDetailDrawer'
 import { DOC_CATEGORIES, DOC_STATUSES, DOC_TYPES, SPACES as KB_SPACES, makeFullDocuments } from '@/pages/workspace/kbData'
 import type { DocRow, SpaceRow } from '@/pages/workspace/kbData'
+import { isSpace, spaceItemToSpaceRow } from '@/pages/workspace/spacesData'
 
 const TYPE_ICON_CLS: Record<DocRow['type'], string> = {
   PDF: 'bg-danger-bg text-danger',
@@ -53,6 +55,14 @@ const IMPORT_HISTORY = [
 
 const REVIEW_CYCLE_OPTIONS = [30, 60, 90, 180, 365] as const
 const PAGE_SIZE = 10
+
+const SPACES_KEY = KEY_NAMESPACE.knowledge.spaces
+
+/** 从与 KnowledgeSpaces 相同的 localStorage 事实源读取空间树（无历史数据回退 kbData 种子） */
+function loadSpaces(): SpaceRow[] {
+  const loaded = loadLSArray(SPACES_KEY, isSpace)
+  return loaded.length > 0 ? loaded.map(spaceItemToSpaceRow) : KB_SPACES
+}
 
 /** 「开始理解」后插入表格的 READY 文档命名池（与上传队列 mock 对齐） */
 const INGEST_POOL: { name: string; type: DocRow['type']; size: string }[] = [
@@ -117,11 +127,18 @@ export default function KnowledgeBase() {
   const toast = useAppToast()
   const navigate = useNavigate()
   const { state } = useAppStore()
+  const [searchParams] = useSearchParams()
   // 冷启动空态：未载入演示数据时展示引导空态（评审 P1-N1）
   const demoOff = state.demoData === false
   const [docs, setDocs] = useState<DocRow[]>(makeFullDocuments)
-  const [spaces, setSpaces] = useState<SpaceRow[]>(KB_SPACES)
-  const [activeSpace, setActiveSpace] = useState(KB_SPACES[0].name)
+  // 与 KnowledgeSpaces 共用同一 localStorage 事实源（新建空间在树中即时可见）
+  const [spaces, setSpaces] = useState<SpaceRow[]>(loadSpaces)
+  // 从「上传资料到此空间」跳转携带 ?space= 目标空间；缺失/无效时回退默认伞空间
+  const [activeSpace, setActiveSpace] = useState(() => {
+    const spaceParam = searchParams.get('space')
+    const umbrella = spaces[0]?.name ?? KB_SPACES[0].name
+    return spaceParam && spaces.some((s) => s.name === spaceParam) ? spaceParam : umbrella
+  })
   const [search, setSearch] = useState('')
   const [typeFilter, setTypeFilter] = useState<(typeof DOC_TYPES)[number]>('全部')
   const [statusFilter, setStatusFilter] = useState<(typeof DOC_STATUSES)[number]>('全部')
@@ -346,6 +363,7 @@ export default function KnowledgeBase() {
       )
       return
     }
+    // 目标空间 = 当前 activeSpace（由「上传资料到此空间」?space= 初始化），非默认伞空间
     const target = activeSpace
     setDocs((prev) => {
       const added: DocRow[] = []

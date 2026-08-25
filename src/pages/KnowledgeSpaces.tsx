@@ -5,7 +5,7 @@
  * 空间管理 Drawer（基本信息 / 成员管理 / 空间文档 / 危险区：归档 L3 · 删除 L4）；草稿空间发布 L2；
  * 策略编辑 Modal；空间内问答 Modal；空间分析 Drawer（recharts）；空间健康报告 Drawer + .md 下载。
  */
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router'
 import { AnimatePresence, motion } from 'framer-motion'
 import {
@@ -39,9 +39,11 @@ import { PageHeader } from '@/pages/workspace/PageHeader'
 import { Modal } from '@/pages/workspace/Modal'
 import { SideDrawer } from '@/pages/workspace/SideDrawer'
 import { useAppToast } from '@/lib/toast'
+import { KEY_NAMESPACE, loadLSArray, saveLS } from '@/lib/storage'
 import { ANSWER_POOL, useAppStore } from '@/mocks'
 import {
   EXPIRE_HANDLING_OPTIONS,
+  isSpace,
   MEMBER_ROLE_OPTIONS,
   OWNER_OPTIONS,
   SPACES,
@@ -105,13 +107,21 @@ function switchCls(on: boolean) {
   return cn('relative h-6 w-11 shrink-0 rounded-full transition-colors duration-comp ease-brand', on ? 'bg-brand-600' : 'bg-neutral-300')
 }
 
+const SPACES_KEY = KEY_NAMESPACE.knowledge.spaces
+
+/** 读取持久化空间：有历史数据用历史数据，否则回退 kbData 派生种子 */
+function loadSpaces(): SpaceItem[] {
+  const loaded = loadLSArray<SpaceItem>(SPACES_KEY, isSpace)
+  return loaded.length > 0 ? loaded : SPACES
+}
+
 export default function KnowledgeSpaces() {
   const toast = useAppToast()
   const navigate = useNavigate()
   const { state } = useAppStore()
   // 冷启动空态：未载入演示数据时展示引导空态（评审 P1-N1）
   const demoOff = state.demoData === false
-  const [spaces, setSpaces] = useState<SpaceItem[]>(SPACES)
+  const [spaces, setSpaces] = useState<SpaceItem[]>(loadSpaces)
   const [conflicts, setConflicts] = useState<SpaceConflict[]>(SPACE_CONFLICTS)
   const [selectedId, setSelectedId] = useState(SPACES[0].id)
   const [wizardOpen, setWizardOpen] = useState(false)
@@ -159,6 +169,12 @@ export default function KnowledgeSpaces() {
   const [formValidity, setFormValidity] = useState(180)
   const [formOwner, setFormOwner] = useState(OWNER_OPTIONS[0])
   const [formAiUse, setFormAiUse] = useState(true)
+
+  // 空间 CRUD 持久化：新建/重命名/成员/归档/删除等任一变更回写 localStorage（与 KnowledgeBase 同源）
+  useEffect(() => {
+    if (demoOff) return
+    saveLS(SPACES_KEY, spaces)
+  }, [spaces, demoOff])
 
   const openConflicts = conflicts.filter((c) => c.status === 'open')
   const visibleSpaces = useMemo(() => spaces.filter((s) => s.status !== 'ARCHIVED'), [spaces])
@@ -265,8 +281,8 @@ export default function KnowledgeSpaces() {
   }
 
   const goUploadToSpace = (spaceName: string) => {
-    navigate('/workspace/knowledge-base')
-    toast.info(`已切换到知识库，请在「${spaceName}」空间筛选下点击「上传资料」`)
+    navigate(`/workspace/knowledge-base?space=${encodeURIComponent(spaceName)}`)
+    toast.info(`已切换到知识库「${spaceName}」空间，上传的资料将归入该空间`)
   }
 
   const askQuestion = () => {
@@ -1130,7 +1146,7 @@ export default function KnowledgeSpaces() {
             <div className="grid grid-cols-2 gap-3">
               {[
                 { doc: '《差旅报销标准》', space: '制度与流程', rows: [['高铁二等座上限', '600 元'], ['住宿（一线城市）', '500 元/晚'], ['更新于', '2024-04-18']] },
-                { doc: '《费用管理制度》', space: '全部知识', rows: [['高铁二等座上限', '550 元'], ['住宿（一线城市）', '450 元/晚'], ['更新于', '2023-12-05']] },
+                { doc: '《费用管理制度》', space: '默认空间（全部知识）', rows: [['高铁二等座上限', '550 元'], ['住宿（一线城市）', '450 元/晚'], ['更新于', '2023-12-05']] },
               ].map((v) => (
                 <div key={v.doc} className="rounded-lg border border-neutral-200 p-4">
                   <p className="text-body font-semibold text-neutral-950">{v.doc}</p>

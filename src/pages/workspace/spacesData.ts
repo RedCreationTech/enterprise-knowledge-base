@@ -1,7 +1,10 @@
 /**
  * 知识空间页面模拟数据（spaces.md §5 / design.md V1.1-§10）
  * 状态枚举沿用 KnowledgeSpace 生命周期（DRAFT / PUBLISHED），展示文案在本文件内映射。
+ * 空间列表以 kbData.SPACES 为单一事实源派生（名称/文档计数唯一来源），此处仅补充页面级展示元数据。
  */
+import { SPACES as KB_SPACES } from './kbData'
+import type { SpaceRow } from './kbData'
 
 export type SpaceStatus = 'PUBLISHED' | 'DRAFT' | 'ARCHIVED'
 
@@ -35,15 +38,14 @@ export interface SpaceItem {
   draftNote?: string
 }
 
-export const SPACES: SpaceItem[] = [
-  {
+/** 页面级展示元数据（不含 name/docs，二者由 kbData.SPACES 单一事实源派生） */
+const SPACE_META: Record<string, Omit<SpaceItem, 'name' | 'docs'>> = {
+  '默认空间（全部知识）': {
     id: 'all',
-    name: '全部知识',
     icon: 'globe',
     status: 'PUBLISHED',
     isDefault: true,
     desc: '全员可见的企业知识总集，新员工默认加入',
-    docs: 128,
     questions: 156,
     members: 12,
     owner: '张伟',
@@ -58,13 +60,11 @@ export const SPACES: SpaceItem[] = [
       { name: '其余 9 人', role: '可问答', joinedAt: '—', aggregate: true },
     ],
   },
-  {
+  '制度与流程': {
     id: 'policy',
-    name: '制度与流程',
     icon: 'clipboard',
     status: 'PUBLISHED',
     desc: '人事、财务、行政与审批制度',
-    docs: 34,
     questions: 42,
     members: 12,
     owner: '李娜',
@@ -79,13 +79,11 @@ export const SPACES: SpaceItem[] = [
       { name: '其余 10 人', role: '可问答', joinedAt: '—', aggregate: true },
     ],
   },
-  {
+  '产品资料': {
     id: 'product',
-    name: '产品资料',
     icon: 'package',
     status: 'PUBLISHED',
     desc: '产品介绍、版本说明、使用指南',
-    docs: 32,
     questions: 38,
     members: 9,
     owner: '王强',
@@ -100,13 +98,11 @@ export const SPACES: SpaceItem[] = [
       { name: '其余 7 人', role: '可问答', joinedAt: '—', aggregate: true },
     ],
   },
-  {
+  '销售弹药库': {
     id: 'sales',
-    name: '销售弹药库',
     icon: 'briefcase',
     status: 'PUBLISHED',
     desc: '报价政策、客户案例、异议应对',
-    docs: 28,
     questions: 31,
     members: 8,
     owner: '赵敏',
@@ -121,13 +117,11 @@ export const SPACES: SpaceItem[] = [
       { name: '其余 6 人', role: '可问答', joinedAt: '—', aggregate: true },
     ],
   },
-  {
+  'IT·SOP': {
     id: 'it-sop',
-    name: 'IT·SOP',
     icon: 'wrench',
     status: 'DRAFT',
     desc: '系统使用与故障处理手册（建设中）',
-    docs: 12,
     questions: 15,
     members: 5,
     owner: '陈晨',
@@ -143,7 +137,56 @@ export const SPACES: SpaceItem[] = [
     ],
     draftNote: '草稿空间：内容暂不进入 AI 助手引用范围，发布后自动生效。',
   },
-]
+}
+
+/** 空间单一事实源：名称与文档计数完全来自 kbData.SPACES，此处仅叠加页面展示元数据 */
+export const SPACES: SpaceItem[] = KB_SPACES.map((row) => ({
+  ...SPACE_META[row.name],
+  name: row.name,
+  docs: row.count,
+}))
+
+/** localStorage 元素级校验（loadLSArray 用）：剔除损坏/非空间条目 */
+export function isSpace(x: unknown): x is SpaceItem {
+  if (typeof x !== 'object' || x === null) return false
+  const s = x as Record<string, unknown>
+  return (
+    typeof s.id === 'string' &&
+    typeof s.name === 'string' &&
+    typeof s.icon === 'string' &&
+    (s.status === 'PUBLISHED' || s.status === 'DRAFT' || s.status === 'ARCHIVED') &&
+    typeof s.desc === 'string' &&
+    typeof s.docs === 'number' &&
+    typeof s.questions === 'number' &&
+    typeof s.members === 'number' &&
+    typeof s.owner === 'string' &&
+    typeof s.ownerAvatar === 'string' &&
+    typeof s.updatedAt === 'string' &&
+    typeof s.scope === 'string' &&
+    typeof s.createdAt === 'string' &&
+    typeof s.policy === 'object' &&
+    s.policy !== null &&
+    Array.isArray(s.memberRows)
+  )
+}
+
+function parseCycleDays(cycle: string): number {
+  const m = cycle.match(/(\d+)\s*天/)
+  return m ? Number(m[1]) : 180
+}
+
+/** 将 KnowledgeSpaces 的 SpaceItem 映射为 KnowledgeBase 空间树所需 SpaceRow（健康态优先沿用 kbData 权威值） */
+export function spaceItemToSpaceRow(s: SpaceItem): SpaceRow {
+  const canonical = KB_SPACES.find((c) => c.name === s.name)
+  return {
+    name: s.name,
+    count: s.docs,
+    health: canonical?.health ?? '健康',
+    reviewCount: canonical?.reviewCount,
+    reviewCycle: canonical?.reviewCycle ?? parseCycleDays(s.policy.cycle),
+    archived: s.status === 'ARCHIVED',
+  }
+}
 
 export type ConflictPriority = '高' | '中'
 export type ConflictStatus = 'open' | 'resolved'
@@ -172,7 +215,7 @@ export const SPACE_CONFLICTS: SpaceConflict[] = [
     id: 'c2',
     title: '《差旅报销标准》与《费用管理制度》金额不一致',
     detail: '涉及 2 个空间 · 高铁二等座上限 600 元 vs 550 元',
-    spaces: ['制度与流程', '全部知识'],
+    spaces: ['制度与流程', '默认空间（全部知识）'],
     priority: '中',
     status: 'open',
   },
@@ -362,7 +405,7 @@ export const SPACE_HEALTH: SpaceHealth[] = [
   {
     id: 'policy',
     score: 74,
-    issues: ['《差旅费用报销管理办法》已过复审期', '与「全部知识」存在 1 处金额口径冲突'],
+    issues: ['《差旅费用报销管理办法》已过复审期', '与「默认空间（全部知识）」存在 1 处金额口径冲突'],
     suggestions: ['尽快完成差旅制度复审', '确认报销金额权威口径后同步两个空间'],
   },
   {

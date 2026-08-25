@@ -1,7 +1,9 @@
 /**
  * 权限管理页数据（design/permissions.md §5 + design.md V1.1-§10）
  * 成员 6 核心 + 6 折叠；身份映射 400/402 与 integrations 页同源。
+ * 空间名称单一事实源来自 kbData.SPACES（ALL_SPACES 由此派生）。
  */
+import { SPACES as KB_SPACES } from './kbData'
 
 export interface PermissionLayer {
   icon: string
@@ -35,8 +37,8 @@ export interface Member {
 }
 
 export const coreMembers: Member[] = [
-  { id: 'm-zw', name: '张伟', dept: '总经办', role: '管理员', spaces: '全部 5 个空间', spaceList: ['全部知识', '制度与流程', '产品资料', '销售弹药库', 'IT·SOP'], mapping: 'ok', mappingLabel: '✅ 飞书·企微', lastActive: '今天 10:26', core: true },
-  { id: 'm-ln', name: '李娜', dept: '知识运营', role: '知识管理员', spaces: '全部空间（可编辑）', spaceList: ['全部知识', '制度与流程', '产品资料', '销售弹药库', 'IT·SOP'], mapping: 'ok', mappingLabel: '✅ 飞书', lastActive: '今天 09:52', core: true },
+  { id: 'm-zw', name: '张伟', dept: '总经办', role: '管理员', spaces: '全部 5 个空间', spaceList: ['默认空间（全部知识）', '制度与流程', '产品资料', '销售弹药库', 'IT·SOP'], mapping: 'ok', mappingLabel: '✅ 飞书·企微', lastActive: '今天 10:26', core: true },
+  { id: 'm-ln', name: '李娜', dept: '知识运营', role: '知识管理员', spaces: '全部空间（可编辑）', spaceList: ['默认空间（全部知识）', '制度与流程', '产品资料', '销售弹药库', 'IT·SOP'], mapping: 'ok', mappingLabel: '✅ 飞书', lastActive: '今天 09:52', core: true },
   { id: 'm-wq', name: '王强', dept: '产品部', role: '空间管理员', spaces: '产品资料 · IT·SOP', spaceList: ['产品资料', 'IT·SOP'], mapping: 'ok', mappingLabel: '✅ 企微', lastActive: '昨天 17:36', core: true },
   { id: 'm-zm', name: '赵敏', dept: '销售部', role: '文档审核员', spaces: '销售弹药库 · 制度与流程', spaceList: ['销售弹药库', '制度与流程'], mapping: 'ok', mappingLabel: '✅ 飞书', lastActive: '今天 08:44', core: true },
   { id: 'm-cc', name: '陈可', dept: 'IT 部', role: '助手运营员', spaces: 'IT·SOP · 产品资料', spaceList: ['IT·SOP', '产品资料'], mapping: 'warning', mappingLabel: '⚠ 飞书未映射', lastActive: '昨天 16:02', core: true },
@@ -48,7 +50,7 @@ export const foldedMembers: Member[] = [
   { id: 'm-s2', name: '周杰', dept: '售前部', role: '普通成员', spaces: '产品资料 · 销售弹药库', spaceList: ['产品资料', '销售弹药库'], mapping: 'ok', mappingLabel: '✅ 企微', lastActive: '昨天 15:44', core: false },
   { id: 'm-s3', name: '吴芳', dept: '客服部', role: '普通成员', spaces: '制度与流程', spaceList: ['制度与流程'], mapping: 'ok', mappingLabel: '✅ 飞书', lastActive: '今天 08:02', core: false },
   { id: 'm-s4', name: '郑浩', dept: '产品部', role: '普通成员', spaces: '产品资料', spaceList: ['产品资料'], mapping: 'ok', mappingLabel: '✅ 企微', lastActive: '05-27 18:20', core: false },
-  { id: 'm-s5', name: '冯雪', dept: '市场部', role: '普通成员', spaces: '全部知识（可问答）', spaceList: ['全部知识'], mapping: 'ok', mappingLabel: '✅ 飞书', lastActive: '昨天 11:36', core: false },
+  { id: 'm-s5', name: '冯雪', dept: '市场部', role: '普通成员', spaces: '全部知识（可问答）', spaceList: ['默认空间（全部知识）'], mapping: 'ok', mappingLabel: '✅ 飞书', lastActive: '昨天 11:36', core: false },
   { id: 'm-s6', name: '何斌', dept: 'IT 部', role: '普通成员', spaces: 'IT·SOP', spaceList: ['IT·SOP'], mapping: 'ok', mappingLabel: '✅ 企微', lastActive: '05-26 14:05', core: false },
 ]
 
@@ -167,7 +169,7 @@ export const initialAuditLogs: AuditLog[] = [
   { id: 'a7', time: '05-18 10:15', daysAgo: 14, operator: '张伟', action: '邀请成员', target: '何斌（IT 部）', result: '已生效', resultTone: 'success', type: '成员' },
 ]
 
-export const ALL_SPACES = ['全部知识', '制度与流程', '产品资料', '销售弹药库', 'IT·SOP'] as const
+export const ALL_SPACES: string[] = KB_SPACES.map((s) => s.name)
 export const ALL_ROLES: CoreRole[] = ['管理员', '知识管理员', '空间管理员', '文档审核员', '助手运营员', '普通成员']
 
 /** 五层权限配置 Drawer：按 permissionLayers 下标 0..4 对应 L1..L5 */
@@ -200,7 +202,7 @@ export interface LayerConfig {
 }
 
 export const initialLayerConfig: LayerConfig = {
-  spaceVisibility: { 全部知识: true, 制度与流程: true, 产品资料: true, 销售弹药库: false, 'IT·SOP': true },
+  spaceVisibility: { '默认空间（全部知识）': true, 制度与流程: true, 产品资料: true, 销售弹药库: false, 'IT·SOP': true },
   defaultRole: '普通成员',
   docSecLabels: { 公开: true, 内部: true, 机密: true, 绝密: false },
   fieldMasking: { 手机号: true, 身份证号: true, 银行卡号: false, 薪资字段: true },
