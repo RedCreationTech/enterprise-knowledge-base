@@ -10,6 +10,7 @@ import {
   AppWindow,
   BookOpen,
   Check,
+  ChevronRight,
   Code2,
   Copy,
   Eye,
@@ -349,12 +350,34 @@ export default function ApiDev() {
 
   return (
     <div>
-      <PageHeader
-        crumbs={['应用与集成', 'API 与开发']}
-        title="API 与开发"
-        subtitle={`${activeKeys.length} 个 API Key · 本月调用 ${apiUsage.month.toLocaleString()} 次 · ${subscribedCount} 个 Webhook 已订阅`}
-        actions={
-          <>
+      {/* 顶部单行横幅：标题(左) + 紧凑统计 & 操作(右) */}
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <div className="min-w-0">
+          <nav className="mb-1 flex h-8 items-center gap-1 text-body-sm text-neutral-500">
+            应用与集成
+            <ChevronRight className="h-3.5 w-3.5 text-neutral-300" />
+            <span className="font-medium text-neutral-950">API 与开发</span>
+          </nav>
+          <h1 className="text-h1 text-neutral-950">API 与开发</h1>
+        </div>
+        <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
+          {[
+            { icon: <KeyRound className="h-4 w-4" />, name: 'API Key', value: activeKeys.length, suffix: '个' },
+            { icon: <Gauge className="h-4 w-4" />, name: '本月调用', value: apiUsage.month.toLocaleString(), suffix: '次' },
+            { icon: <Webhook className="h-4 w-4" />, name: 'Webhook', value: subscribedCount, suffix: '个' },
+          ].map((m) => (
+            <div key={m.name} className="flex items-center gap-2">
+              {m.icon}
+              <div className="leading-tight">
+                <p className="text-metric text-neutral-950">
+                  {m.value}
+                  <span className="text-body-sm text-neutral-500">{m.suffix}</span>
+                </p>
+                <p className="text-caption text-neutral-500">{m.name}</p>
+              </div>
+            </div>
+          ))}
+          <div className="flex items-center gap-2">
             <button
               type="button"
               onClick={() => setDocOpen(true)}
@@ -371,9 +394,9 @@ export default function ApiDev() {
               <Plus className="h-4 w-4" />
               创建 API Key
             </button>
-          </>
-        }
-      />
+          </div>
+        </div>
+      </div>
 
       {/* Row 1：左 8（Key 表 + Webhook）｜ 右 4（用量 + 快速开始） */}
       <div className="grid grid-cols-12 gap-4">

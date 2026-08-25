@@ -32,7 +32,6 @@ import { QuickChips } from '@/components/chat/QuickChips'
 import { StatusBadge } from '@/components/common/StatusBadge'
 import { Modal } from './workspace/Modal'
 import { SideDrawer } from './workspace/SideDrawer'
-import { PageHeader } from './workspace/PageHeader'
 import { CitationDrawer } from './workspace/CitationDrawer'
 import { NoAnswerCard } from './workspace/NoAnswerCard'
 import { AssistantConfigDrawer } from './workspace/AssistantConfigDrawer'
@@ -427,15 +426,30 @@ export default function AiAssistant() {
 
   return (
     <div className="flex h-[calc(100dvh-64px-48px)] min-h-[520px] flex-col">
-      {/* 标题区 */}
-      <PageHeader
-        crumbs={[]}
-        title="AI 助手"
-        subtitle={
-          demoOff ? '2 个业务助手 · 完成配置后开始真实问答' : `2 个业务助手 · 本周 ${METRICS.questions7d} 次问答 · 认可率 ${METRICS.approvalRate}%`
-        }
-        actions={
-          <div className="flex shrink-0 items-center gap-2">
+      {/* 顶部单行横幅：标题(左) + 紧凑统计 & 操作(右) */}
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <div className="min-w-0">
+          <h1 className="text-h1 text-neutral-950">AI 助手</h1>
+        </div>
+        <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
+          {!demoOff &&
+            [
+              { icon: <Bot className="h-4 w-4" />, name: '业务助手', value: 2, suffix: '个' },
+              { icon: <SendHorizontal className="h-4 w-4" />, name: '本周问答', value: METRICS.questions7d, suffix: '次' },
+              { icon: <CheckCheck className="h-4 w-4" />, name: '认可率', value: METRICS.approvalRate, suffix: '%' },
+            ].map((m) => (
+              <div key={m.name} className="flex items-center gap-2">
+                {m.icon}
+                <div className="leading-tight">
+                  <p className="text-metric text-neutral-950">
+                    {m.value}
+                    <span className="text-body-sm text-neutral-500">{m.suffix}</span>
+                  </p>
+                  <p className="text-caption text-neutral-500">{m.name}</p>
+                </div>
+              </div>
+            ))}
+          <div className="flex items-center gap-2">
             <button
               type="button"
               onClick={() => setLeftTab((t) => (t === 'history' ? 'assistants' : 'history'))}
@@ -458,8 +472,8 @@ export default function AiAssistant() {
               评测中心
             </button>
           </div>
-        }
-      />
+        </div>
+      </div>
 
       <div className="flex min-h-0 flex-1 gap-4">
         {/* 左栏：助手 / 历史 */}

@@ -7,6 +7,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { motion } from 'framer-motion'
 import {
   Check,
+  ChevronRight,
   Download,
   Eye,
   Grid3X3,
@@ -401,12 +402,34 @@ export default function Permissions() {
 
   return (
     <div>
-      <PageHeader
-        crumbs={['运营与分析', '权限管理']}
-        title="权限管理"
-        subtitle={`12 名成员 · 6 名核心角色 · 身份映射 ${mappedCount}/402 · 权限策略：按组织架构 + 空间权限同步`}
-        actions={
-          <>
+      {/* 顶部单行横幅：标题(左) + 紧凑统计 & 操作(右) */}
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <div className="min-w-0">
+          <nav className="mb-1 flex h-8 items-center gap-1 text-body-sm text-neutral-500">
+            运营与分析
+            <ChevronRight className="h-3.5 w-3.5 text-neutral-300" />
+            <span className="font-medium text-neutral-950">权限管理</span>
+          </nav>
+          <h1 className="text-h1 text-neutral-950">权限管理</h1>
+        </div>
+        <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
+          {[
+            { icon: <Users className="h-4 w-4" />, name: '成员', value: 12, suffix: '人' },
+            { icon: <Grid3X3 className="h-4 w-4" />, name: '核心角色', value: 6, suffix: '个' },
+            { icon: <UserPlus className="h-4 w-4" />, name: '身份映射', value: mappedCount, suffix: '/402' },
+          ].map((m) => (
+            <div key={m.name} className="flex items-center gap-2">
+              {m.icon}
+              <div className="leading-tight">
+                <p className="text-metric text-neutral-950">
+                  {m.value}
+                  <span className="text-body-sm text-neutral-500">{m.suffix}</span>
+                </p>
+                <p className="text-caption text-neutral-500">{m.name}</p>
+              </div>
+            </div>
+          ))}
+          <div className="flex items-center gap-2">
             <button
               type="button"
               onClick={exportPermissionReport}
@@ -423,9 +446,9 @@ export default function Permissions() {
               <Plus className="h-4 w-4" />
               邀请成员
             </button>
-          </>
-        }
-      />
+          </div>
+        </div>
+      </div>
 
       {/* Row 1：五层权限总览 */}
       <SectionCard title="五层权限模型" icon={<Lock className="h-5 w-5" />}>

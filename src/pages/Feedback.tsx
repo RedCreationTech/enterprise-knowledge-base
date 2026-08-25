@@ -31,7 +31,6 @@ import { ConfirmationCard } from '@/components/common/ConfirmationCard'
 import { AnswerCard } from '@/components/common/AnswerCard'
 import { Modal } from './workspace/Modal'
 import { SideDrawer } from './workspace/SideDrawer'
-import { PageHeader } from './workspace/PageHeader'
 import { useAppToast } from '@/lib/toast'
 import type { IssueType, KnowledgeIssueItem, UserFeedbackItem } from './workspace/feedback.mock'
 import {
@@ -306,16 +305,31 @@ export default function Feedback() {
 
   return (
     <div className="space-y-4">
-      {/* 标题区 */}
-      <PageHeader
-        crumbs={[]}
-        title="反馈与洞察"
-        subtitle={
-          demoOff
-            ? '完成快速配置或载入演示数据后，这里会展示真实的反馈与洞察'
-            : `${issueTotal} 个知识问题待处理 · ${feedbackTotal} 条用户反馈待审核 · 本周已闭环 ${closureStats.closed} 项`
-        }
-      />
+      {/* 顶部单行横幅：标题(左) + 紧凑统计(右) */}
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <div className="min-w-0">
+          <h1 className="text-h1 text-neutral-950">反馈与洞察</h1>
+        </div>
+        <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
+          {!demoOff &&
+            [
+              { icon: <FileWarning className="h-4 w-4" />, name: '知识问题', value: issueTotal, suffix: '个' },
+              { icon: <ThumbsUp className="h-4 w-4" />, name: '用户反馈', value: feedbackTotal, suffix: '条' },
+              { icon: <CheckCircle2 className="h-4 w-4" />, name: '本周闭环', value: closureStats.closed, suffix: '项' },
+            ].map((m) => (
+              <div key={m.name} className="flex items-center gap-2">
+                {m.icon}
+                <div className="leading-tight">
+                  <p className="text-metric text-neutral-950">
+                    {m.value}
+                    <span className="text-body-sm text-neutral-500">{m.suffix}</span>
+                  </p>
+                  <p className="text-caption text-neutral-500">{m.name}</p>
+                </div>
+              </div>
+            ))}
+        </div>
+      </div>
 
       {/* 空态起点：队列与分布区替换为空态卡 */}
       {demoOff ? (

@@ -8,6 +8,7 @@ import { AnimatePresence, motion } from 'framer-motion'
 import {
   Bot,
   Check,
+  ChevronRight,
   Copy,
   FileText,
   History,
@@ -497,12 +498,34 @@ export default function Instructions() {
 
   return (
     <div>
-      <PageHeader
-        crumbs={['智能助手', '指令管理']}
-        title="指令管理"
-        subtitle="4 个系统预置模板 · 3 个自定义指令 · 当前 2 个助手正在使用"
-        actions={
-          <>
+      {/* 顶部单行横幅：标题(左) + 紧凑统计 & 操作(右) */}
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <div className="min-w-0">
+          <nav className="mb-1 flex h-8 items-center gap-1 text-body-sm text-neutral-500">
+            智能助手
+            <ChevronRight className="h-3.5 w-3.5 text-neutral-300" />
+            <span className="font-medium text-neutral-950">指令管理</span>
+          </nav>
+          <h1 className="text-h1 text-neutral-950">指令管理</h1>
+        </div>
+        <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
+          {[
+            { icon: <FileText className="h-4 w-4" />, name: '系统预置模板', value: 4, suffix: '个' },
+            { icon: <Pencil className="h-4 w-4" />, name: '自定义指令', value: 3, suffix: '个' },
+            { icon: <Bot className="h-4 w-4" />, name: '使用中助手', value: 2, suffix: '个' },
+          ].map((m) => (
+            <div key={m.name} className="flex items-center gap-2">
+              {m.icon}
+              <div className="leading-tight">
+                <p className="text-metric text-neutral-950">
+                  {m.value}
+                  <span className="text-body-sm text-neutral-500">{m.suffix}</span>
+                </p>
+                <p className="text-caption text-neutral-500">{m.name}</p>
+              </div>
+            </div>
+          ))}
+          <div className="flex items-center gap-2">
             <button
               type="button"
               onClick={() => setShowVersions(true)}
@@ -519,9 +542,9 @@ export default function Instructions() {
               <Plus className="h-4 w-4" />
               新建自定义指令
             </button>
-          </>
-        }
-      />
+          </div>
+        </div>
+      </div>
 
       {/* Row 1：系统预置模板（4 张横向卡） */}
       <div className="grid grid-cols-2 gap-4 xl:grid-cols-4">

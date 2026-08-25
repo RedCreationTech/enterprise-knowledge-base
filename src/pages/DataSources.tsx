@@ -9,6 +9,7 @@ import { AnimatePresence, motion } from 'framer-motion'
 import {
   BookLock,
   ChevronDown,
+  ChevronRight,
   FileCode2,
   Globe,
   HardDrive,
@@ -23,7 +24,7 @@ import {
 import type { LucideIcon } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useNavigate } from 'react-router'
-import { DemoEmptyState, ConfirmationCard, MetricCard, ProgressBar, StatusBadge } from '@/components/common'
+import { DemoEmptyState, ConfirmationCard, ProgressBar, StatusBadge } from '@/components/common'
 import { PageHeader } from '@/pages/workspace/PageHeader'
 import { Modal } from '@/pages/workspace/Modal'
 import { SideDrawer } from '@/pages/workspace/SideDrawer'
@@ -337,12 +338,35 @@ export default function DataSources() {
 
   return (
     <div>
-      <PageHeader
-        crumbs={['知识', '数据来源']}
-        title="数据来源"
-        subtitle={`${connectedCount} 个连接器已接入 · 连接器文档共 ${METRICS.connectedDocs.total.toLocaleString('en-US')} 份 · 本地上传 ${METRICS.connectedDocs.localUpload} 份 · 最近同步 今天 10:20`}
-        actions={
-          <>
+      {/* 顶部单行横幅：标题(左) + 紧凑统计 & 操作(右)，去掉副标题重复数字（§5.6） */}
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <div className="min-w-0">
+          <nav className="mb-1 flex h-8 items-center gap-1 text-body-sm text-neutral-500">
+            知识
+            <ChevronRight className="h-3.5 w-3.5 text-neutral-300" />
+            <span className="font-medium text-neutral-950">数据来源</span>
+          </nav>
+          <h1 className="text-h1 text-neutral-950">数据来源</h1>
+        </div>
+        <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
+          {[
+            { icon: <Plug className="h-4 w-4" />, name: '已连接来源', value: `${connectedCount} / 4`, suffix: '', hint: '企业网盘 · 飞书文档' },
+            { icon: <HardDrive className="h-4 w-4" />, name: '连接器文档', value: METRICS.connectedDocs.total.toLocaleString('en-US'), suffix: '份', hint: `网盘 ${METRICS.connectedDocs.netdisk} + 飞书 ${METRICS.connectedDocs.feishu} + 本地上传 ${METRICS.connectedDocs.localUpload}` },
+            { icon: <RotateCcw className="h-4 w-4" />, name: '今日同步', value: `${successToday} 次成功`, suffix: '', hint: failedCount > 0 ? `${failedCount} 次失败待重试` : '今日同步全部成功' },
+            { icon: <ShieldCheck className="h-4 w-4" />, name: 'ACL 覆盖率', value: '94', suffix: '%', hint: '企业网盘 94% · 飞书文档 92%' },
+          ].map((m) => (
+            <div key={m.name} className="flex items-center gap-2" title={m.hint}>
+              {m.icon}
+              <div className="leading-tight">
+                <p className="text-metric text-neutral-950">
+                  {m.value}
+                  {m.suffix && <span className="text-body-sm text-neutral-500">{m.suffix}</span>}
+                </p>
+                <p className="text-caption text-neutral-500">{m.name}</p>
+              </div>
+            </div>
+          ))}
+          <div className="flex items-center gap-2">
             <button type="button" className={BTN_SECONDARY} onClick={openPageSettings}>
               同步设置
             </button>
@@ -350,21 +374,8 @@ export default function DataSources() {
               <Plug className="h-4 w-4" />
               新增数据来源
             </button>
-          </>
-        }
-      />
-
-      {/* Row1 指标 */}
-      <div className="mb-4 grid grid-cols-2 gap-4 xl:grid-cols-4">
-        <MetricCard icon={<Plug className="h-4 w-4" />} name="已连接来源" value={`${connectedCount} / 4`} hint="企业网盘 · 飞书文档" />
-        <MetricCard icon={<HardDrive className="h-4 w-4" />} name="连接器文档" value={METRICS.connectedDocs.total} suffix="份" hint={`网盘 ${METRICS.connectedDocs.netdisk} + 飞书 ${METRICS.connectedDocs.feishu} + 本地上传 ${METRICS.connectedDocs.localUpload}`} />
-        <MetricCard
-          icon={<RotateCcw className="h-4 w-4" />}
-          name="今日同步"
-          value={`${successToday} 次成功`}
-          hint={failedCount > 0 ? `${failedCount} 次失败待重试` : '今日同步全部成功'}
-        />
-        <MetricCard icon={<ShieldCheck className="h-4 w-4" />} name="ACL 同步覆盖率" value={94} suffix="%" hint="企业网盘 94% · 飞书文档 92%" />
+          </div>
+        </div>
       </div>
 
       <div className="grid grid-cols-12 gap-4">

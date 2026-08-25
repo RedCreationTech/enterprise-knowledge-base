@@ -424,12 +424,34 @@ export default function KnowledgeBase() {
 
   return (
     <div>
-      <PageHeader
-        crumbs={['知识', '知识库与文档']}
-        title="知识库与文档"
-        subtitle={`${METRICS.spaces} 个知识空间 · ${METRICS.kbDocs} 份文档 · ${assets.qaItems.toLocaleString('en-US')} 条可问答知识`}
-        actions={
-          <>
+      {/* 顶部单行横幅：标题(左) + 紧凑统计 & 操作(右) */}
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <div className="min-w-0">
+          <nav className="mb-1 flex h-8 items-center gap-1 text-body-sm text-neutral-500">
+            知识
+            <ChevronRight className="h-3.5 w-3.5 text-neutral-300" />
+            <span className="font-medium text-neutral-950">知识库与文档</span>
+          </nav>
+          <h1 className="text-h1 text-neutral-950">知识库与文档</h1>
+        </div>
+        <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
+          {[
+            { icon: <FolderClosed className="h-4 w-4" />, name: '知识空间', value: METRICS.spaces, suffix: '个' },
+            { icon: <FileText className="h-4 w-4" />, name: '文档', value: METRICS.kbDocs, suffix: '份' },
+            { icon: <Info className="h-4 w-4" />, name: '可问答知识', value: assets.qaItems.toLocaleString('en-US'), suffix: '条' },
+          ].map((m) => (
+            <div key={m.name} className="flex items-center gap-2">
+              {m.icon}
+              <div className="leading-tight">
+                <p className="text-metric text-neutral-950">
+                  {m.value}
+                  <span className="text-body-sm text-neutral-500">{m.suffix}</span>
+                </p>
+                <p className="text-caption text-neutral-500">{m.name}</p>
+              </div>
+            </div>
+          ))}
+          <div className="flex items-center gap-2">
             <button
               type="button"
               onClick={() => setHistoryOpen(true)}
@@ -449,9 +471,9 @@ export default function KnowledgeBase() {
               <Upload className="h-4 w-4" />
               上传资料
             </button>
-          </>
-        }
-      />
+          </div>
+        </div>
+      </div>
 
       <div className="flex items-start gap-4">
         {/* 左：知识空间树 */}

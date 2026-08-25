@@ -9,8 +9,12 @@ import { AnimatePresence, motion } from 'framer-motion'
 import {
   Archive,
   Check,
+  ChevronRight,
+  CircleHelp,
   Download,
+  FileText,
   Flame,
+  Layers,
   Maximize,
   Minus,
   Plus,
@@ -375,12 +379,35 @@ export default function KnowledgeMap() {
 
   return (
     <div>
-      <PageHeader
-        crumbs={['知识', '知识地图']}
-        title="知识地图"
-        subtitle={`以「${space.replace('（默认）', '')}」空间为视角 · 128 份资料 · 5 个分类 · 156 个问题`}
-        actions={
-          <>
+      {/* 顶部单行横幅：标题(左) + 紧凑统计 & 操作(右) */}
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <div className="min-w-0">
+          <nav className="mb-1 flex h-8 items-center gap-1 text-body-sm text-neutral-500">
+            知识
+            <ChevronRight className="h-3.5 w-3.5 text-neutral-300" />
+            <span className="font-medium text-neutral-950">知识地图</span>
+          </nav>
+          <h1 className="text-h1 text-neutral-950">知识地图</h1>
+          <p className="mt-1 text-body-sm text-neutral-500">以「{space.replace('（默认）', '')}」空间为视角</p>
+        </div>
+        <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
+          {[
+            { icon: <FileText className="h-4 w-4" />, name: '资料', value: 128, suffix: '份' },
+            { icon: <Layers className="h-4 w-4" />, name: '分类', value: 5, suffix: '个' },
+            { icon: <CircleHelp className="h-4 w-4" />, name: '问题', value: 156, suffix: '个' },
+          ].map((m) => (
+            <div key={m.name} className="flex items-center gap-2">
+              {m.icon}
+              <div className="leading-tight">
+                <p className="text-metric text-neutral-950">
+                  {m.value}
+                  <span className="text-body-sm text-neutral-500">{m.suffix}</span>
+                </p>
+                <p className="text-caption text-neutral-500">{m.name}</p>
+              </div>
+            </div>
+          ))}
+          <div className="flex items-center gap-2">
             <button type="button" className={BTN_SECONDARY} onClick={() => void exportPng()}>
               <Download className="h-4 w-4" />
               导出图谱 PNG
@@ -388,9 +415,9 @@ export default function KnowledgeMap() {
             <button type="button" className={BTN_PRIMARY} onClick={() => setOrphanDrawerOpen(true)}>
               处理孤立文档（{orphans.length}）
             </button>
-          </>
-        }
-      />
+          </div>
+        </div>
+      </div>
 
       {/* 筛选工具条 */}
       <div className="mb-4 flex min-h-11 flex-wrap items-center gap-2 rounded-xl border border-neutral-200 bg-white px-3 py-2">

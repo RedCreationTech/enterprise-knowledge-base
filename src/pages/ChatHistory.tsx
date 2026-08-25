@@ -9,6 +9,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router'
 import { AnimatePresence, motion } from 'framer-motion'
 import {
+  ChevronRight,
   CircleHelp,
   Download,
   Link2,
@@ -21,8 +22,7 @@ import {
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { METRICS, useAppStore } from '@/mocks'
-import { AnswerCard, CitationCard, ConfirmationCard, EmptyState, MetricCard } from '@/components/common'
-import { PageHeader } from '@/pages/workspace/PageHeader'
+import { AnswerCard, CitationCard, ConfirmationCard, EmptyState } from '@/components/common'
 import { SideDrawer } from '@/pages/workspace/SideDrawer'
 import { Modal } from '@/pages/workspace/Modal'
 import { NoAnswerCard } from '@/pages/workspace/NoAnswerCard'
@@ -325,12 +325,36 @@ export default function ChatHistory() {
 
   return (
     <div>
-      <PageHeader
-        crumbs={['智能助手', '对话历史']}
-        title="对话历史"
-        subtitle={demoOff ? '完成快速配置或载入演示数据后，这里会展示真实的问答记录' : '累计 156 个问题 · 今日 64 次问答 · 来自 4 个渠道 · 数据更新于 今天 10:30'}
-        actions={
-          <>
+      {/* 顶部单行横幅：标题(左) + 紧凑统计 & 操作(右)，去掉副标题重复数字（§5.6） */}
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <div className="min-w-0">
+          <nav className="mb-1 flex h-8 items-center gap-1 text-body-sm text-neutral-500">
+            智能助手
+            <ChevronRight className="h-3.5 w-3.5 text-neutral-300" />
+            <span className="font-medium text-neutral-950">对话历史</span>
+          </nav>
+          <h1 className="text-h1 text-neutral-950">对话历史</h1>
+        </div>
+        <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
+          {!demoOff &&
+            [
+              { icon: <MessageSquare className="h-4 w-4" />, name: '今日会话', value: '64', suffix: '次', hint: '较昨日 +12%' },
+              { icon: <ThumbsUp className="h-4 w-4" />, name: '答案认可率', value: `${METRICS.approvalRate}%`, suffix: '', hint: '较上周 +2.1%' },
+              { icon: <ThumbsDown className="h-4 w-4" />, name: '负反馈会话', value: '5', suffix: '条', hint: '待处理' },
+              { icon: <CircleHelp className="h-4 w-4" />, name: '无答案问题', value: '23', suffix: '个', hint: '含 3 个高优先级' },
+            ].map((m) => (
+              <div key={m.name} className="flex items-center gap-2" title={m.hint}>
+                {m.icon}
+                <div className="leading-tight">
+                  <p className="text-metric text-neutral-950">
+                    {m.value}
+                    {m.suffix && <span className="text-body-sm text-neutral-500">{m.suffix}</span>}
+                  </p>
+                  <p className="text-caption text-neutral-500">{m.name}</p>
+                </div>
+              </div>
+            ))}
+          <div className="flex items-center gap-2">
             <button type="button" className={BTN_SECONDARY} onClick={() => navigate('/workspace/feedback')}>
               {demoOff ? '反馈队列' : '反馈队列（5）'}
             </button>
@@ -340,9 +364,9 @@ export default function ChatHistory() {
                 导出会话记录
               </button>
             )}
-          </>
-        }
-      />
+          </div>
+        </div>
+      </div>
 
       {/* 空态起点：还没有对话记录 */}
       {demoOff ? (
@@ -364,14 +388,6 @@ export default function ChatHistory() {
         </div>
       ) : (
         <>
-      {/* Row1 指标 */}
-      <div className="mb-4 grid grid-cols-2 gap-4 xl:grid-cols-4">
-        <MetricCard icon={<MessageSquare className="h-4 w-4" />} name="今日会话" value={64} suffix="次" delta="+12%" deltaDirection="up" deltaPositive hint="较昨日" />
-        <MetricCard icon={<ThumbsUp className="h-4 w-4" />} name="答案认可率" value={`${METRICS.approvalRate}%`} delta="+2.1%" deltaDirection="up" deltaPositive hint="较上周" />
-        <MetricCard icon={<ThumbsDown className="h-4 w-4" />} name="负反馈会话" value={5} suffix="条" hint="待处理" />
-        <MetricCard icon={<CircleHelp className="h-4 w-4" />} name="无答案问题" value={23} suffix="个" hint="含 3 个高优先级" />
-      </div>
-
       {/* 筛选工具条 */}
       <div className="mb-4 flex min-h-11 flex-wrap items-center gap-2 rounded-xl border border-neutral-200 bg-white px-3 py-2">
         <div className="relative">

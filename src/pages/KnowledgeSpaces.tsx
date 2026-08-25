@@ -13,6 +13,7 @@ import {
   BarChart3,
   BookOpen,
   Briefcase,
+  ChevronRight,
   ClipboardList,
   Download,
   FileWarning,
@@ -34,7 +35,7 @@ import {
 import type { LucideIcon } from 'lucide-react'
 import { CartesianGrid, Legend, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import { cn } from '@/lib/utils'
-import { DemoEmptyState, MetricCard, StatusBadge, ConfirmationCard } from '@/components/common'
+import { DemoEmptyState, StatusBadge, ConfirmationCard } from '@/components/common'
 import { PageHeader } from '@/pages/workspace/PageHeader'
 import { Modal } from '@/pages/workspace/Modal'
 import { SideDrawer } from '@/pages/workspace/SideDrawer'
@@ -438,12 +439,35 @@ export default function KnowledgeSpaces() {
 
   return (
     <div>
-      <PageHeader
-        crumbs={['知识', '知识空间']}
-        title="知识空间"
-        subtitle={`${visibleSpaces.length} 个空间 · 空间内资料 ${METRICS.kbDocs} 份 · 12 名成员 · 数据更新于 今天 10:30`}
-        actions={
-          <>
+      {/* 顶部单行横幅：标题(左) + 紧凑统计 & 操作(右)，去掉副标题重复数字（§5.6） */}
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <div className="min-w-0">
+          <nav className="mb-1 flex h-8 items-center gap-1 text-body-sm text-neutral-500">
+            知识
+            <ChevronRight className="h-3.5 w-3.5 text-neutral-300" />
+            <span className="font-medium text-neutral-950">知识空间</span>
+          </nav>
+          <h1 className="text-h1 text-neutral-950">知识空间</h1>
+        </div>
+        <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
+          {[
+            { icon: <FolderKanban className="h-4 w-4" />, name: '知识空间', value: visibleSpaces.length, suffix: '个', hint: `${publishedCount} 个已发布 · ${draftCount} 个草稿` },
+            { icon: <BookOpen className="h-4 w-4" />, name: '空间内资料', value: METRICS.kbDocs, suffix: '份', hint: `较上周 +6 份（连接器文档共 ${METRICS.connectedDocs.total.toLocaleString('en-US')} 份另计）` },
+            { icon: <Users className="h-4 w-4" />, name: '空间成员', value: '12', suffix: '人', hint: '覆盖 4 个部门' },
+            { icon: <TriangleAlert className="h-4 w-4" />, name: '跨空间冲突', value: openConflicts.length, suffix: '处', hint: openConflicts.length === 0 ? '均已处理' : openConflicts.some((c) => c.priority === '高') ? '1 处高优先级' : '均为中优先级' },
+          ].map((m) => (
+            <div key={m.name} className="flex items-center gap-2" title={m.hint}>
+              {m.icon}
+              <div className="leading-tight">
+                <p className="text-metric text-neutral-950">
+                  {m.value}
+                  {m.suffix && <span className="text-body-sm text-neutral-500">{m.suffix}</span>}
+                </p>
+                <p className="text-caption text-neutral-500">{m.name}</p>
+              </div>
+            </div>
+          ))}
+          <div className="flex items-center gap-2">
             <button type="button" className={BTN_SECONDARY} onClick={() => setHealthOpen(true)}>
               空间健康报告
             </button>
@@ -451,28 +475,8 @@ export default function KnowledgeSpaces() {
               <Plus className="h-4 w-4" />
               新建知识空间
             </button>
-          </>
-        }
-      />
-
-      {/* Row1 指标 */}
-      <div className="mb-4 grid grid-cols-2 gap-4 xl:grid-cols-4">
-        <MetricCard
-          icon={<FolderKanban className="h-4 w-4" />}
-          name="知识空间"
-          value={visibleSpaces.length}
-          suffix="个"
-          hint={`${publishedCount} 个已发布 · ${draftCount} 个草稿`}
-        />
-        <MetricCard icon={<BookOpen className="h-4 w-4" />} name="空间内资料" value={METRICS.kbDocs} suffix="份" delta="+6 份" deltaDirection="up" deltaPositive hint={`较上周（连接器文档共 ${METRICS.connectedDocs.total.toLocaleString('en-US')} 份另计）`} />
-        <MetricCard icon={<Users className="h-4 w-4" />} name="空间成员" value={12} suffix="人" hint="覆盖 4 个部门" />
-        <MetricCard
-          icon={<TriangleAlert className="h-4 w-4" />}
-          name="跨空间冲突"
-          value={openConflicts.length}
-          suffix="处"
-          hint={openConflicts.length === 0 ? '均已处理' : openConflicts.some((c) => c.priority === '高') ? '1 处高优先级' : '均为中优先级'}
-        />
+          </div>
+        </div>
       </div>
 
       <div className="grid grid-cols-12 gap-4">
