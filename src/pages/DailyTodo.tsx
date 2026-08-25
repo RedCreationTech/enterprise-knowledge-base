@@ -34,13 +34,16 @@ import { Modal } from '@/pages/activation/ui'
 import { SideDrawer } from '@/pages/workspace/SideDrawer'
 import { PageHeader } from '@/pages/workspace/PageHeader'
 import { useAppToast } from '@/lib/toast'
+import { KEY_NAMESPACE, migrateRawKey } from '@/lib/storage'
 import { dailyTaskDefs, GENERATED_TASKS, recommendArticles, recommendGroups, TASK_GROUPS, TASK_SKIP_REASONS, TRANSFER_MEMBERS, trend7d, trend30d } from '@/pages/activation/daily-data'
 
 const EASE: [number, number, number, number] = [0.2, 0.8, 0.2, 1]
 const PAGE = '/workspace/daily'
 
 /** AI 摘要条展开状态本地记忆键（1366–1535 / 1280–1365 折叠形态） */
-const SUMMARY_KEY = 'kb.daily.summaryExpanded'
+const SUMMARY_KEY = KEY_NAMESPACE.daily.summaryExpanded
+/** Phase 3 Task 6 迁移回退旧 key：读取时迁移到新 key 并删除旧 key */
+const LEGACY_SUMMARY_KEY = 'kb.daily.summaryExpanded'
 
 /** 视口媒体查询（1280–1365 右栏推荐卡并入趋势卡 Tab 判定） */
 function useMediaQuery(query: string): boolean {
@@ -74,7 +77,14 @@ export default function DailyTodo() {
   const [skipReason, setSkipReason] = useState('')
   const [highlightId, setHighlightId] = useState<string | null>(null)
   /** AI 摘要条展开态（<1536 折叠形态，localStorage 记忆） */
-  const [summaryExpanded, setSummaryExpanded] = useState(() => localStorage.getItem(SUMMARY_KEY) === '1')
+  const [summaryExpanded, setSummaryExpanded] = useState(() => {
+    try {
+      migrateRawKey(LEGACY_SUMMARY_KEY, SUMMARY_KEY)
+      return localStorage.getItem(SUMMARY_KEY) === '1'
+    } catch {
+      return false
+    }
+  })
   /** 1280–1365：右栏「推荐」卡折叠进「趋势」卡 Tab */
   const compactRight = useMediaQuery('(max-width: 1365px)')
   const [rightTab, setRightTab] = useState<'trend' | 'rec'>('trend')

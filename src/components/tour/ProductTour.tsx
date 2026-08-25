@@ -6,7 +6,7 @@
  *   目标缺失时 console.warn 并跳过该步，连续 2 步缺失直达完成页（§7 防御）。
  * - 四向自动翻转 + 16px 视口钳制 + 目标自动滚动到位；Framer Motion 240ms 动效，reduced-motion 降级为纯淡入淡出。
  * - 键盘：Esc 跳过 / →·Enter 下一步 / ← 上一步 / Tab 焦点锁在卡内；焦点在开关时保存与归还。
- * - 状态：localStorage kb.tour.done=1 / kb.tour.version=v1.3 / kb.tour.exit（completed|skipped|step-n）。
+ * - 状态：localStorage ekb-tour-done=1 / ekb-tour-version=v1.3 / ekb-tour-exit（completed|skipped|step-n）。
  * - 全局重开：window 事件 `ekb:start-tour`（或调用 startProductTour()）；状态变化广播 `ekb:tour-state`。
  */
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'

@@ -35,6 +35,24 @@ export const KEY_NAMESPACE = {
     /** 指令管理 CRUD/发布/回滚结果（刷新不丢） */
     list: `${LS_PREFIX}instructions`,
   },
+  tour: {
+    /** 新手导览完成标记（onboarding-tour.md §2.1/§2.3） */
+    done: `${LS_PREFIX}tour-done`,
+    version: `${LS_PREFIX}tour-version`,
+    exit: `${LS_PREFIX}tour-exit`,
+  },
+  checklist: {
+    /** 新手任务清单收起态（onboarding-tour.md §8） */
+    collapsed: `${LS_PREFIX}checklist-collapsed`,
+  },
+  daily: {
+    /** AI 摘要条展开态（<1536 折叠形态，localStorage 记忆） */
+    summaryExpanded: `${LS_PREFIX}daily-summary-expanded`,
+  },
+  knowledgeMap: {
+    /** 知识地图问题动作（创建 FAQ / 加入测试集）幂等记录 */
+    questionActions: `${LS_PREFIX}knowledge-map-question-actions`,
+  },
 } as const
 
 /** 读取并 JSON.parse；key 不存在或解析失败/损坏时返回 fallback */
@@ -51,6 +69,25 @@ export function loadLS<T>(key: string, fallback: T): T {
 export function saveLS(key: string, value: unknown): void {
   try {
     localStorage.setItem(key, JSON.stringify(value))
+  } catch {
+    // 存储不可用时静默降级
+  }
+}
+
+/**
+ * 迁移旧 localStorage key（Phase 3 Task 6：旧 key 前缀收敛为 ekb-）：
+ * 新 key 缺失而旧 key 有值时，将旧值原样写入新 key 并删除旧 key。
+ * 按原始字符串复制（不做 JSON 处理），适配 '1'/'0' 等非 JSON 值；存储不可用时静默降级。
+ */
+export function migrateRawKey(oldKey: string, newKey: string): void {
+  try {
+    if (localStorage.getItem(newKey) === null) {
+      const value = localStorage.getItem(oldKey)
+      if (value !== null) {
+        localStorage.setItem(newKey, value)
+        localStorage.removeItem(oldKey)
+      }
+    }
   } catch {
     // 存储不可用时静默降级
   }

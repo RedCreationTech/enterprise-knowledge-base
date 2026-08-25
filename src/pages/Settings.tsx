@@ -32,6 +32,7 @@ import { SideDrawer } from './workspace/SideDrawer'
 import { PageHeader } from './workspace/PageHeader'
 import { useAppToast } from '@/lib/toast'
 import { KEY_NAMESPACE, loadLS, saveLS } from '@/lib/storage'
+import { LEGACY_TOUR_DONE_KEY, LEGACY_TOUR_VERSION_KEY, TOUR_DONE_KEY, TOUR_VERSION_KEY } from '@/components/tour/tour'
 import type { ApiKeyItem, MemberItem } from './workspace/settings.mock'
 import {
   apiKeys as initialApiKeys,
@@ -1024,8 +1025,11 @@ export default function Settings() {
                       type="button"
                       onClick={() => {
                         try {
-                          localStorage.removeItem('kb.tour.done')
-                          localStorage.removeItem('kb.tour.version')
+                          localStorage.removeItem(TOUR_DONE_KEY)
+                          localStorage.removeItem(TOUR_VERSION_KEY)
+                          // 一并清理迁移回退旧 key（Phase 3 Task 6）：确保尚未触发迁移的用户也能重看导览
+                          localStorage.removeItem(LEGACY_TOUR_DONE_KEY)
+                          localStorage.removeItem(LEGACY_TOUR_VERSION_KEY)
                         } catch {
                           // 存储不可用时直接进入工作台，导览仍按未记忆处理
                         }

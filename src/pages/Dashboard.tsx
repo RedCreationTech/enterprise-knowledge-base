@@ -55,11 +55,12 @@ import { PageHeader } from '@/pages/workspace/PageHeader'
 import { TrendChart } from '@/pages/workspace/TrendChart'
 import { SideDrawer } from '@/pages/workspace/SideDrawer'
 import { useAppToast } from '@/lib/toast'
-import { KEY_NAMESPACE, loadLSArray, saveLS } from '@/lib/storage'
+import { KEY_NAMESPACE, loadLSArray, migrateRawKey, saveLS } from '@/lib/storage'
 import { QuickConfigDrawer } from '@/pages/workspace/QuickConfigDrawer'
 import { LOCAL_UPLOAD_BASE, LOCAL_UPLOAD_EVENT, readLocalUploads } from '@/pages/workspace/quickConfigUploads'
 import { ProductTour } from '@/components/tour/ProductTour'
 import {
+  LEGACY_TOUR_DONE_KEY,
   TOUR_DONE_KEY,
   TOUR_START_EVENT,
   TOUR_STATE_EVENT,
@@ -257,7 +258,9 @@ function WelcomeBanner({ onStartConfig, onStartTour }: { onStartConfig: () => vo
 
 
 /** 新手任务清单收起状态（onboarding-tour.md §8：刷新保持收起态） */
-const CHECKLIST_COLLAPSED_KEY = 'kb.checklist.collapsed'
+const CHECKLIST_COLLAPSED_KEY = KEY_NAMESPACE.checklist.collapsed
+/** Phase 3 Task 6 迁移回退旧 key：读取时迁移到新 key 并删除旧 key */
+const LEGACY_CHECKLIST_COLLAPSED_KEY = 'kb.checklist.collapsed'
 
 interface StarterItem {
   key: string
@@ -290,6 +293,7 @@ function StarterChecklist({ onOpenQuickConfig }: { onOpenQuickConfig: () => void
 
   const tourDone = (() => {
     try {
+      migrateRawKey(LEGACY_TOUR_DONE_KEY, TOUR_DONE_KEY)
       return localStorage.getItem(TOUR_DONE_KEY) === '1'
     } catch {
       return false
@@ -308,6 +312,7 @@ function StarterChecklist({ onOpenQuickConfig }: { onOpenQuickConfig: () => void
 
   const [collapsed, setCollapsed] = useState(() => {
     try {
+      migrateRawKey(LEGACY_CHECKLIST_COLLAPSED_KEY, CHECKLIST_COLLAPSED_KEY)
       return localStorage.getItem(CHECKLIST_COLLAPSED_KEY) === '1'
     } catch {
       return false

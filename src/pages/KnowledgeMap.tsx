@@ -30,6 +30,7 @@ import { PageHeader } from '@/pages/workspace/PageHeader'
 import { SideDrawer } from '@/pages/workspace/SideDrawer'
 import { Modal } from '@/pages/workspace/Modal'
 import { useAppToast } from '@/lib/toast'
+import { KEY_NAMESPACE, migrateRawKey } from '@/lib/storage'
 import {
   MAP_CATEGORIES,
   MAP_DOCS,
@@ -45,12 +46,15 @@ import {
 } from '@/pages/workspace/mapData'
 import type { DocNode, OrphanDoc, QuestionNode } from '@/pages/workspace/mapData'
 
-const Q_ACTION_KEY = 'knowledge-map:question-actions'
+const Q_ACTION_KEY = KEY_NAMESPACE.knowledgeMap.questionActions
+/** Phase 3 Task 6 迁移回退旧 key：读取时迁移到新 key 并删除旧 key */
+const LEGACY_Q_ACTION_KEY = 'knowledge-map:question-actions'
 
 type QuestionAction = 'faq' | 'testset'
 
 function readQuestionActions(): Record<string, QuestionAction[]> {
   try {
+    migrateRawKey(LEGACY_Q_ACTION_KEY, Q_ACTION_KEY)
     const raw = localStorage.getItem(Q_ACTION_KEY)
     return raw ? (JSON.parse(raw) as Record<string, QuestionAction[]>) : {}
   } catch {
