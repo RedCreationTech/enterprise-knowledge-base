@@ -20,7 +20,7 @@ import {
   TriangleAlert,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { useAppStore } from '@/mocks'
+import { METRICS, useAppStore } from '@/mocks'
 import { AnswerCard, CitationCard, ConfirmationCard, EmptyState, MetricCard } from '@/components/common'
 import { PageHeader } from '@/pages/workspace/PageHeader'
 import { SideDrawer } from '@/pages/workspace/SideDrawer'
@@ -367,7 +367,7 @@ export default function ChatHistory() {
       {/* Row1 指标 */}
       <div className="mb-4 grid grid-cols-2 gap-4 xl:grid-cols-4">
         <MetricCard icon={<MessageSquare className="h-4 w-4" />} name="今日会话" value={64} suffix="次" delta="+12%" deltaDirection="up" deltaPositive hint="较昨日" />
-        <MetricCard icon={<ThumbsUp className="h-4 w-4" />} name="答案认可率" value="87.6%" delta="+2.1%" deltaDirection="up" deltaPositive hint="较上周" />
+        <MetricCard icon={<ThumbsUp className="h-4 w-4" />} name="答案认可率" value={`${METRICS.approvalRate}%`} delta="+2.1%" deltaDirection="up" deltaPositive hint="较上周" />
         <MetricCard icon={<ThumbsDown className="h-4 w-4" />} name="负反馈会话" value={5} suffix="条" hint="待处理" />
         <MetricCard icon={<CircleHelp className="h-4 w-4" />} name="无答案问题" value={23} suffix="个" hint="含 3 个高优先级" />
       </div>

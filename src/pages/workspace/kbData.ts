@@ -2,6 +2,7 @@
  * kbData — 知识库与文档管理页扩展 mock（design/knowledge-base.md §4，数值以 §2.1/§2.3 为准）。
  * 页面级数据，不改全局 store。
  */
+import { METRICS, TODAY } from '@/mocks'
 
 export type DocStatus = '已发布' | '待复审' | '已过期' | '解析中' | '存在冲突' | '已归档'
 
@@ -55,7 +56,7 @@ export interface SpaceRow {
  * 默认空间为伞空间（count=全库 128），命名空间 34+32+28+12=106，其余 22 份仅属默认空间。
  */
 export const SPACES: SpaceRow[] = [
-  { name: '默认空间（全部知识）', count: 128, health: '健康', reviewCycle: 180 },
+  { name: '默认空间（全部知识）', count: METRICS.kbDocs, health: '健康', reviewCycle: 180 },
   { name: '制度与流程', count: 34, health: '待复审', reviewCount: 3, reviewCycle: 180 },
   { name: '产品资料', count: 32, health: '健康', reviewCycle: 60 },
   { name: '销售弹药库', count: 28, health: '健康', reviewCycle: 60 },
@@ -223,7 +224,7 @@ function makeFillerDoc(space: string, seq: number): DocRow {
     size: `${(0.4 + ((seq * 7) % 46) / 10).toFixed(1)} MB`,
     pages: 6 + ((seq * 5) % 40),
     owner,
-    updatedAt: `2026-0${month}-${day}`,
+    updatedAt: `${TODAY.slice(0, 4)}-0${month}-${day}`,
     space,
     source: FILLER_SOURCES[seq % FILLER_SOURCES.length],
     validFrom: '2026-01-01',

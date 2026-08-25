@@ -1,7 +1,8 @@
 /**
  * API 与开发页数据（design/api-dev.md §5 + design.md V1.1-§10）
- * 用量口径与 integrations 页「自定义 API · 本月调用 1,240 次」一致（P1-1：统一 AI 问答 1,240/5,000）。
+ * 用量口径与 integrations 页「自定义 API · 本月调用」一致（P1-1：统一引用 METRICS.apiMonthlyCalls）。
  */
+import { METRICS } from '@/mocks'
 
 export interface ApiKey {
   id: string
@@ -43,9 +44,9 @@ export const initialApiKeys: ApiKey[] = [
 export const API_PERMISSION_OPTIONS = ['检索问答', '文档读取', '反馈写入', '分析数据只读'] as const
 export const API_EXPIRY_OPTIONS = ['90 天', '180 天', '365 天', '自定义'] as const
 
-/** 调用用量（1,240 / 5,000 ≈ 25%，与套餐 AI 问答额度同口径） */
+/** 调用用量（METRICS.apiMonthlyCalls / 5,000 ≈ 25%，与套餐 AI 问答额度同口径） */
 export const apiUsage = {
-  month: 1240,
+  month: METRICS.apiMonthlyCalls,
   limit: 5000,
   pct: 25,
   byKey: [

@@ -24,7 +24,7 @@ import {
   X,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { useAppStore, me } from '@/mocks'
+import { METRICS, useAppStore, me } from '@/mocks'
 import { AnswerCard } from '@/components/common/AnswerCard'
 import { CitationCard } from '@/components/common/CitationCard'
 import { ConfirmationCard } from '@/components/common/ConfirmationCard'
@@ -432,7 +432,7 @@ export default function AiAssistant() {
         crumbs={[]}
         title="AI 助手"
         subtitle={
-          demoOff ? '2 个业务助手 · 完成配置后开始真实问答' : '2 个业务助手 · 本周 328 次问答 · 认可率 87.6%'
+          demoOff ? '2 个业务助手 · 完成配置后开始真实问答' : `2 个业务助手 · 本周 ${METRICS.questions7d} 次问答 · 认可率 ${METRICS.approvalRate}%`
         }
         actions={
           <div className="flex shrink-0 items-center gap-2">

@@ -15,7 +15,7 @@ import {
   useRef,
 } from 'react'
 import type { ReactNode } from 'react'
-import { apps, daily, invitees, me } from './base.mock'
+import { apps, daily, invitees, me, TODAY } from './base.mock'
 
 // ---------- 类型 ----------
 
@@ -166,7 +166,8 @@ function nowTime(): string {
 function nowDateTime(): string {
   const d = new Date()
   const p = (n: number) => String(n).padStart(2, '0')
-  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`
+  // 日期取演示基准日 TODAY（单一时间宇宙），时分取当前时钟（仅时刻，无日期语义）
+  return `${TODAY} ${p(d.getHours())}:${p(d.getMinutes())}`
 }
 
 /** 默认已安装应用 id（与 base.mock apps[] 的「已安装」状态同源：企业微信 / 自定义 API / SSO） */

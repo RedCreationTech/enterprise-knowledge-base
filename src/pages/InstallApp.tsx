@@ -36,7 +36,7 @@ import {
 import type { LucideIcon } from 'lucide-react'
 import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import { cn } from '@/lib/utils'
-import { ANSWER_POOL, apps as baseApps, daily, isStepDone, JOURNEY_STEPS, useAppStore } from '@/mocks'
+import { ANSWER_POOL, apps as baseApps, daily, isStepDone, JOURNEY_STEPS, METRICS, useAppStore } from '@/mocks'
 import type { AppStatus } from '@/mocks'
 import { ChatPanel } from '@/components/chat'
 import { ConfirmationCard, SectionCard, StatusBadge } from '@/components/common'
@@ -1412,7 +1412,7 @@ export default function InstallApp() {
         <div className="grid grid-cols-2 gap-3">
           <div className="rounded-lg bg-surface-soft p-3.5">
             <p className="text-caption text-neutral-400">本月调用</p>
-            <p className="mt-1 text-h3 text-neutral-950">1,240 次</p>
+            <p className="mt-1 text-h3 text-neutral-950">{METRICS.apiMonthlyCalls.toLocaleString('en-US')} 次</p>
           </div>
           <div className="rounded-lg bg-surface-soft p-3.5">
             <p className="text-caption text-neutral-400">近 14 天峰值</p>

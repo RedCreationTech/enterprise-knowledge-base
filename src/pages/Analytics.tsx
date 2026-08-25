@@ -31,7 +31,7 @@ import {
   Users,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { useAppStore } from '@/mocks'
+import { METRICS, TODAY, useAppStore } from '@/mocks'
 import { EmptyState } from '@/components/common/EmptyState'
 import { MetricCard } from '@/components/common/MetricCard'
 import { SectionCard } from '@/components/common/SectionCard'
@@ -60,11 +60,11 @@ const RANGE_LABEL: Record<TimeRange, string> = {
   custom: '自定义',
 }
 
-/** 三个时间范围的指标 mock（筛选变更全页联动） */
+/** 三个时间范围的指标 mock（筛选变更全页联动；近 7/30 天数字引用 METRICS 唯一来源） */
 const RANGE_METRICS: Record<Exclude<TimeRange, 'custom'>, { questions: string; answerRate: string; noAnswer: string; noAnswerHint: string; approval: string; approvalHint: string; activeUsers: string }> = {
   today: { questions: '108', answerRate: '88.0%', noAnswer: '6.5%', noAnswerHint: '7 个无答案问题', approval: '83.0%', approvalHint: '来自 14 条反馈', activeUsers: '7 / 12' },
-  '7d': { questions: '328', answerRate: '91.2%', noAnswer: '7.0%', noAnswerHint: '23 个无答案问题', approval: '87.6%', approvalHint: '来自 96 条反馈', activeUsers: '9 / 12' },
-  '30d': { questions: '1,240', answerRate: '85.9%', noAnswer: '7.8%', noAnswerHint: '97 个无答案问题', approval: '81.2%', approvalHint: '来自 356 条反馈', activeUsers: '11 / 12' },
+  '7d': { questions: String(METRICS.questions7d), answerRate: `${METRICS.answerRate7d}%`, noAnswer: `${METRICS.noAnswerRate7d.toFixed(1)}%`, noAnswerHint: `${METRICS.pendingIssues} 个无答案问题`, approval: `${METRICS.approvalRate}%`, approvalHint: '来自 96 条反馈', activeUsers: '9 / 12' },
+  '30d': { questions: METRICS.totalQuestions.toLocaleString('en-US'), answerRate: '85.9%', noAnswer: '7.8%', noAnswerHint: '97 个无答案问题', approval: '81.2%', approvalHint: '来自 356 条反馈', activeUsers: '11 / 12' },
 }
 
 const QUESTION_TYPES = ['全部', '正常', '无答案', '低质量', '冲突']
@@ -124,7 +124,7 @@ export default function Analytics() {
       '# 企业知识库试用价值报告',
       '',
       `- 报告范围：${RANGE_LABEL[timeRange]} · ${assistant} · ${userGroup === '全部' ? '全部用户组' : userGroup}`,
-      '- 生成时间：2026-05-29 10:30',
+      `- 生成时间：${TODAY} 10:30`,
       '- 数据口径：排除测试会话与系统消息',
       '',
     ]
@@ -214,10 +214,10 @@ export default function Analytics() {
             const url = URL.createObjectURL(blob)
             const a = document.createElement('a')
             a.href = url
-            a.download = '价值报告_2026-05-29.md'
+            a.download = `价值报告_${TODAY}.md`
             a.click()
             URL.revokeObjectURL(url)
-            toast.success(`价值报告_2026-05-29.md 已生成并开始下载（${selectedChapters.length} 个章节）。`)
+            toast.success(`价值报告_${TODAY}.md 已生成并开始下载（${selectedChapters.length} 个章节）。`)
           }
         }, 500 * (i + 1)),
       )
@@ -298,7 +298,7 @@ export default function Analytics() {
           <>
             <input type="date" defaultValue="2026-05-01" className={selectCls} aria-label="开始日期" />
             <span className="text-caption text-neutral-400">至</span>
-            <input type="date" defaultValue="2026-05-29" className={selectCls} aria-label="结束日期" />
+            <input type="date" defaultValue={TODAY} className={selectCls} aria-label="结束日期" />
             <button
               type="button"
               onClick={() => {
@@ -350,7 +350,7 @@ export default function Analytics() {
       {/* Row 1：指标卡 ×5 */}
       <div className="grid grid-cols-2 gap-4 xl:grid-cols-5">
         <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.24 }}>
-          <MetricCard icon={<MessageSquareText className="h-4 w-4" />} name="问题数量" value={timeRange === '7d' ? 328 : metrics.questions} delta="较上周 +18%" deltaPositive hint={RANGE_LABEL[timeRange]} />
+          <MetricCard icon={<MessageSquareText className="h-4 w-4" />} name="问题数量" value={timeRange === '7d' ? METRICS.questions7d : metrics.questions} delta="较上周 +18%" deltaPositive hint={RANGE_LABEL[timeRange]} />
         </motion.div>
         <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.24, delay: 0.06 }}>
           <MetricCard icon={<CheckCircle2 className="h-4 w-4" />} name="成功回答率" value={metrics.answerRate} delta="+2.1%" deltaPositive />
@@ -648,7 +648,7 @@ export default function Analytics() {
           })}
         </ul>
         {reportProgress >= selectedChapters.length && reportProgress > 0 && (
-          <p className="mt-4 rounded-lg bg-success-bg px-3 py-2 text-body-sm text-success">报告已生成：价值报告_2026-05-29.md（{selectedChapters.length} 个章节）</p>
+          <p className="mt-4 rounded-lg bg-success-bg px-3 py-2 text-body-sm text-success">报告已生成：价值报告_{TODAY}.md（{selectedChapters.length} 个章节）</p>
         )}
       </Modal>
 

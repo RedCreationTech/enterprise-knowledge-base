@@ -2,6 +2,7 @@
  * 对话历史页面模拟数据（chat-history.md §5）
  * 渠道枚举沿用 SurfaceType 子集（PORTAL / FEISHU_BOT / WECOM_BOT / SITE），展示文案在本文件内映射。
  */
+import { METRICS, TODAY } from '@/mocks'
 
 export type Channel = 'Web 门户' | '飞书' | '企业微信' | '知识网站'
 export type FeedbackKind = 'up' | 'down' | 'no-answer' | 'expired' | 'none'
@@ -121,7 +122,7 @@ export const CONVERSATIONS: Conversation[] = [
         refusal: {
           title: '未找到可靠答案',
           reason: '已接入资料中没有关于国产数据库适配的说明。',
-          searchedScope: '已检索：全部知识空间 · 1,286 份文档',
+          searchedScope: `已检索：全部知识空间 · ${METRICS.connectedDocs.total.toLocaleString('en-US')} 份文档`,
           missingType: '缺失类型：产品兼容性 / 部署适配文档',
           closestTopic: '《产品 X 部署环境要求》',
           closestMeta: '仅覆盖操作系统与中间件',
@@ -215,8 +216,8 @@ EXTRA_PAGE2.forEach(([user, dept, avatar, channel, q, count, time, fb], i) => {
   })
 })
 
-/** 演示基准日「今天」（与 analytics.mock 趋势口径一致） */
-export const DEMO_TODAY = '2026-05-29'
+/** 演示基准日「今天」（与 base.mock TODAY 同源） */
+export const DEMO_TODAY = TODAY
 
 /** 会话时间文案 → ISO 日期（今天/昨天/MM-DD 三类，用于时间筛选与导出范围） */
 export function conversationDate(c: Conversation): string {
@@ -228,7 +229,7 @@ export function conversationDate(c: Conversation): string {
     return d.toISOString().slice(0, 10)
   }
   const m = t.match(/^(\d{2})-(\d{2})/)
-  if (m) return `2026-${m[1]}-${m[2]}`
+  if (m) return `${TODAY.slice(0, 4)}-${m[1]}-${m[2]}`
   return DEMO_TODAY
 }
 
@@ -244,7 +245,7 @@ export const FEEDBACK_LABEL: Record<FeedbackKind, string> = {
 export const CONVERSATION_STATS = {
   today: 64,
   todayDelta: '+12%',
-  approvalRate: '87.6%',
+  approvalRate: `${METRICS.approvalRate}%`,
   approvalDelta: '+2.1%',
   negative: 5,
   noAnswer: 23,

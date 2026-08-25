@@ -1,6 +1,7 @@
 /**
  * 激活交接页 mock（activated.md §3/§5 逐字基准）
  */
+import { METRICS } from '@/mocks'
 
 export interface ValueMetric {
   name: string
@@ -11,11 +12,11 @@ export interface ValueMetric {
 
 /** 试用价值摘要 6 指标（128/12/1,240 与 base.mock METRICS 一致） */
 export const valueMetrics: ValueMetric[] = [
-  { name: '已上传资料', value: 128, suffix: '份', hint: '已识别 4,352 个章节' },
+  { name: '已上传资料', value: METRICS.kbDocs, suffix: '份', hint: `已识别 ${METRICS.chapters.toLocaleString('en-US')} 个章节` },
   { name: '可信答案', value: 86, suffix: '个', hint: '引用覆盖率 78%' },
-  { name: '答案认可率', value: '87.6', suffix: '%', hint: '来自 12 名成员反馈' },
+  { name: '答案认可率', value: String(METRICS.approvalRate), suffix: '%', hint: '来自 12 名成员反馈' },
   { name: '试用成员', value: 12, suffix: '人', hint: '覆盖 2 个团队' },
-  { name: '累计提问', value: 1240, suffix: '次', hint: '近 30 天累计' },
+  { name: '累计提问', value: METRICS.totalQuestions, suffix: '次', hint: '近 30 天累计' },
   { name: '已安装应用', value: 3, suffix: '个', hint: '企业微信/SSO/自定义 API' },
 ]
 

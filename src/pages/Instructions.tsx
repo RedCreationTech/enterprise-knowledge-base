@@ -58,6 +58,21 @@ function nextInsId(prefix: string) {
 }
 
 const STYLE_OPTIONS = ['专业严谨', '简洁直接', '亲切易懂'] as const
+
+/** 生效范围 → 确认卡「影响对象」文案（助手/渠道分列，历史遗留范围项按原文兜底） */
+function scopeImpact(scope: string[]): string {
+  const assistants = scope.filter((s) => (SCOPE_ASSISTANTS as readonly string[]).includes(s))
+  const channels = scope.filter((s) => (SCOPE_CHANNELS as readonly string[]).includes(s))
+  const rest = scope.filter(
+    (s) => !(SCOPE_ASSISTANTS as readonly string[]).includes(s) && !(SCOPE_CHANNELS as readonly string[]).includes(s),
+  )
+  const parts: string[] = []
+  if (assistants.length > 0) parts.push(`${assistants.length} 个助手（${assistants.join('、')}）`)
+  if (channels.length > 0) parts.push(`${channels.length} 个渠道（${channels.join('、')}）`)
+  if (rest.length > 0) parts.push(rest.join('、'))
+  return parts.length > 0 ? parts.join(' 与 ') : scope.join(' · ')
+}
+
 const REJECT_OPTIONS = ['明确告知并给出建议', '转人工', '仅回答公开内容'] as const
 const STATUS_FILTERS = ['全部', '生效中', '草稿', '已停用'] as const
 
@@ -147,6 +162,12 @@ export default function Instructions() {
   const [scopeChannels, setScopeChannels] = useState<string[]>([])
   /** 最近一次确认的范围（草稿首次发布时沿用） */
   const [lastScope, setLastScope] = useState<string[]>(DEFAULT_PUBLISH_SCOPE)
+
+  /** 本次发布将实际生效的范围（草稿首发作 lastScope，否则沿用现有范围），供确认卡「影响对象」展示 */
+  const publishScope =
+    selected.scope.length === 0 || (selected.scope.length === 1 && selected.scope[0] === '未发布')
+      ? lastScope
+      : selected.scope
 
   // 指令 CRUD/发布/回滚持久化：任一变更回写 localStorage（刷新不丢）；冷启动空态不写入
   useEffect(() => {
@@ -1116,7 +1137,7 @@ export default function Instructions() {
             description="发布后在用版本冻结可追溯"
             fields={[
               { label: '动作', value: `将「${selected.name}」发布为新版本（当前 ${selected.version}）` },
-              { label: '影响对象', value: '1 个助手（销售知识助手）与 1 个渠道（飞书）' },
+              { label: '影响对象', value: scopeImpact(publishScope) },
               { label: '影响范围', value: '该渠道 156 个历史问题的回答口径' },
               { label: '可撤销性', value: `可一键回滚到 ${selected.version}` },
             ]}

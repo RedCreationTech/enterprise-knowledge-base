@@ -3,6 +3,7 @@
  * 与 base.mock METRICS 跨页一致：近 7 天问答 328（逐日 [32,41,44,48,52,55,56]，与 daily.trend7d 一致）、
  * 成功回答 299 ≈ 91.2%、认可率 87.6%。
  */
+import { trend7dLabels } from '@/mocks'
 
 export interface TrendPoint {
   day: string
@@ -11,16 +12,14 @@ export interface TrendPoint {
   rate: number
 }
 
-/** 近 7 天：问题/成功/认可率（analytics.md §2.2；问题合计恰好 328，与 base.mock daily.trend7d 一致） */
-export const trend7dDetailed: TrendPoint[] = [
-  { day: '05-23', questions: 32, answered: 29, rate: 78 },
-  { day: '05-24', questions: 41, answered: 37, rate: 79 },
-  { day: '05-25', questions: 44, answered: 40, rate: 81 },
-  { day: '05-26', questions: 48, answered: 44, rate: 83 },
-  { day: '05-27', questions: 52, answered: 47, rate: 84 },
-  { day: '05-28', questions: 55, answered: 51, rate: 86 },
-  { day: '05-29', questions: 56, answered: 51, rate: 88 },
-]
+/** 近 7 天：问题/成功/认可率（analytics.md §2.2；问题合计恰好 328，与 base.mock daily.trend7d 一致；日期标签由 TODAY 派生） */
+export const trend7dDetailed: TrendPoint[] = (() => {
+  const days = trend7dLabels('MM-DD')
+  const questions = [32, 41, 44, 48, 52, 55, 56]
+  const answered = [29, 37, 40, 44, 47, 51, 51]
+  const rates = [78, 79, 81, 83, 84, 86, 88]
+  return days.map((day, i) => ({ day, questions: questions[i], answered: answered[i], rate: rates[i] }))
+})()
 
 /** 近 30 天扩展 mock（确定性与 7 天口径一致：末 7 天 = trend7dDetailed） */
 export const trend30d: TrendPoint[] = (() => {

@@ -2,6 +2,7 @@
  * 指令管理页数据（design/instructions.md §5 + design.md V1.1-§10）
  * 数字口径与 base.mock.ts / design.md §10 保持一致。
  */
+import { TODAY } from '@/mocks'
 
 export interface InstructionTemplate {
   id: string
@@ -152,7 +153,7 @@ export const VARIABLE_VALUES: Record<string, string> = {
   '{企业名称}': '示例科技有限公司',
   '{知识范围}': '全部知识空间',
   '{助手名称}': '销售知识助手',
-  '{当前日期}': '2024-05-29',
+  '{当前日期}': TODAY,
 }
 
 /** 版本历史（v2.2 vs v2.3 对比 Modal） */

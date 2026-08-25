@@ -16,6 +16,30 @@ export const org: Org = {
 }
 
 /**
+ * 演示基准日「今天」：全站时间唯一来源（P1-3）。
+ * 近 7 天趋势标签、{当前日期} 变量、新建实体的 createdAt/updatedAt 一律由它派生，
+ * 消灭「2024/2025/真实 Date()」多时间宇宙。
+ */
+export const TODAY = '2026-05-29'
+
+/** 由 TODAY 回溯生成近 7 天日期标签（含今日）；fmt 控制 '5/23'（M/D）或 '05-23'（MM-DD） */
+export function trend7dLabels(fmt: 'M/D' | 'MM-DD' = 'MM-DD'): string[] {
+  const base = new Date(`${TODAY}T00:00:00`)
+  const pad = (n: number) => String(n).padStart(2, '0')
+  return Array.from({ length: 7 }, (_, i) => {
+    const d = new Date(base)
+    d.setDate(base.getDate() - (6 - i))
+    return fmt === 'MM-DD' ? `${pad(d.getMonth() + 1)}-${pad(d.getDate())}` : `${d.getMonth() + 1}/${d.getDate()}`
+  })
+}
+
+/** 「近 7 天」区间文案（如 5/23–5/29） */
+export function trend7dRangeLabel(): string {
+  const labels = trend7dLabels('M/D')
+  return `${labels[0]}–${labels[labels.length - 1]}`
+}
+
+/**
  * 全站口径字典（P1-1：数字一致性唯一事实来源）。
  * 各页面展示数字必须引用本常量，或引用由它派生的既有常量（assets/sources/daily/plan/site 等）。
  */
@@ -30,6 +54,8 @@ export const METRICS = {
   qaItems: 12648,
   /** 累计问答（近 30 天口径） */
   totalQuestions: 1240,
+  /** 自定义 API 本月调用（与「累计问答」totalQuestions 分属不同口径，勿共用同一数字） */
+  apiMonthlyCalls: 1240,
   /** 近 7 天问答 */
   questions7d: 328,
   /** 近 7 天逐日问答（5/23–5/29，合计恰好 328） */
@@ -40,6 +66,8 @@ export const METRICS = {
   approvalRate: 87.6,
   /** 成功回答率 %（近 7 天，非拒答比例，≥ 认可率） */
   answerRate7d: 91.2,
+  /** 近 7 天无答案率 %（= pendingIssues 23 / questions7d 328 ≈ 7.0%） */
+  noAnswerRate7d: 7.0,
   /** 待处理知识问题 */
   pendingIssues: 23,
   /** 已安装应用（企业微信 / SSO 单点登录 / 自定义 API） */

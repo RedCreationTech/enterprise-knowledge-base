@@ -1,6 +1,7 @@
 /**
  * 反馈与洞察页扩展模拟数据（feedback.md §4）
  */
+import { METRICS } from '@/mocks'
 
 export type IssueType = '无答案' | '低质量' | '冲突' | '过期' | '权限' | '引用失败'
 export type IssueStatus = '待处理' | '处理中' | '待验证' | '已关闭' | '已忽略'
@@ -167,7 +168,7 @@ export interface FeedbackChatTurn {
 export const feedbackConversations: Record<string, FeedbackChatTurn[]> = {
   'uf-1': [
     { role: 'user', content: '私有化部署报价是多少？', time: '今天 09:10' },
-    { role: 'assistant', content: '没有找到足够可靠的企业知识来回答这个问题。已检索全部知识空间 1,286 份文档，未命中私有化部署报价相关条款。', time: '今天 09:10' },
+    { role: 'assistant', content: `没有找到足够可靠的企业知识来回答这个问题。已检索全部知识空间 ${METRICS.connectedDocs.total.toLocaleString('en-US')} 份文档，未命中私有化部署报价相关条款。`, time: '今天 09:10' },
     { role: 'user', content: '那大概的价格区间呢？', time: '今天 09:11' },
     { role: 'assistant', content: '抱歉，价格区间属于需要权威来源的内容，我不能凭空生成。建议联系售前或上传《私有化部署报价单》。', time: '今天 09:12' },
   ],

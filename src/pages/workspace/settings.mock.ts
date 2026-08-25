@@ -5,6 +5,7 @@
  * 与 Permissions 页姓名/计数/角色口径一致（12 名成员 / 6 核心角色）。
  */
 
+import { METRICS } from '@/mocks'
 import { coreMembers, foldedMembers } from './permissionsData'
 
 export interface MemberItem {
@@ -92,10 +93,10 @@ export interface UsageItem {
 export const usageItems: UsageItem[] = [
   { name: '知识存储', current: '0.68 GB', limit: '1 GB', pct: 68 },
   { name: '成员席位', current: '12', limit: '20 人', pct: 60 },
-  { name: 'AI 问答', current: '1,240', limit: '5,000 次', pct: 25 },
-  { name: '文档数', current: '128', limit: '不限', pct: null },
+  { name: 'AI 问答', current: METRICS.totalQuestions.toLocaleString('en-US'), limit: '5,000 次', pct: 25 },
+  { name: '文档数', current: String(METRICS.kbDocs), limit: '不限', pct: null },
   { name: '业务助手', current: '2', limit: '5 个', pct: 40 },
-  { name: 'API 调用', current: '1,240', limit: '5,000 次', pct: 25 },
+  { name: 'API 调用', current: METRICS.apiMonthlyCalls.toLocaleString('en-US'), limit: '5,000 次', pct: 25 },
 ]
 
 export interface PlanColumn {

@@ -40,7 +40,7 @@ import { Modal } from '@/pages/workspace/Modal'
 import { SideDrawer } from '@/pages/workspace/SideDrawer'
 import { useAppToast } from '@/lib/toast'
 import { KEY_NAMESPACE, loadLSArray, saveLS } from '@/lib/storage'
-import { ANSWER_POOL, useAppStore } from '@/mocks'
+import { ANSWER_POOL, METRICS, TODAY, useAppStore } from '@/mocks'
 import {
   EXPIRE_HANDLING_OPTIONS,
   isSpace,
@@ -345,7 +345,7 @@ export default function KnowledgeSpaces() {
       ownerAvatar: formOwner[0],
       updatedAt: '刚刚',
       scope: scopeLabel,
-      createdAt: '2024-05-30',
+      createdAt: TODAY,
       policy: { cycle: `默认 ${formValidity} 天复审`, onExpire: '降权并提醒 Owner', notify: true },
       memberRows: [{ name: formOwner, role: '管理员', joinedAt: '今天' }],
       draftNote: '草稿空间：内容暂不进入 AI 助手引用范围，发布后自动生效。',
@@ -441,7 +441,7 @@ export default function KnowledgeSpaces() {
       <PageHeader
         crumbs={['知识', '知识空间']}
         title="知识空间"
-        subtitle={`${visibleSpaces.length} 个空间 · 空间内资料 128 份 · 12 名成员 · 数据更新于 今天 10:30`}
+        subtitle={`${visibleSpaces.length} 个空间 · 空间内资料 ${METRICS.kbDocs} 份 · 12 名成员 · 数据更新于 今天 10:30`}
         actions={
           <>
             <button type="button" className={BTN_SECONDARY} onClick={() => setHealthOpen(true)}>
@@ -464,7 +464,7 @@ export default function KnowledgeSpaces() {
           suffix="个"
           hint={`${publishedCount} 个已发布 · ${draftCount} 个草稿`}
         />
-        <MetricCard icon={<BookOpen className="h-4 w-4" />} name="空间内资料" value={128} suffix="份" delta="+6 份" deltaDirection="up" deltaPositive hint="较上周（连接器文档共 1,286 份另计）" />
+        <MetricCard icon={<BookOpen className="h-4 w-4" />} name="空间内资料" value={METRICS.kbDocs} suffix="份" delta="+6 份" deltaDirection="up" deltaPositive hint={`较上周（连接器文档共 ${METRICS.connectedDocs.total.toLocaleString('en-US')} 份另计）`} />
         <MetricCard icon={<Users className="h-4 w-4" />} name="空间成员" value={12} suffix="人" hint="覆盖 4 个部门" />
         <MetricCard
           icon={<TriangleAlert className="h-4 w-4" />}

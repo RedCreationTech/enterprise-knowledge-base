@@ -21,7 +21,7 @@ import {
   Webhook,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { useAppStore } from '@/mocks'
+import { TODAY, useAppStore } from '@/mocks'
 import { ConfirmationCard, DemoEmptyState, ProgressBar, SectionCard, StatusBadge } from '@/components/common'
 import { PageHeader } from '@/pages/workspace/PageHeader'
 import { Modal } from '@/pages/workspace/Modal'
@@ -224,7 +224,7 @@ export default function ApiDev() {
       maskedKey: `sk-live-••••••${rand.slice(0, 4)}`,
       fullKey: `sk-live-${rand}${Date.now().toString(36)}9x2w7q`,
       permissions: newPerms,
-      createdAt: '2024-05-29',
+      createdAt: TODAY,
       createdBy: '张伟',
       lastCallAt: '尚未调用',
       status: '生效中',
@@ -288,7 +288,7 @@ export default function ApiDev() {
       description: capiDesc.trim() || '暂无描述',
       maskedSecret: `sk-capi-••••••${rand}`,
       status: '启用',
-      createdAt: '2024-05-29',
+      createdAt: TODAY,
       trend14d: [0, 2, 1, 3, 2, 4, 3, 5, 4, 6, 5, 7, 6, 8],
     }
     setCustomApis((prev) => [...prev, app])

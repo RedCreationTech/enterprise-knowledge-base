@@ -2,6 +2,7 @@
  * 集成管理页数据（design/integrations.md §5 + design.md V1.1-§10）
  * 源自 base.mock apps 已安装/使用中项；身份映射与 permissions 页同源（400/402，陈可/刘洋待映射）。
  */
+import { METRICS } from '@/mocks'
 
 export type IntegrationTone = 'success' | 'warning'
 
@@ -68,10 +69,10 @@ export const integrations: Integration[] = [
     tone: 'success',
     channelStatus: '正常',
     meta: [
-      { label: '本月调用', value: '1,240 次' },
+      { label: '本月调用', value: `${METRICS.apiMonthlyCalls.toLocaleString('en-US')} 次` },
       { label: '可访问', value: '不限（按 Key 权限）' },
     ],
-    usage: '本月 1,240 次',
+    usage: `本月 ${METRICS.apiMonthlyCalls.toLocaleString('en-US')} 次`,
     actions: [
       { label: '配置', kind: 'config' },
       { label: 'API 与开发 ›', kind: 'tertiary', to: '/workspace/api-dev' },
@@ -129,11 +130,11 @@ export const channelHealth = [
 
 export const recommendApps = ['官网客服组件', '钉钉机器人', '知识日报', '飞书文档插件']
 
-/** 渠道运行概览 MetricCard 口径（328 = 212 + 96 + 20；「已安装集成」计数由 store.installedApps 派生） */
+/** 渠道运行概览 MetricCard 口径（weeklyUsage = METRICS.questions7d 328 = 212 + 96 + 20；「已安装集成」计数由 store.installedApps 派生） */
 export const integrationMetrics = {
   normal: 3,
   warning: 1,
-  weeklyUsage: 328,
+  weeklyUsage: METRICS.questions7d,
   usageSplit: '企业微信 212 · 知识网站 96 · 其他 20',
   reachable: 286,
   alerts: 1,

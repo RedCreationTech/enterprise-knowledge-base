@@ -38,7 +38,7 @@ import {
   Zap,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { daily, me, METRICS, org, useAppStore } from '@/mocks'
+import { daily, me, METRICS, org, trend7dRangeLabel, useAppStore } from '@/mocks'
 import type { TaskItem } from '@/mocks'
 import { trend30d, trend7d } from '@/pages/activation/daily-data'
 import {
@@ -164,7 +164,7 @@ const FEATURE_NAV = [
   { icon: MessagesSquare, name: '对话历史', desc: '156 个问题的完整记录', emptyDesc: '回看团队提问与答案', to: '/workspace/chat-history', count: 0 },
   { icon: FileSliders, name: '指令管理', desc: '回答风格与拒答策略', emptyDesc: '回答风格与拒答策略', to: '/workspace/instructions', count: 0 },
   { icon: Puzzle, name: '集成管理', desc: '4 个集成 · 1 条授权告警', emptyDesc: '连接常用办公平台', to: '/workspace/integrations', count: 1 },
-  { icon: KeyRound, name: 'API 与开发', desc: '1,240 次调用 · Widget 嵌入', emptyDesc: '开放 API · Widget 嵌入', to: '/workspace/api-dev', count: 0 },
+  { icon: KeyRound, name: 'API 与开发', desc: `${METRICS.apiMonthlyCalls.toLocaleString('en-US')} 次调用 · Widget 嵌入`, emptyDesc: '开放 API · Widget 嵌入', to: '/workspace/api-dev', count: 0 },
   { icon: ShieldCheck, name: '权限管理', desc: '五层权限 · 2 人待映射', emptyDesc: '五层权限管控', to: '/workspace/permissions', count: 2 },
 ]
 
@@ -617,7 +617,7 @@ export default function Dashboard() {
     const channelRows = CHANNEL_USAGE.map((c) => `- ${c.name}：${c.count} 次`).join('\n')
     const md = `# 企业知识库周报（${org.name}）
 
-> 导出时间：${stamp} · 统计口径：近 7 天（5/23–5/29）
+> 导出时间：${stamp} · 统计口径：近 7 天（${trend7dRangeLabel()}）
 
 ## 核心指标
 
