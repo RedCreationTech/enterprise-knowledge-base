@@ -388,7 +388,7 @@ export default function Settings() {
   return (
     <div className="space-y-4">
       {/* 标题区 */}
-      <PageHeader crumbs={[]} title="设置中心" subtitle="管理企业信息、成员权限、套餐用量与安全策略" />
+      <PageHeader crumbs={['运营与分析', '设置中心']} title="设置中心" subtitle="管理企业信息、成员权限、套餐用量与安全策略" />
 
       <div className="flex items-start gap-6">
         {/* 左分组导航 */}

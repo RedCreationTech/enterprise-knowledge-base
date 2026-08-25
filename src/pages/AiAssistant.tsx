@@ -430,6 +430,11 @@ export default function AiAssistant() {
       {/* 顶部单行横幅：标题(左) + 紧凑统计 & 操作(右) */}
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div className="min-w-0">
+          <nav className="mb-1 flex h-8 items-center gap-1 text-body-sm text-neutral-500">
+            智能助手
+            <ChevronRight className="h-3.5 w-3.5 text-neutral-300" />
+            <span className="font-medium text-neutral-950">AI 助手</span>
+          </nav>
           <h1 className="text-h1 text-neutral-950">AI 助手</h1>
         </div>
         <div className="flex flex-wrap items-center gap-x-6 gap-y-3">

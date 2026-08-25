@@ -38,6 +38,7 @@ const Instructions = lazy(() => import('@/pages/Instructions'))
 const Integrations = lazy(() => import('@/pages/Integrations'))
 const ApiDev = lazy(() => import('@/pages/ApiDev'))
 const Permissions = lazy(() => import('@/pages/Permissions'))
+const NotFound = lazy(() => import('@/pages/NotFound'))
 
 /** 路由懒加载兜底：居中轻量加载态（Spinner + 文案，贴现有设计系统），避免 chunk 加载期间白屏 */
 function RouteFallback() {
@@ -122,7 +123,8 @@ function AppRoutes() {
           <Route path="/workspace/settings" element={<Settings />} />
         </Route>
 
-        <Route path="*" element={<HomeRedirect />} />
+        {/* 真实 404：未知 URL 显示 NotFound，不再静默跳转工作台 */}
+        <Route path="*" element={<NotFound />} />
       </Routes>
     </Suspense>
   )

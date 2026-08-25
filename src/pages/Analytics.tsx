@@ -241,7 +241,7 @@ export default function Analytics() {
     <div className="space-y-4">
       {/* 标题区 */}
       <PageHeader
-        crumbs={[]}
+        crumbs={['运营与分析', '使用分析']}
         title="使用分析"
         subtitle="数据口径：排除测试会话与系统消息 · 更新于 今天 10:30"
         actions={

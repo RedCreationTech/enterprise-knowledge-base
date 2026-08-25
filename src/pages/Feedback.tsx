@@ -11,6 +11,7 @@ import { AnimatePresence, motion } from 'framer-motion'
 import {
   Activity,
   CheckCircle2,
+  ChevronRight,
   CircleCheck,
   ClipboardList,
   Clock,
@@ -311,6 +312,11 @@ export default function Feedback() {
       {/* 顶部单行横幅：标题(左) + 紧凑统计(右) */}
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div className="min-w-0">
+          <nav className="mb-1 flex h-8 items-center gap-1 text-body-sm text-neutral-500">
+            运营与分析
+            <ChevronRight className="h-3.5 w-3.5 text-neutral-300" />
+            <span className="font-medium text-neutral-950">反馈与洞察</span>
+          </nav>
           <h1 className="text-h1 text-neutral-950">反馈与洞察</h1>
         </div>
         <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
