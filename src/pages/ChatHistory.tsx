@@ -373,7 +373,7 @@ export default function ChatHistory() {
       </div>
 
       {/* 筛选工具条 */}
-      <div className="mb-4 flex min-h-16 flex-wrap items-center gap-2 rounded-xl border border-neutral-200 bg-white px-4 py-3 shadow-card">
+      <div className="mb-4 flex min-h-11 flex-wrap items-center gap-2 rounded-xl border border-neutral-200 bg-white px-3 py-2">
         <div className="relative">
           <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-400" />
           <input

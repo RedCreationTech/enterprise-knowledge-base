@@ -393,7 +393,7 @@ export default function KnowledgeMap() {
       />
 
       {/* 筛选工具条 */}
-      <div className="mb-4 flex min-h-14 flex-wrap items-center gap-2 rounded-xl border border-neutral-200 bg-white px-4 py-2.5 shadow-card">
+      <div className="mb-4 flex min-h-11 flex-wrap items-center gap-2 rounded-xl border border-neutral-200 bg-white px-3 py-2">
         <select
           value={space}
           onChange={(e) => {

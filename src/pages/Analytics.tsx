@@ -287,7 +287,7 @@ export default function Analytics() {
       ) : (
         <>
       {/* 筛选行（sticky） */}
-      <div className="sticky top-16 z-30 -mx-1 flex flex-wrap items-center gap-2 rounded-lg border border-neutral-200 bg-white px-3 py-2.5 shadow-card">
+      <div className="sticky top-16 z-30 -mx-1 flex flex-wrap items-center gap-2 rounded-lg border border-neutral-200 bg-white px-3 py-2">
         <select value={pendingRange} onChange={(e) => applyRange(e.target.value as TimeRange)} className={selectCls} title="时间范围">
           <option value="today">今日</option>
           <option value="7d">近 7 天</option>

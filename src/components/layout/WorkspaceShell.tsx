@@ -242,7 +242,7 @@ export function WorkspaceShell({ children }: WorkspaceShellProps) {
           <PlanCard />
         </aside>
         <main className="min-w-0 flex-1">
-          <div className="mx-auto w-full max-w-content px-6 pt-5 pb-6">{children ?? <Outlet />}</div>
+          <div className="mx-auto w-full max-w-content px-6 pt-4 pb-6">{children ?? <Outlet />}</div>
         </main>
       </div>
       <CopilotDrawer open={copilotOpen} onClose={() => setCopilotOpen(false)} />

@@ -18,9 +18,9 @@ export interface PageHeaderProps {
 
 export function PageHeader({ crumbs, title, subtitle, badge, actions, className }: PageHeaderProps) {
   return (
-    <div className={cn('mb-4', className)}>
+    <div className={cn('mb-3', className)}>
       {crumbs.length > 0 && (
-        <nav className="mb-1.5 flex h-8 items-center gap-1 text-body-sm text-neutral-500">
+        <nav className="mb-1 flex h-8 items-center gap-1 text-body-sm text-neutral-500">
           {crumbs.map((c, i) => {
             const last = i === crumbs.length - 1
             return (
@@ -38,7 +38,7 @@ export function PageHeader({ crumbs, title, subtitle, badge, actions, className 
             <h1 className="text-h1 text-neutral-950">{title}</h1>
             {badge}
           </div>
-          {subtitle && <p className="mt-1.5 text-body text-neutral-500">{subtitle}</p>}
+          {subtitle && <p className="mt-1 text-body text-neutral-500">{subtitle}</p>}
         </div>
         {actions && <div className="flex shrink-0 items-center gap-2">{actions}</div>}
       </div>
