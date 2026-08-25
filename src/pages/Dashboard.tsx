@@ -55,6 +55,7 @@ import { PageHeader } from '@/pages/workspace/PageHeader'
 import { TrendChart } from '@/pages/workspace/TrendChart'
 import { SideDrawer } from '@/pages/workspace/SideDrawer'
 import { useAppToast } from '@/lib/toast'
+import { KEY_NAMESPACE, loadLSArray, saveLS } from '@/lib/storage'
 import {
   LOCAL_UPLOAD_BASE,
   LOCAL_UPLOAD_EVENT,
@@ -145,8 +146,8 @@ const CHANNEL_USAGE = [
 const RANK_COLORS = ['bg-warning text-white', 'bg-warning text-white', 'bg-brand-500 text-white', 'bg-neutral-200 text-neutral-500', 'bg-neutral-200 text-neutral-500']
 
 /** 高频问题 Drawer「创建 FAQ」「加入测试集」幂等记录（localStorage） */
-const FAQ_CREATED_KEY = 'ekb-faq-created'
-const TESTSET_ADDED_KEY = 'ekb-testset-added'
+const FAQ_CREATED_KEY = KEY_NAMESPACE.dashboard.faqCreated
+const TESTSET_ADDED_KEY = KEY_NAMESPACE.dashboard.testsetAdded
 
 const QUICK_ACTIONS = [
   { icon: Upload, name: '上传资料', desc: '文档 / 表格 / 图片', to: '/workspace/knowledge-base' },
@@ -663,20 +664,9 @@ ${channelRows}
 
   // ----- 高频问题 Drawer：创建 FAQ / 加入测试集（写入 store.tasks，localStorage 幂等） -----
 
-  const readDoneList = (key: string): string[] => {
-    try {
-      const list = JSON.parse(localStorage.getItem(key) ?? '[]') as unknown
-      return Array.isArray(list) ? (list as string[]) : []
-    } catch {
-      return []
-    }
-  }
+  const readDoneList = (key: string): string[] => loadLSArray(key, (x): x is string => typeof x === 'string')
   const appendDoneList = (key: string, value: string) => {
-    try {
-      localStorage.setItem(key, JSON.stringify([...readDoneList(key), value]))
-    } catch {
-      // 存储不可用时仅本次会话生效
-    }
+    saveLS(key, [...readDoneList(key), value])
   }
 
   const handleCreateFaq = (q: TopQuestion) => {

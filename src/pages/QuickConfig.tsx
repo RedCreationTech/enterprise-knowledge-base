@@ -33,6 +33,7 @@ import { ProgressRing, SectionCard } from '@/components/common'
 import { PageHeader } from '@/pages/workspace/PageHeader'
 import { PrimaryButton, SecondaryButton } from './activation/ui'
 import { useAppToast } from '@/lib/toast'
+import { KEY_NAMESPACE, loadLS, saveLS } from '@/lib/storage'
 
 const PAGE = '/workspace/quick-config'
 
@@ -77,7 +78,7 @@ const GENERATE_PHASES = ['正在理解你的资料…', '正在组织答案…']
 
 // ---------- 「稍后继续」进度持久化 ----------
 
-const PROGRESS_KEY = 'ekb-quick-config-progress'
+const PROGRESS_KEY = KEY_NAMESPACE.quickConfig.progress
 
 interface QuickConfigProgress {
   /** 已连接的系统名称 */
@@ -90,31 +91,22 @@ interface QuickConfigProgress {
 }
 
 function loadProgress(): QuickConfigProgress | null {
-  try {
-    const raw = localStorage.getItem(PROGRESS_KEY)
-    if (!raw) return null
-    const parsed = JSON.parse(raw) as Partial<QuickConfigProgress>
-    return {
-      connected: Array.isArray(parsed.connected) ? parsed.connected.filter((x): x is string => typeof x === 'string') : [],
-      scene: typeof parsed.scene === 'string' ? parsed.scene : '',
-      question: typeof parsed.question === 'string' ? parsed.question : '',
-      progress: typeof parsed.progress === 'number' ? parsed.progress : 0,
-    }
-  } catch {
-    return null
+  const parsed = loadLS<Partial<QuickConfigProgress> | null>(PROGRESS_KEY, null)
+  if (!parsed) return null
+  return {
+    connected: Array.isArray(parsed.connected) ? parsed.connected.filter((x): x is string => typeof x === 'string') : [],
+    scene: typeof parsed.scene === 'string' ? parsed.scene : '',
+    question: typeof parsed.question === 'string' ? parsed.question : '',
+    progress: typeof parsed.progress === 'number' ? parsed.progress : 0,
   }
 }
 
 // ---------- 步骤卡 ----------
 
-const COLLAPSE_KEY = 'ekb-quick-config-collapsed'
+const COLLAPSE_KEY = KEY_NAMESPACE.quickConfig.collapsed
 
 function loadCollapsed(): Record<number, boolean> {
-  try {
-    return JSON.parse(localStorage.getItem(COLLAPSE_KEY) ?? '{}') as Record<number, boolean>
-  } catch {
-    return {}
-  }
+  return loadLS<Record<number, boolean>>(COLLAPSE_KEY, {})
 }
 
 interface StepCardProps {
@@ -249,11 +241,7 @@ export default function QuickConfig() {
   const toggleCollapsed = (i: number) => {
     setCollapsed((prev) => {
       const next = { ...prev, [i]: !prev[i] }
-      try {
-        localStorage.setItem(COLLAPSE_KEY, JSON.stringify(next))
-      } catch {
-        // ignore
-      }
+      saveLS(COLLAPSE_KEY, next)
       return next
     })
   }

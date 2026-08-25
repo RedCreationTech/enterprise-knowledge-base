@@ -27,6 +27,7 @@ import { PageHeader } from '@/pages/workspace/PageHeader'
 import { Modal } from '@/pages/workspace/Modal'
 import { SideDrawer } from '@/pages/workspace/SideDrawer'
 import { useAppToast } from '@/lib/toast'
+import { KEY_NAMESPACE, loadLS, saveLS } from '@/lib/storage'
 import {
   API_DOC_SECTIONS,
   API_EXPIRY_OPTIONS,
@@ -50,7 +51,7 @@ import {
 import type { ApiKey, CustomApiApp, WebhookEvent, WidgetConfig } from '@/pages/workspace/apiData'
 
 /** Key 创建/吊销持久化：刷新不丢 */
-const KEYS_KEY = 'ekb-api-keys'
+const KEYS_KEY = KEY_NAMESPACE.apiDev.keys
 /** 元素级 schema 校验：历史污染数据（异构结构）直接丢弃，防止渲染期 TypeError 白屏 */
 function isApiKey(v: unknown): v is ApiKey {
   if (typeof v !== 'object' || v === null) return false
@@ -58,24 +59,16 @@ function isApiKey(v: unknown): v is ApiKey {
   return typeof k.id === 'string' && typeof k.name === 'string' && typeof k.maskedKey === 'string' && Array.isArray(k.permissions)
 }
 function readKeys(): ApiKey[] | null {
-  try {
-    const v = JSON.parse(localStorage.getItem(KEYS_KEY) ?? 'null')
-    if (!Array.isArray(v)) return null
-    const valid = v.filter(isApiKey)
-    // 全部为异构污染数据（非用户清空）→ 视为无效键，回退默认数据
-    if (v.length > 0 && valid.length === 0) return null
-    if (valid.length !== v.length) {
-      // 发现污染条目：回写净化后的数组，避免反复读到坏数据
-      try {
-        localStorage.setItem(KEYS_KEY, JSON.stringify(valid))
-      } catch {
-        /* 存储不可用时仅内存净化 */
-      }
-    }
-    return valid
-  } catch {
-    return null
+  const v = loadLS<unknown>(KEYS_KEY, null)
+  if (!Array.isArray(v)) return null
+  const valid = v.filter(isApiKey)
+  // 全部为异构污染数据（非用户清空）→ 视为无效键，回退默认数据
+  if (v.length > 0 && valid.length === 0) return null
+  if (valid.length !== v.length) {
+    // 发现污染条目：回写净化后的数组，避免反复读到坏数据
+    saveLS(KEYS_KEY, valid)
   }
+  return valid
 }
 
 /** Webhook 订阅端点（支持多端点） */
@@ -175,11 +168,7 @@ export default function ApiDev() {
 
   // Key 创建/吊销持久化（与既有逻辑整合，刷新不丢）
   useEffect(() => {
-    try {
-      localStorage.setItem(KEYS_KEY, JSON.stringify(keys))
-    } catch {
-      /* ignore */
-    }
+    saveLS(KEYS_KEY, keys)
   }, [keys])
 
   // Webhook 多端点

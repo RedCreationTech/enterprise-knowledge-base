@@ -31,6 +31,7 @@ import { Modal } from './workspace/Modal'
 import { SideDrawer } from './workspace/SideDrawer'
 import { PageHeader } from './workspace/PageHeader'
 import { useAppToast } from '@/lib/toast'
+import { KEY_NAMESPACE, loadLS, saveLS } from '@/lib/storage'
 import type { ApiKeyItem, MemberItem } from './workspace/settings.mock'
 import {
   apiKeys as initialApiKeys,
@@ -59,26 +60,9 @@ const GROUPS: { key: GroupKey; label: string; icon: typeof Building2 }[] = [
   { key: 'demo', label: '演示数据', icon: RefreshCcw },
 ]
 
-const ORG_LS_KEY = 'ekb-org-profile'
+const ORG_LS_KEY = KEY_NAMESPACE.settings.orgProfile
 // 独立命名空间：ApiDev 页的 ApiKey 结构不同（maskedKey/permissions[]），不得共用同一键（V2 评审 P0 白屏根因）
-const APIKEYS_LS_KEY = 'ekb-settings-api-keys'
-
-function loadLS<T>(key: string, fallback: T): T {
-  try {
-    const raw = localStorage.getItem(key)
-    return raw ? (JSON.parse(raw) as T) : fallback
-  } catch {
-    return fallback
-  }
-}
-
-function saveLS(key: string, value: unknown) {
-  try {
-    localStorage.setItem(key, JSON.stringify(value))
-  } catch {
-    // 存储不可用时静默降级为会话内状态
-  }
-}
+const APIKEYS_LS_KEY = KEY_NAMESPACE.settings.apiKeys
 
 /** 触发浏览器真实下载（CSV） */
 function downloadCsv(filename: string, header: string, rows: string[][]) {

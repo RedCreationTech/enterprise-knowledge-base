@@ -30,6 +30,7 @@ import { ChatPanel } from '@/components/chat'
 import { SectionCard } from '@/components/common'
 import { DemoModal, Modal, PrimaryButton, SecondaryButton } from './activation/ui'
 import { useAppToast } from '@/lib/toast'
+import { KEY_NAMESPACE, loadLS, saveLS } from '@/lib/storage'
 
 // ---------- 小知脚本（trial-apply.md §4.1 逐字） ----------
 
@@ -65,7 +66,7 @@ const CHIP_GOALS: Record<string, string> = {
 
 // ---------- 表单 ----------
 
-const DRAFT_KEY = 'ekb-trial-apply-draft'
+const DRAFT_KEY = KEY_NAMESPACE.trialApply.draft
 
 /** 条款版本（提交成功时随草稿落盘 agreedVersion / agreedAt） */
 const TERMS_VERSION = 'v1.2'
@@ -237,17 +238,12 @@ export default function TrialApply() {
   useEffect(() => {
     if (restoredRef.current) return
     restoredRef.current = true
-    try {
-      const raw = localStorage.getItem(DRAFT_KEY)
-      if (raw) {
-        const draft = JSON.parse(raw) as Partial<ApplyForm> & { contactMode?: ContactMode }
-        const { contactMode: savedMode, ...formDraft } = draft
-        setForm((prev) => ({ ...prev, ...formDraft }))
-        if (savedMode === 'phone' || savedMode === 'email') setContactMode(savedMode)
-        toast.info('已恢复上次进度')
-      }
-    } catch {
-      // 草稿不可用时忽略
+    const draft = loadLS<Partial<ApplyForm> & { contactMode?: ContactMode } | null>(DRAFT_KEY, null)
+    if (draft) {
+      const { contactMode: savedMode, ...formDraft } = draft
+      setForm((prev) => ({ ...prev, ...formDraft }))
+      if (savedMode === 'phone' || savedMode === 'email') setContactMode(savedMode)
+      toast.info('已恢复上次进度')
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
@@ -257,11 +253,7 @@ export default function TrialApply() {
     if (!dirtyRef.current) return
     setSaveState('正在保存…')
     const timer = window.setTimeout(() => {
-      try {
-        localStorage.setItem(DRAFT_KEY, JSON.stringify({ ...form, contactMode }))
-      } catch {
-        // 存储不可用时静默降级
-      }
+      saveLS(DRAFT_KEY, { ...form, contactMode })
       setSaveState('已保存')
     }, 800)
     return () => window.clearTimeout(timer)
@@ -348,14 +340,7 @@ export default function TrialApply() {
       setSubmitState('success')
       submitApplication()
       // 提交成功：条款同意记录随草稿落盘（向后兼容旧草稿结构）
-      try {
-        localStorage.setItem(
-          DRAFT_KEY,
-          JSON.stringify({ ...form, contactMode, agreedVersion: TERMS_VERSION, agreedAt: new Date().toISOString() }),
-        )
-      } catch {
-        // 存储不可用时静默降级
-      }
+      saveLS(DRAFT_KEY, { ...form, contactMode, agreedVersion: TERMS_VERSION, agreedAt: new Date().toISOString() })
       toast.success('申请已提交成功')
       window.setTimeout(() => navigate('/workspace/quick-config'), 800)
     }, 1500)

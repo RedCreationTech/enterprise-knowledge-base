@@ -44,6 +44,7 @@ import { Modal } from '@/pages/activation/ui'
 import { SideDrawer } from '@/pages/workspace/SideDrawer'
 import { PageHeader } from '@/pages/workspace/PageHeader'
 import { useAppToast } from '@/lib/toast'
+import { KEY_NAMESPACE, loadLSArray, saveLS } from '@/lib/storage'
 import {
   APP_DOCS,
   APP_TABS,
@@ -62,21 +63,12 @@ const EASE: [number, number, number, number] = [0.2, 0.8, 0.2, 1]
 const PAGE = '/workspace/apps'
 
 /** 卸载持久化：刷新后已卸载应用不再「复活」，可重新安装 */
-const UNINSTALLED_KEY = 'ekb-uninstalled-apps'
+const UNINSTALLED_KEY = KEY_NAMESPACE.installApp.uninstalled
 function readUninstalled(): string[] {
-  try {
-    const v = JSON.parse(localStorage.getItem(UNINSTALLED_KEY) ?? '[]')
-    return Array.isArray(v) ? v.filter((x) => typeof x === 'string') : []
-  } catch {
-    return []
-  }
+  return loadLSArray(UNINSTALLED_KEY, (x): x is string => typeof x === 'string')
 }
 function writeUninstalled(ids: string[]) {
-  try {
-    localStorage.setItem(UNINSTALLED_KEY, JSON.stringify(ids))
-  } catch {
-    /* ignore */
-  }
+  saveLS(UNINSTALLED_KEY, ids)
 }
 
 type SettingsTab = 'scope' | 'notify' | 'auth' | 'danger'
