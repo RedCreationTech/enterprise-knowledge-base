@@ -119,6 +119,8 @@ export default function DataSources() {
   const [wizardOpen, setWizardOpen] = useState(false)
   const [wizardStep, setWizardStep] = useState(1)
   const [wizardNotice, setWizardNotice] = useState<string | null>(null)
+  // 从「连接{c.name}」按钮进入向导时记录目标内置连接器 id（否则为 null = 通用新增来源）
+  const [wizardTargetId, setWizardTargetId] = useState<string | null>(null)
   const [srcType, setSrcType] = useState<SourceTypeOption | null>(null)
   const [srcUrl, setSrcUrl] = useState('')
   const [srcDepth, setSrcDepth] = useState(CRAWL_DEPTH_OPTIONS[1])
@@ -167,10 +169,12 @@ export default function DataSources() {
     setOauthDone(false)
     setSubmitting(false)
     setWizardNotice(null)
+    setWizardTargetId(null)
   }
 
-  const openWizard = (notice?: string) => {
+  const openWizard = (notice?: string, targetId: string | null = null) => {
     resetWizard()
+    setWizardTargetId(targetId)
     setWizardNotice(notice ?? null)
     setWizardOpen(true)
   }
@@ -221,26 +225,40 @@ export default function DataSources() {
   const submitWizard = () => {
     if (!srcType || !canSubmit) return
     setSubmitting(true)
+    // 连接内置连接器时命中目标卡；通用新增来源时 target 为空，保持新增自定义卡
+    const target = wizardTargetId ? connectors.find((c) => c.id === wizardTargetId) : undefined
+    const connectName = target?.name ?? srcType.label
     setTimeout(() => {
       const uid = `w-${Date.now()}`
       if (srcType.kind === 'oauth') {
-        // OAuth 来源：连接器列表真实新增卡片 + 首次同步任务
-        setConnectors((prev) => [
-          ...prev,
-          {
-            id: `custom-${uid}`,
-            name: srcType.label,
-            connected: true,
-            syncStatus: 'idle',
-            desc: srcType.desc,
-            docs: 0,
-            lastSyncAt: '刚刚',
-            aclCoverage: 100,
-            incremental: true,
-          },
-        ])
+        if (target) {
+          // 内置连接器：将目标连接器卡置为已连接，不新增伪卡
+          setConnectors((prev) =>
+            prev.map((c) =>
+              c.id === target.id
+                ? { ...c, connected: true, docs: c.docs ?? 0, lastSyncAt: '刚刚', aclCoverage: c.aclCoverage ?? 100, incremental: true }
+                : c,
+            ),
+          )
+        } else {
+          // OAuth 来源：连接器列表真实新增卡片 + 首次同步任务
+          setConnectors((prev) => [
+            ...prev,
+            {
+              id: `custom-${uid}`,
+              name: srcType.label,
+              connected: true,
+              syncStatus: 'idle',
+              desc: srcType.desc,
+              docs: 0,
+              lastSyncAt: '刚刚',
+              aclCoverage: 100,
+              incremental: true,
+            },
+          ])
+        }
         setTasks((prev) => [
-          { id: `t-${uid}`, source: srcType.label, type: '首次同步', status: '进行中', docs: '—', startedAt: '刚刚', duration: '—' },
+          { id: `t-${uid}`, source: connectName, type: '首次同步', status: '进行中', docs: '—', startedAt: '刚刚', duration: '—' },
           ...prev,
         ])
       } else {
@@ -261,7 +279,7 @@ export default function DataSources() {
       }
       setSubmitting(false)
       setWizardOpen(false)
-      toast.success(srcType.kind === 'oauth' ? `${srcType.label} 已连接，首次同步任务已加入队列` : '地址验证通过，抓取任务已开始')
+      toast.success(srcType.kind === 'oauth' ? `${connectName} 已连接，首次同步任务已加入队列` : '地址验证通过，抓取任务已开始')
       resetWizard()
     }, 1800)
   }
@@ -439,7 +457,7 @@ export default function DataSources() {
                       <button type="button" className={BTN_TERTIARY + ' !text-danger hover:!bg-danger-bg'} onClick={() => setDeleteTarget(c.id)}>
                         删除
                       </button>
-                      <button type="button" className={BTN_SECONDARY + ' !h-8 px-3'} onClick={() => openWizard(`正在连接：${c.name}，请选择接入方式（推荐 OAuth 授权）`)}>
+                      <button type="button" className={BTN_SECONDARY + ' !h-8 px-3'} onClick={() => openWizard(`正在连接：${c.name}，请选择接入方式（推荐 OAuth 授权）`, c.id)}>
                         连接{c.name}
                       </button>
                     </span>
