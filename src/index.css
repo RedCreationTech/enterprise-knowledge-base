@@ -1,0 +1,97 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* shadcn/ui CSS variables (brand-aligned) */
+    --background: 216 43% 98%;
+    --foreground: 219 40% 11%;
+    --card: 0 0% 100%;
+    --card-foreground: 219 40% 11%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 219 40% 11%;
+    --primary: 221 91% 54%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 217 100% 97%;
+    --secondary-foreground: 221 91% 54%;
+    --muted: 214 32% 95%;
+    --muted-foreground: 215 16% 47%;
+    --accent: 217 100% 97%;
+    --accent-foreground: 221 91% 54%;
+    --destructive: 358 75% 59%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 214 32% 92%;
+    --input: 214 32% 92%;
+    --ring: 221 91% 54%;
+    --radius: 0.75rem;
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 219 40% 11%;
+    --sidebar-primary: 221 91% 54%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 217 100% 97%;
+    --sidebar-accent-foreground: 221 91% 54%;
+    --sidebar-border: 214 32% 92%;
+    --sidebar-ring: 221 91% 54%;
+
+    /* design-system §4.5 全量 CSS tokens（供图表 / SVG / 第三方覆盖使用） */
+    --color-brand-700: #174FCF; --color-brand-600: #1E63F4; --color-brand-500: #2F74FF;
+    --color-brand-300: #8DB2FF; --color-brand-100: #EAF2FF; --color-brand-50: #F5F8FF;
+    --color-text-primary: #101828; --color-text-secondary: #475569;
+    --color-text-tertiary: #7B879A; --color-text-placeholder: #98A2B3;
+    --color-page: #F7F9FC; --color-surface: #FFFFFF; --color-surface-soft: #FBFCFE;
+    --color-border: #E4EAF2; --color-divider: #EEF2F7;
+    --color-success: #16A563; --color-success-bg: #EAF9F1;
+    --color-warning: #E99812; --color-warning-bg: #FFF7E7;
+    --color-danger: #E5484D; --color-danger-bg: #FFF0F0;
+    --color-info: #1E63F4; --color-info-bg: #EAF2FF;
+    --color-violet: #7357E8; --color-violet-bg: #F1EEFF;
+    --color-cyan: #159FB7; --color-cyan-bg: #E8FAFC;
+    --color-highlight: #FFF4C2;
+    --radius-sm: 6px; --radius-md: 8px; --radius-lg: 12px; --radius-xl: 16px; --radius-pill: 999px;
+    --space-1: 4px; --space-2: 8px; --space-3: 12px; --space-4: 16px;
+    --space-5: 20px; --space-6: 24px; --space-8: 32px;
+    --shadow-card: 0 8px 24px rgba(31, 55, 90, 0.06);
+    --shadow-float: 0 12px 32px rgba(31, 55, 90, 0.10);
+    --shadow-focus: 0 0 0 3px rgba(47, 116, 255, 0.16);
+    --motion-fast: 120ms; --motion-normal: 180ms; --motion-slow: 240ms;
+    --ease-brand: cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  html {
+    @apply antialiased;
+  }
+  body {
+    @apply bg-surface-page text-neutral-700 font-sans text-body;
+    font-feature-settings: 'tnum';
+  }
+  h1, h2, h3, h4, h5, h6, strong, b {
+    @apply text-neutral-950;
+  }
+  ::placeholder {
+    @apply text-neutral-400;
+  }
+  ::selection {
+    background: var(--color-brand-100);
+    color: var(--color-brand-700);
+  }
+  *:focus-visible {
+    outline: none;
+    box-shadow: var(--shadow-focus);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

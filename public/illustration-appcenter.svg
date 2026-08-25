@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="640" height="360" viewBox="0 0 640 360" fill="none">
+  <ellipse cx="480" cy="316" rx="150" ry="18" fill="#EAF2FF" opacity="0.6"/>
+  <!-- floating folder -->
+  <g transform="translate(388 96) rotate(-6)">
+    <path d="M0 14 Q0 6 8 6 L34 6 L44 16 L104 16 Q112 16 112 24 L112 82 Q112 90 104 90 L8 90 Q0 90 0 82 Z" fill="#EAF2FF" stroke="#8DB2FF" stroke-width="2.5"/>
+    <path d="M0 30 L112 30" stroke="#8DB2FF" stroke-width="2.5"/>
+  </g>
+  <!-- isometric cube -->
+  <g transform="translate(516 60)">
+    <path d="M40 0 L80 22 L80 66 L40 88 L0 66 L0 22 Z" fill="#8DB2FF"/>
+    <path d="M40 0 L80 22 L40 44 L0 22 Z" fill="#2F74FF"/>
+    <path d="M40 44 L80 22 L80 66 L40 88 Z" fill="#1E63F4"/>
+    <path d="M40 44 L0 22 L0 66 L40 88 Z" fill="#8DB2FF"/>
+  </g>
+  <!-- chat bubble -->
+  <g transform="translate(438 200)">
+    <rect width="96" height="56" rx="14" fill="#FFFFFF" stroke="#8DB2FF" stroke-width="2.5"/>
+    <path d="M22 56 L22 72 L40 56 Z" fill="#FFFFFF" stroke="#8DB2FF" stroke-width="2.5" stroke-linejoin="round"/>
+    <circle cx="28" cy="28" r="5" fill="#2F74FF"/>
+    <circle cx="48" cy="28" r="5" fill="#8DB2FF"/>
+    <circle cx="68" cy="28" r="5" fill="#E4EAF2"/>
+  </g>
+  <!-- puzzle piece -->
+  <g transform="translate(560 180) rotate(12)">
+    <path d="M6 0 L26 0 Q26 -10 34 -10 Q42 -10 42 0 L62 0 Q70 0 70 8 L70 28 Q80 28 80 36 Q80 44 70 44 L70 64 Q70 72 62 72 L6 72 Q-2 72 -2 64 L-2 8 Q-2 0 6 0 Z" fill="#7357E8" opacity="0.85"/>
+  </g>
+  <!-- accent dots & rings -->
+  <circle cx="380" cy="70" r="6" fill="#7357E8" opacity="0.5"/>
+  <circle cx="600" cy="120" r="5" fill="#2F74FF" opacity="0.5"/>
+  <circle cx="420" cy="290" r="7" fill="none" stroke="#8DB2FF" stroke-width="2.5"/>
+  <circle cx="590" cy="270" r="9" fill="none" stroke="#7357E8" stroke-width="2.5" opacity="0.6"/>
+  <path d="M372 240 l10 10 M382 240 l-10 10" stroke="#8DB2FF" stroke-width="2.5" stroke-linecap="round"/>
+</svg>
