@@ -459,45 +459,48 @@ export default function ApiDev() {
                           )}
                         </td>
                         <td className="rounded-r-md px-3 text-right">
-                          <button
-                            type="button"
-                            disabled={revoked}
-                            onClick={() => {
-                              setEditPermsTarget(k)
-                              setEditPermsDraft(k.permissions)
-                            }}
-                            className="mr-3 text-body-sm text-brand-600 hover:text-brand-500 disabled:text-neutral-300"
-                          >
-                            编辑权限
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => setUsageTarget(k)}
-                            className="mr-3 text-body-sm text-brand-600 hover:text-brand-500"
-                          >
-                            查看用量
-                          </button>
-                          <button
-                            type="button"
-                            disabled={revoked}
-                            onClick={async () => {
-                              if (await copyText(k.fullKey)) toast.success('Key 已复制，请妥善保管')
-                            }}
-                            className="mr-3 text-body-sm text-brand-600 hover:text-brand-500 disabled:text-neutral-300"
-                          >
-                            复制
-                          </button>
-                          <button
-                            type="button"
-                            disabled={revoked}
-                            onClick={() => {
-                              setRevokeTarget(k)
-                              setRevokeWord('')
-                            }}
-                            className="text-body-sm text-danger hover:opacity-80 disabled:text-neutral-300"
-                          >
-                            吊销
-                          </button>
+                          {revoked ? (
+                            <span className="text-caption text-neutral-400">—</span>
+                          ) : (
+                            <>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setEditPermsTarget(k)
+                                  setEditPermsDraft(k.permissions)
+                                }}
+                                className="mr-3 text-body-sm text-brand-600 hover:text-brand-500"
+                              >
+                                编辑权限
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => setUsageTarget(k)}
+                                className="mr-3 text-body-sm text-brand-600 hover:text-brand-500"
+                              >
+                                查看用量
+                              </button>
+                              <button
+                                type="button"
+                                onClick={async () => {
+                                  if (await copyText(k.fullKey)) toast.success('Key 已复制，请妥善保管')
+                                }}
+                                className="mr-3 text-body-sm text-brand-600 hover:text-brand-500"
+                              >
+                                复制
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setRevokeTarget(k)
+                                  setRevokeWord('')
+                                }}
+                                className="text-body-sm text-danger hover:opacity-80"
+                              >
+                                吊销
+                              </button>
+                            </>
+                          )}
                         </td>
                       </tr>
                     )

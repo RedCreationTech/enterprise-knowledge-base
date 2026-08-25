@@ -658,7 +658,8 @@ ${channelRows}
     document.body.appendChild(a)
     a.click()
     a.remove()
-    URL.revokeObjectURL(url)
+    // 延迟回收 object URL：a.click() 后同步 revoke 会与下载启动竞争，导致文件名回退为 "download"
+    window.setTimeout(() => URL.revokeObjectURL(url), 1000)
     toast.success('周报已导出，开始下载')
   }
 
