@@ -48,6 +48,7 @@ import {
   usageItems,
   webhookEvents,
 } from './workspace/settings.mock'
+import { ALL_ROLES, type CoreRole } from './workspace/permissionsData'
 
 type GroupKey = 'org' | 'members' | 'plan' | 'security' | 'notifications' | 'demo'
 
@@ -89,10 +90,10 @@ const secondaryBtn =
 const primaryBtn =
   'inline-flex h-10 items-center gap-1.5 rounded-md bg-brand-600 px-5 text-body font-medium text-white transition-colors duration-micro ease-brand hover:bg-brand-500 active:bg-brand-700'
 
-/** 角色权限等级：roleTemplates 下标越大权限越低 */
+/** 角色权限等级：ALL_ROLES（6 核心角色）下标越大权限越低，管理员=0 权限最高 */
 function roleRank(role: string) {
-  const idx = roleTemplates.indexOf(role)
-  return idx === -1 ? roleTemplates.length : idx
+  const idx = ALL_ROLES.indexOf(role as CoreRole)
+  return idx === -1 ? ALL_ROLES.length : idx
 }
 
 export default function Settings() {
@@ -318,7 +319,7 @@ export default function Settings() {
   }
 
   const applyRoleChange = (member: MemberItem, role: string) => {
-    setMemberList((prev) => prev.map((m) => (m.id === member.id ? { ...m, role, roleTone: roleRank(role) <= 1 ? 'admin' : 'normal' } : m)))
+    setMemberList((prev) => prev.map((m) => (m.id === member.id ? { ...m, role, roleTone: role === '管理员' ? 'admin' : 'normal' } : m)))
     setEditTarget(null)
     setDowngradeConfirm(null)
     toast.success(`已将 ${member.name} 的角色调整为「${role}」。`)
@@ -528,7 +529,7 @@ export default function Settings() {
                       />
                       <select value={roleFilter} onChange={(e) => setRoleFilter(e.target.value)} className={selectCls} title="角色筛选">
                         <option>全部角色</option>
-                        {roleTemplates.map((r) => (
+                        {ALL_ROLES.map((r) => (
                           <option key={r}>{r}</option>
                         ))}
                       </select>
@@ -1187,7 +1188,7 @@ export default function Settings() {
         }
       >
         <ul className="space-y-1.5">
-          {roleTemplates.map((r) => (
+          {ALL_ROLES.map((r) => (
             <li key={r}>
               <button
                 type="button"

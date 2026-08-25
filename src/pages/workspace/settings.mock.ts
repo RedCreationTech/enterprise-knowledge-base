@@ -62,6 +62,12 @@ const MEMBER_JOINED_AT: Record<string, string> = {
   'm-s6': '2025-05-30',
 }
 
+/** 成员状态（待激活保留自旧 6 人数组：陈可/刘洋），其余默认活跃。 */
+const MEMBER_STATUS: Record<string, MemberItem['status']> = {
+  'm-cc': '待激活',
+  'm-ly': '待激活',
+}
+
 /** 单一成员事实源：由 permissionsData（coreMembers + foldedMembers）派生，共 12 名成员。 */
 export const members: MemberItem[] = [...coreMembers, ...foldedMembers].map((m) => ({
   id: m.id,
@@ -71,7 +77,7 @@ export const members: MemberItem[] = [...coreMembers, ...foldedMembers].map((m) 
   department: m.dept,
   role: m.role,
   roleTone: m.role === '管理员' ? 'admin' : 'normal',
-  status: '活跃',
+  status: MEMBER_STATUS[m.id] ?? '活跃',
   joinedAt: MEMBER_JOINED_AT[m.id] ?? '—',
 }))
 
