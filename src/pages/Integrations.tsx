@@ -20,7 +20,7 @@ import {
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useAppStore } from '@/mocks'
-import { ConfirmationCard, DemoEmptyState, MetricCard, ProgressBar, SectionCard } from '@/components/common'
+import { ConfirmationCard, DemoEmptyState, ProgressBar, SectionCard } from '@/components/common'
 import { PageHeader } from '@/pages/workspace/PageHeader'
 import { Modal } from '@/pages/workspace/Modal'
 import { SideDrawer } from '@/pages/workspace/SideDrawer'
@@ -206,12 +206,35 @@ export default function Integrations() {
 
   return (
     <div>
-      <PageHeader
-        crumbs={['应用与集成', '集成管理']}
-        title="集成管理"
-        subtitle={`${installedCount} 个集成 · ${integrationMetrics.normal} 个运行正常 · ${integrationMetrics.warning} 个需要关注 · 本周渠道使用 ${integrationMetrics.weeklyUsage} 次`}
-        actions={
-          <>
+      {/* 顶部单行横幅：标题(左) + 紧凑统计 & 操作(右)，去掉副标题重复数字（评审：顶部面积过大） */}
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <div className="min-w-0">
+          <nav className="mb-1 flex h-8 items-center gap-1 text-body-sm text-neutral-500">
+            应用与集成
+            <ChevronRight className="h-3.5 w-3.5 text-neutral-300" />
+            <span className="font-medium text-neutral-950">集成管理</span>
+          </nav>
+          <h1 className="text-h1 text-neutral-950">集成管理</h1>
+        </div>
+        <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
+          {[
+            { icon: <Puzzle className="h-4 w-4" />, name: '已安装集成', value: installedCount, suffix: '个', hint: `${integrationMetrics.normal} 正常 · ${integrationMetrics.warning} 告警` },
+            { icon: <Send className="h-4 w-4" />, name: '本周渠道使用', value: integrationMetrics.weeklyUsage, suffix: '次', hint: integrationMetrics.usageSplit },
+            { icon: <Users className="h-4 w-4" />, name: '渠道可访问人数', value: integrationMetrics.reachable, suffix: '人', hint: '覆盖 12 名成员的 3 个渠道' },
+            { icon: <AlertTriangle className="h-4 w-4" />, name: '渠道告警', value: authWarning ? integrationMetrics.alerts : 0, suffix: '条', hint: authWarning ? '飞书授权 16 天后到期' : '暂无待处理告警' },
+          ].map((m) => (
+            <div key={m.name} className="flex items-center gap-2" title={m.hint}>
+              {m.icon}
+              <div className="leading-tight">
+                <p className="text-metric text-neutral-950">
+                  {m.value}
+                  <span className="text-body-sm text-neutral-500">{m.suffix}</span>
+                </p>
+                <p className="text-caption text-neutral-500">{m.name}</p>
+              </div>
+            </div>
+          ))}
+          <div className="flex items-center gap-2">
             <button
               type="button"
               onClick={() => navigate('/workspace/analytics')}
@@ -226,9 +249,9 @@ export default function Integrations() {
               安装新应用
               <ChevronRight className="h-4 w-4" />
             </Link>
-          </>
-        }
-      />
+          </div>
+        </div>
+      </div>
 
       {/* 渠道异常通栏（mock 演示：降级恢复） */}
       {channelDown && (
@@ -258,25 +281,6 @@ export default function Integrations() {
           </div>
         </div>
       )}
-
-      {/* Row 1：渠道运行概览 */}
-      <div className="grid grid-cols-2 gap-4 xl:grid-cols-4">
-        {[
-          { icon: <Puzzle className="h-4 w-4" />, name: '已安装集成', value: installedCount, suffix: '个', hint: `${integrationMetrics.normal} 正常 · ${integrationMetrics.warning} 告警` },
-          { icon: <Send className="h-4 w-4" />, name: '本周渠道使用', value: integrationMetrics.weeklyUsage, suffix: '次', hint: integrationMetrics.usageSplit },
-          { icon: <Users className="h-4 w-4" />, name: '渠道可访问人数', value: integrationMetrics.reachable, suffix: '人', hint: '覆盖 12 名成员的 3 个渠道' },
-          { icon: <AlertTriangle className="h-4 w-4" />, name: '渠道告警', value: authWarning ? integrationMetrics.alerts : 0, suffix: '条', hint: authWarning ? '飞书授权 16 天后到期' : '暂无待处理告警' },
-        ].map((m, i) => (
-          <motion.div
-            key={m.name}
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.24, delay: i * 0.07, ease: [0.2, 0.8, 0.2, 1] }}
-          >
-            <MetricCard icon={m.icon} name={m.name} value={m.value} suffix={m.suffix} hint={m.hint} />
-          </motion.div>
-        ))}
-      </div>
 
       {/* Row 2：左 8（集成卡 + 配置面板）｜ 右 4（运行状态侧栏） */}
       <div className="mt-4 grid grid-cols-12 gap-4">
