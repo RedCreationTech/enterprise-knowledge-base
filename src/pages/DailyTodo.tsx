@@ -261,7 +261,7 @@ export default function DailyTodo() {
 
       {/* AI 摘要条（<1536：左栏 AI 摘要面板折叠形态；展开/收起状态 localStorage 记忆） */}
       <div className="2xl:hidden">
-        <div className="flex h-12 items-center justify-between gap-3 rounded-xl bg-brand-50 px-4">
+        <div className="flex h-10 items-center justify-between gap-3 rounded-xl bg-brand-50 px-4">
           <span className="truncate text-body-sm text-neutral-800">💡 小知：今日 Top 5 任务已就绪，需要执行计划吗？</span>
           <button
             type="button"
@@ -430,8 +430,8 @@ export default function DailyTodo() {
           </SectionCard>
         </div>
 
-        {/* 右栏（1366–1535 占 4 列；≥1536 占 3 列） */}
-        <div className="flex flex-col gap-4 xl:sticky xl:top-[88px] xl:col-span-4 2xl:col-span-3">
+        {/* 右栏（1366–1535 占 4 列；≥1536 占 3 列）：独立滚动容器，与左侧「智能助手」栏、页面主滚动各自分离（§5.6 滚动分区） */}
+        <div className="flex flex-col gap-4 xl:sticky xl:top-[88px] xl:col-span-4 xl:h-[calc(100dvh-112px)] xl:overflow-y-auto xl:pr-1 2xl:col-span-3">
           {/* 快捷操作 */}
           <SectionCard title="快捷操作">
             <div className="grid grid-cols-2 gap-2.5">

@@ -202,27 +202,27 @@ function WelcomeBanner({ onStartConfig, onStartTour }: { onStartConfig: () => vo
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.24, ease: [0.2, 0.8, 0.2, 1] }}
-      className="relative w-full flex-1 overflow-hidden rounded-2xl border border-brand-100 bg-gradient-to-r from-brand-50 via-white to-white p-5 shadow-card"
+      className="relative w-full flex-1 overflow-hidden rounded-2xl border border-brand-100 bg-gradient-to-r from-brand-50 via-white to-white p-4 shadow-card"
     >
       <button
         type="button"
         onClick={close}
         aria-label="关闭欢迎横幅"
-        className="absolute right-3 top-3 flex h-7 w-7 items-center justify-center rounded-md text-neutral-400 transition-colors duration-micro ease-brand hover:bg-white hover:text-neutral-600"
+        className="absolute right-2.5 top-2.5 flex h-7 w-7 items-center justify-center rounded-md text-neutral-400 transition-colors duration-micro ease-brand hover:bg-white hover:text-neutral-600"
       >
         <X className="h-4 w-4" />
       </button>
-      <div className="flex items-center gap-5">
+      <div className="flex items-center gap-4">
         <div className="min-w-0 flex-1">
           <p className="flex items-center gap-1.5 text-caption font-medium text-brand-600">
             <Sparkles className="h-3.5 w-3.5" />
             欢迎使用
           </p>
-          <h2 className="mt-1 text-h2 text-neutral-950">企业知识库</h2>
-          <p className="mt-1.5 text-body-sm text-neutral-500">
+          <h2 className="mt-0.5 text-h3 text-neutral-950">企业知识库</h2>
+          <p className="mt-0.5 text-body-sm text-neutral-500">
             上传公司资料，几分钟得到有出处、可验证的 AI 知识助手
           </p>
-          <div className="mt-4 flex flex-wrap items-center gap-2.5">
+          <div className="mt-3 flex flex-wrap items-center gap-2.5">
             <button
               type="button"
               onClick={onStartConfig}
@@ -252,7 +252,7 @@ function WelcomeBanner({ onStartConfig, onStartTour }: { onStartConfig: () => vo
         <img
           src="/illustration-appcenter.svg"
           alt=""
-          className="hidden h-24 w-auto shrink-0 md:block"
+          className="hidden h-12 w-auto shrink-0 md:block"
         />
       </div>
     </motion.div>
@@ -369,7 +369,7 @@ function StarterChecklist({ onOpenQuickConfig }: { onOpenQuickConfig: () => void
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.24, delay: 0.12, ease: [0.2, 0.8, 0.2, 1] }}
-      className="w-full shrink-0 self-start rounded-lg border border-neutral-200 bg-white p-4 shadow-card xl:w-[280px]"
+      className="w-full shrink-0 self-start rounded-lg border border-neutral-200 bg-white p-3 shadow-card xl:w-[280px]"
     >
       {allDone ? (
         <div className="flex items-center justify-between gap-2">
@@ -400,14 +400,14 @@ function StarterChecklist({ onOpenQuickConfig }: { onOpenQuickConfig: () => void
               收起
             </button>
           </div>
-          <ul className="mt-3 flex flex-col gap-0.5">
+          <ul className="mt-2 flex flex-col gap-0.5">
             {items.map((item) => (
               <li key={item.key}>
                 <button
                   type="button"
                   onClick={() => runItem(item)}
                   disabled={item.done}
-                  className="group flex w-full items-center gap-2 rounded-md px-1.5 py-1.5 text-left transition-colors duration-micro ease-brand enabled:hover:bg-neutral-50"
+                  className="group flex w-full items-center gap-2 rounded-md px-1.5 py-1 text-left transition-colors duration-micro ease-brand enabled:hover:bg-neutral-50"
                 >
                   <span
                     className={cn(
