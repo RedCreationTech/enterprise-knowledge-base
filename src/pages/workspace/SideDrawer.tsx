@@ -1,11 +1,12 @@
 /**
  * SideDrawer — 右滑抽屉（x: 100%→0，240ms，遮罩 rgba(16,24,40,.4)，Esc 关闭，design.md §7）。
  */
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import type { ReactNode } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { X } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { useFocusTrap } from '@/hooks/use-focus-trap'
 
 export interface SideDrawerProps {
   open: boolean
@@ -19,6 +20,9 @@ export interface SideDrawerProps {
 }
 
 export function SideDrawer({ open, onClose, title, width = 480, children, footer, className }: SideDrawerProps) {
+  const containerRef = useRef<HTMLElement>(null)
+  useFocusTrap(open, containerRef)
+
   useEffect(() => {
     if (!open) return
     const onKey = (e: KeyboardEvent) => {
@@ -43,17 +47,19 @@ export function SideDrawer({ open, onClose, title, width = 480, children, footer
           />
           <motion.aside
             key="panel"
+            ref={containerRef}
             initial={{ x: '100%' }}
             animate={{ x: 0 }}
             exit={{ x: '100%' }}
             transition={{ duration: 0.24, ease: [0.2, 0.8, 0.2, 1] }}
             className={cn(
-              'fixed inset-y-0 right-0 z-[71] flex w-full flex-col bg-white shadow-float',
+              'fixed inset-y-0 right-0 z-[71] flex w-full flex-col bg-white shadow-float outline-none',
               className,
             )}
             style={{ maxWidth: width }}
             role="dialog"
             aria-modal="true"
+            tabIndex={-1}
           >
             <header className="flex h-14 shrink-0 items-center justify-between gap-3 border-b border-neutral-200 px-5">
               <div className="min-w-0 flex-1 truncate text-h3 text-neutral-950">{title}</div>

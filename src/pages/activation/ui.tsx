@@ -10,6 +10,7 @@ import type { ReactNode } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { ArrowLeft, ArrowRight, CalendarCheck, CloudUpload, FileText, ShieldCheck, Users, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { Modal as WorkspaceModal } from '@/pages/workspace/Modal'
 
 // ---------- Buttons ----------
 
@@ -275,7 +276,7 @@ export function PageTitle({ title, subtitle }: { title: string; subtitle: string
 
 const EASE: [number, number, number, number] = [0.2, 0.8, 0.2, 1]
 
-/** Modal — 遮罩 rgba(16,24,40,.4) + 卡片 scale .96→1 + y 8→0（240ms） */
+/** Modal — 复用 workspace/Modal 的 bare 模式（全站单 Modal 基座；无 header/footer，children 自带白卡；遮罩 rgba(16,24,40,.4) + scale .96→1 + y 8→0 240ms） */
 export function Modal({
   open,
   onClose,
@@ -288,29 +289,9 @@ export function Modal({
   maxWidth?: string
 }) {
   return (
-    <AnimatePresence>
-      {open && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-6">
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.24, ease: EASE }}
-            className="absolute inset-0 bg-[rgba(16,24,40,0.4)]"
-            onClick={onClose}
-          />
-          <motion.div
-            initial={{ opacity: 0, scale: 0.96, y: 8 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.96, y: 8 }}
-            transition={{ duration: 0.24, ease: EASE }}
-            className={cn('relative z-10 max-h-[88vh] w-full overflow-y-auto rounded-xl', maxWidth)}
-          >
-            {children}
-          </motion.div>
-        </div>
-      )}
-    </AnimatePresence>
+    <WorkspaceModal open={open} onClose={onClose} bare maxWidth={maxWidth}>
+      {children}
+    </WorkspaceModal>
   )
 }
 
