@@ -166,12 +166,13 @@ export function isSpace(x: unknown): x is SpaceItem {
     typeof s.createdAt === 'string' &&
     typeof s.policy === 'object' &&
     s.policy !== null &&
+    typeof (s.policy as Record<string, unknown>).cycle === 'string' &&
     Array.isArray(s.memberRows)
   )
 }
 
 function parseCycleDays(cycle: string): number {
-  const m = cycle.match(/(\d+)\s*天/)
+  const m = typeof cycle === 'string' ? cycle.match(/(\d+)\s*天/) : null
   return m ? Number(m[1]) : 180
 }
 

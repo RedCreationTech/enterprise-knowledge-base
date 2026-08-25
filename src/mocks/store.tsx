@@ -16,6 +16,7 @@ import {
 } from 'react'
 import type { ReactNode } from 'react'
 import { apps, daily, invitees, me, TODAY } from './base.mock'
+import { KEY_NAMESPACE } from '@/lib/storage'
 
 // ---------- 类型 ----------
 
@@ -520,6 +521,8 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
       resetDemoData: () => {
         try {
           localStorage.removeItem(STORAGE_KEY)
+          localStorage.removeItem(KEY_NAMESPACE.knowledge.spaces)
+          localStorage.removeItem(KEY_NAMESPACE.instructions.list)
         } catch {
           // ignore
         }
@@ -531,6 +534,8 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
       resetDemo: () => {
         try {
           localStorage.removeItem(STORAGE_KEY)
+          localStorage.removeItem(KEY_NAMESPACE.knowledge.spaces)
+          localStorage.removeItem(KEY_NAMESPACE.instructions.list)
         } catch {
           // ignore
         }
