@@ -1,7 +1,11 @@
 /**
  * 设置中心页扩展模拟数据（settings.md §4）
  * 跨页一致数字：plan（试用版 / 2025-06-03 / 0.68GB/1GB）直接引用 @/mocks（P1-2 TRIAL 统一）。
+ * 成员单一事实源（P1-N5）：members 由 permissionsData 的 coreMembers + foldedMembers 派生，
+ * 与 Permissions 页姓名/计数/角色口径一致（12 名成员 / 6 核心角色）。
  */
+
+import { coreMembers, foldedMembers } from './permissionsData'
 
 export interface MemberItem {
   id: string
@@ -27,14 +31,49 @@ export const roleTemplates = [
   'API 开发者',
 ]
 
-export const members: MemberItem[] = [
-  { id: 'm-1', name: '张伟', avatar: '张', contact: 'zhangwei@example.com', department: '销售团队', role: '企业管理员', roleTone: 'admin', status: '活跃', joinedAt: '2025-05-20' },
-  { id: 'm-2', name: '李娜', avatar: '李', contact: 'lina@example.com', department: '销售团队', role: '知识管理员', roleTone: 'normal', status: '活跃', joinedAt: '2025-05-20' },
-  { id: 'm-3', name: '王磊', avatar: '王', contact: '138 0000 0001', department: '销售团队', role: '普通成员', roleTone: 'normal', status: '活跃', joinedAt: '2025-05-21' },
-  { id: 'm-4', name: '陈晨', avatar: '陈', contact: 'chenchen@example.com', department: '销售团队', role: '普通成员', roleTone: 'normal', status: '待激活', joinedAt: '2025-05-28' },
-  { id: 'm-5', name: '赵敏', avatar: '赵', contact: 'zhaomin@example.com', department: '售前团队', role: '空间管理员', roleTone: 'normal', status: '活跃', joinedAt: '2025-05-22' },
-  { id: 'm-6', name: '刘洋', avatar: '刘', contact: 'liuyang@example.com', department: '售前团队', role: '普通成员', roleTone: 'normal', status: '待激活', joinedAt: '2025-05-29' },
-]
+/** 成员展示元数据（联系方式/加入时间），键为 permissionsData 的成员 id（身份事实源）。 */
+const MEMBER_CONTACT: Record<string, string> = {
+  'm-zw': 'zhangwei@example.com',
+  'm-ln': 'lina@example.com',
+  'm-wq': 'wangqiang@example.com',
+  'm-zm': 'zhaomin@example.com',
+  'm-cc': 'chenke@example.com',
+  'm-ly': 'liuyang@example.com',
+  'm-s1': 'sunqian@example.com',
+  'm-s2': 'zhoujie@example.com',
+  'm-s3': 'wufang@example.com',
+  'm-s4': 'zhenghao@example.com',
+  'm-s5': 'fengxue@example.com',
+  'm-s6': 'hebin@example.com',
+}
+
+const MEMBER_JOINED_AT: Record<string, string> = {
+  'm-zw': '2025-05-20',
+  'm-ln': '2025-05-20',
+  'm-wq': '2025-05-21',
+  'm-zm': '2025-05-22',
+  'm-cc': '2025-05-28',
+  'm-ly': '2025-05-29',
+  'm-s1': '2025-05-23',
+  'm-s2': '2025-05-24',
+  'm-s3': '2025-05-25',
+  'm-s4': '2025-05-26',
+  'm-s5': '2025-05-27',
+  'm-s6': '2025-05-30',
+}
+
+/** 单一成员事实源：由 permissionsData（coreMembers + foldedMembers）派生，共 12 名成员。 */
+export const members: MemberItem[] = [...coreMembers, ...foldedMembers].map((m) => ({
+  id: m.id,
+  name: m.name,
+  avatar: m.name.charAt(0),
+  contact: MEMBER_CONTACT[m.id] ?? '',
+  department: m.dept,
+  role: m.role,
+  roleTone: m.role === '管理员' ? 'admin' : 'normal',
+  status: '活跃',
+  joinedAt: MEMBER_JOINED_AT[m.id] ?? '—',
+}))
 
 export interface UsageItem {
   name: string
@@ -99,7 +138,7 @@ export const auditLogs: AuditLogItem[] = [
   { time: '今天 09:58', member: '李娜', action: '上传文档', target: '客服 FAQ 汇编', result: '成功' },
   { time: '昨天 17:22', member: '张伟', action: '修改成员角色', target: '赵敏 → 空间管理员', result: '成功' },
   { time: '昨天 15:40', member: '系统', action: '权限同步', target: '企业网盘', result: '成功（覆盖 402 人）' },
-  { time: '06-01 11:05', member: '王磊', action: '导出数据', target: '成员名单.csv', result: '成功' },
+  { time: '06-01 11:05', member: '王强', action: '导出数据', target: '成员名单.csv', result: '成功' },
 ]
 
 export const industries = ['软件与信息技术服务', '制造业', '金融服务', '零售与电商', '医疗健康', '教育培训', '其他']

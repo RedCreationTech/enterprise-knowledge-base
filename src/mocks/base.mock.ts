@@ -77,7 +77,7 @@ export const me: Me = {
   avatar: '张',
   role: 'org_admin',
   phone: '138 0000 0000',
-  email: 'zhangsan@example.com',
+  email: 'zhangwei@example.com',
 }
 
 /** 试用旅程状态基准（Stepper / 守卫驱动，动态部分见 store.tsx 的 journey） */
