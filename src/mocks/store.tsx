@@ -31,6 +31,11 @@ export interface JourneyState {
   installedApps: string[]
   /** 显式卸载的应用（集成管理页据此隐藏已卸载项；重新安装时清除） */
   uninstalledApps: string[]
+  /**
+   * 用户主动安装的应用（新手引导信号，独立于目录默认已安装）：
+   * 仅当用户通过应用中心显式安装时追加；卸载不回退（onboarding 完成即持久）。
+   */
+  userInstalledApps: string[]
   dailyDone: boolean
   activated: boolean
   trialDays: number
@@ -113,7 +118,7 @@ export function isStepDone(journey: JourneyState, index: number): boolean {
       return journey.invitesSent
     case 3:
       return (
-        journey.installedApps.length > 0 ||
+        journey.userInstalledApps.length > 0 ||
         journey.appsSkipped ||
         journey.dailyDone ||
         journey.activated
@@ -178,6 +183,7 @@ export const initialJourney: JourneyState = {
   appsSkipped: false,
   installedApps: [...DEFAULT_INSTALLED_APPS],
   uninstalledApps: [],
+  userInstalledApps: [],
   dailyDone: false,
   activated: false,
   trialDays: 7,
@@ -220,7 +226,7 @@ export function starterTasks(): TaskItem[] {
 
 export function createInitialState(): AppState {
   return {
-    journey: { ...initialJourney, installedApps: [...DEFAULT_INSTALLED_APPS], uninstalledApps: [] },
+    journey: { ...initialJourney, installedApps: [...DEFAULT_INSTALLED_APPS], uninstalledApps: [], userInstalledApps: [] },
     chatMessages: initialChatMessages(),
     feedbacks: [],
     // 冷启动真实空态：不预置成熟运营任务，仅保留新手引导
@@ -335,6 +341,10 @@ function loadState(): AppState {
     const legacyUninstalled = readLegacyUninstalled()
     let installedApps: string[]
     let uninstalledApps: string[]
+    // 新手引导信号：老持久化缺少该字段 → 回退为空（新用户不自动完成「安装 1 个应用」）
+    const userInstalledApps: string[] = Array.isArray(persistedJourney.userInstalledApps)
+      ? persistedJourney.userInstalledApps.filter((id) => typeof id === 'string')
+      : []
     if (Array.isArray(persistedJourney.uninstalledApps)) {
       // 新 schema：installedApps/uninstalledApps 均已在 ekb-store-v1 内，直接采用
       installedApps = Array.isArray(persistedJourney.installedApps)
@@ -355,7 +365,7 @@ function loadState(): AppState {
     }
     clearLegacyUninstalledKeys()
     return {
-      journey: { ...base.journey, ...persistedJourney, installedApps, uninstalledApps },
+      journey: { ...base.journey, ...persistedJourney, installedApps, uninstalledApps, userInstalledApps },
       chatMessages: parsed && Array.isArray(parsed.chatMessages) && parsed.chatMessages.length > 0
         ? parsed.chatMessages
         : base.chatMessages,
@@ -477,6 +487,10 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
             ? state.journey.installedApps
             : [...state.journey.installedApps, appId],
           uninstalledApps: state.journey.uninstalledApps.filter((id) => id !== appId),
+          // 新手引导信号：仅当用户显式安装时追加（幂等，卸载不回退）
+          userInstalledApps: state.journey.userInstalledApps.includes(appId)
+            ? state.journey.userInstalledApps
+            : [...state.journey.userInstalledApps, appId],
         }),
       uninstallApp: (appId: string) =>
         setJourney({
@@ -484,6 +498,7 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
           uninstalledApps: state.journey.uninstalledApps.includes(appId)
             ? state.journey.uninstalledApps
             : [...state.journey.uninstalledApps, appId],
+          // userInstalledApps 不回退：卸载是安装完成后的管理动作，不重置「安装 1 个应用」完成态
         }),
       skipApps: () => setJourney({ appsSkipped: true }),
       completeDaily: () => setJourney({ dailyDone: true }),

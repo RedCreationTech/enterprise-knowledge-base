@@ -304,7 +304,7 @@ function StarterChecklist({ onOpenQuickConfig }: { onOpenQuickConfig: () => void
     { key: 'tour', name: '完成新手导览', done: tourDone, action: 'tour' },
     { key: 'config', name: '完成快速配置', done: state.journey.configProgress >= 100, action: 'quick-config' },
     { key: 'invite', name: '邀请 1 位同事', done: state.journey.invitesSent, to: '/workspace/invite-team' },
-    { key: 'app', name: '安装 1 个应用', done: state.journey.installedApps.length > 0, to: '/workspace/apps' },
+    { key: 'app', name: '安装 1 个应用', done: state.journey.userInstalledApps.length > 0, to: '/workspace/apps' },
     { key: 'ask', name: '提出第一个问题', done: state.chatMessages.some((m) => m.role === 'user'), to: '/workspace/ai-assistant' },
   ]
   const doneCount = items.filter((i) => i.done).length
