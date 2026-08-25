@@ -142,16 +142,6 @@ export function stepStatusOf(journey: JourneyState, index: number): StepStatus {
   return 'current'
 }
 
-/** 当前应处步骤路径（守卫重定向目标） */
-export function getCurrentStepPath(state: AppState): string {
-  const { journey } = state
-  if (journey.activated) return '/workspace/dashboard'
-  for (let i = 0; i < JOURNEY_STEPS.length; i += 1) {
-    if (!isStepDone(journey, i)) return JOURNEY_STEPS[i].path
-  }
-  return '/trial/activated'
-}
-
 // ---------- 初始状态 ----------
 
 let uidCounter = 0
