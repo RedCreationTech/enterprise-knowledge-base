@@ -39,6 +39,11 @@ export function trend7dRangeLabel(): string {
   return `${labels[0]}–${labels[labels.length - 1]}`
 }
 
+/** TODAY 所在月份（演示基准日 2026-05-29 → 5），近 30 天趋势标签的月份由它派生 */
+export function trendMonth(): number {
+  return Number(TODAY.slice(5, 7))
+}
+
 /**
  * 全站口径字典（P1-1：数字一致性唯一事实来源）。
  * 各页面展示数字必须引用本常量，或引用由它派生的既有常量（assets/sources/daily/plan/site 等）。
@@ -70,6 +75,36 @@ export const METRICS = {
   noAnswerRate7d: 7.0,
   /** 待处理知识问题 */
   pendingIssues: 23,
+  /** 近 7 天认可反馈条数（答案认可率卡「来自 N 条反馈」） */
+  feedback7d: 96,
+  /** 近 7 天活跃用户 / 席位（9 / 12） */
+  activeUsers7d: 9,
+  /** 今日问答 */
+  questionsToday: 108,
+  /** 今日成功回答率 % */
+  answerRateToday: 88.0,
+  /** 今日无答案率 % */
+  noAnswerRateToday: 6.5,
+  /** 今日无答案问题数 */
+  pendingIssuesToday: 7,
+  /** 今日答案认可率 % */
+  approvalRateToday: 83.0,
+  /** 今日认可反馈条数 */
+  feedbackToday: 14,
+  /** 今日活跃用户 / 席位 */
+  activeUsersToday: 7,
+  /** 近 30 天成功回答率 % */
+  answerRate30d: 85.9,
+  /** 近 30 天无答案率 % */
+  noAnswerRate30d: 7.8,
+  /** 近 30 天无答案问题数 */
+  pendingIssues30d: 97,
+  /** 近 30 天答案认可率 % */
+  approvalRate30d: 81.2,
+  /** 近 30 天认可反馈条数 */
+  feedback30d: 356,
+  /** 近 30 天活跃用户 / 席位 */
+  activeUsers30d: 11,
   /** 已安装应用（企业微信 / SSO 单点登录 / 自定义 API） */
   installedApps: 3,
   /** 可试用应用（含飞书问答插件） */

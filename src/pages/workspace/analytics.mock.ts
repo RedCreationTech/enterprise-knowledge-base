@@ -3,7 +3,7 @@
  * 与 base.mock METRICS 跨页一致：近 7 天问答 328（逐日 [32,41,44,48,52,55,56]，与 daily.trend7d 一致）、
  * 成功回答 299 ≈ 91.2%、认可率 87.6%。
  */
-import { trend7dLabels } from '@/mocks'
+import { METRICS, trend7dLabels, trendMonth } from '@/mocks'
 
 export interface TrendPoint {
   day: string
@@ -15,19 +15,20 @@ export interface TrendPoint {
 /** 近 7 天：问题/成功/认可率（analytics.md §2.2；问题合计恰好 328，与 base.mock daily.trend7d 一致；日期标签由 TODAY 派生） */
 export const trend7dDetailed: TrendPoint[] = (() => {
   const days = trend7dLabels('MM-DD')
-  const questions = [32, 41, 44, 48, 52, 55, 56]
-  const answered = [29, 37, 40, 44, 47, 51, 51]
+  const questions = METRICS.questions7dDaily
+  const answered = METRICS.answered7dDaily
   const rates = [78, 79, 81, 83, 84, 86, 88]
   return days.map((day, i) => ({ day, questions: questions[i], answered: answered[i], rate: rates[i] }))
 })()
 
 /** 近 30 天扩展 mock（确定性与 7 天口径一致：末 7 天 = trend7dDetailed） */
 export const trend30d: TrendPoint[] = (() => {
+  const month = String(trendMonth()).padStart(2, '0')
   const seed = [18, 22, 25, 21, 28, 24, 30, 33, 27, 35, 31, 38, 29, 40, 36, 44, 39, 47, 42, 50, 46, 52, 45]
   const first = seed.map((q, i) => {
     const answered = Math.round(q * (0.82 + (i % 5) * 0.02))
     return {
-      day: `05-${String(i + 1).padStart(2, '0')}`,
+      day: `${month}-${String(i + 1).padStart(2, '0')}`,
       questions: q,
       answered,
       rate: 70 + Math.round((answered / q) * 12),

@@ -2,7 +2,7 @@
  * 每日待办页 mock：10 项任务（图 7 逐字）、趋势数据、推荐条目、跳过原因。
  * 任务标题/分组/优先级/状态/截止/负责人以 daily-todo.md §3.3 为唯一基准。
  */
-import { daily, invitees, trend7dLabels } from '@/mocks'
+import { daily, invitees, METRICS, trend7dLabels, trendMonth } from '@/mocks'
 import type { TaskItem } from '@/mocks/store'
 
 export interface DailyTaskDef extends Omit<TaskItem, 'id'> {
@@ -44,13 +44,14 @@ export interface TrendPoint {
 /** 近 7 天（与 base.mock daily.trend7d 完全一致，日期标签由 TODAY 派生，合计 328） */
 export const trend7d: TrendPoint[] = trend7dLabels('M/D').map((date, i) => ({
   date,
-  value: [32, 41, 44, 48, 52, 55, 56][i],
+  value: METRICS.questions7dDaily[i],
 }))
 
 /** 近 30 天 mock（整体上行趋势，末端与 7 天数据衔接） */
 export const trend30d: TrendPoint[] = (() => {
+  const month = trendMonth()
   const seeds = [12, 15, 14, 18, 22, 20, 25, 24, 28, 31, 30, 35, 33, 38, 42, 40, 45, 47, 44, 52, 55, 53, 58]
-  const points: TrendPoint[] = seeds.map((v, i) => ({ date: `5/${i + 1}`, value: v }))
+  const points: TrendPoint[] = seeds.map((v, i) => ({ date: `${month}/${i + 1}`, value: v }))
   return points.concat(trend7d.map((p) => ({ ...p })))
 })()
 

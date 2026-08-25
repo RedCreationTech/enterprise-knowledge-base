@@ -60,11 +60,11 @@ const RANGE_LABEL: Record<TimeRange, string> = {
   custom: '自定义',
 }
 
-/** 三个时间范围的指标 mock（筛选变更全页联动；近 7/30 天数字引用 METRICS 唯一来源） */
+/** 三个时间范围的指标 mock（筛选变更全页联动；数字均引用 METRICS 唯一来源，页面不再硬编码） */
 const RANGE_METRICS: Record<Exclude<TimeRange, 'custom'>, { questions: string; answerRate: string; noAnswer: string; noAnswerHint: string; approval: string; approvalHint: string; activeUsers: string }> = {
-  today: { questions: '108', answerRate: '88.0%', noAnswer: '6.5%', noAnswerHint: '7 个无答案问题', approval: '83.0%', approvalHint: '来自 14 条反馈', activeUsers: '7 / 12' },
-  '7d': { questions: String(METRICS.questions7d), answerRate: `${METRICS.answerRate7d}%`, noAnswer: `${METRICS.noAnswerRate7d.toFixed(1)}%`, noAnswerHint: `${METRICS.pendingIssues} 个无答案问题`, approval: `${METRICS.approvalRate}%`, approvalHint: '来自 96 条反馈', activeUsers: '9 / 12' },
-  '30d': { questions: METRICS.totalQuestions.toLocaleString('en-US'), answerRate: '85.9%', noAnswer: '7.8%', noAnswerHint: '97 个无答案问题', approval: '81.2%', approvalHint: '来自 356 条反馈', activeUsers: '11 / 12' },
+  today: { questions: String(METRICS.questionsToday), answerRate: `${METRICS.answerRateToday.toFixed(1)}%`, noAnswer: `${METRICS.noAnswerRateToday.toFixed(1)}%`, noAnswerHint: `${METRICS.pendingIssuesToday} 个无答案问题`, approval: `${METRICS.approvalRateToday.toFixed(1)}%`, approvalHint: `来自 ${METRICS.feedbackToday} 条反馈`, activeUsers: `${METRICS.activeUsersToday} / ${METRICS.activatedMembers}` },
+  '7d': { questions: String(METRICS.questions7d), answerRate: `${METRICS.answerRate7d}%`, noAnswer: `${METRICS.noAnswerRate7d.toFixed(1)}%`, noAnswerHint: `${METRICS.pendingIssues} 个无答案问题`, approval: `${METRICS.approvalRate}%`, approvalHint: `来自 ${METRICS.feedback7d} 条反馈`, activeUsers: `${METRICS.activeUsers7d} / ${METRICS.activatedMembers}` },
+  '30d': { questions: METRICS.totalQuestions.toLocaleString('en-US'), answerRate: `${METRICS.answerRate30d.toFixed(1)}%`, noAnswer: `${METRICS.noAnswerRate30d.toFixed(1)}%`, noAnswerHint: `${METRICS.pendingIssues30d} 个无答案问题`, approval: `${METRICS.approvalRate30d.toFixed(1)}%`, approvalHint: `来自 ${METRICS.feedback30d} 条反馈`, activeUsers: `${METRICS.activeUsers30d} / ${METRICS.activatedMembers}` },
 }
 
 const QUESTION_TYPES = ['全部', '正常', '无答案', '低质量', '冲突']
