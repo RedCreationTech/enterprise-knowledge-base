@@ -22,6 +22,8 @@ import {
   Trash2,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { uid } from '@/lib/id'
+import { KEY_NAMESPACE, loadLSArray, saveLS } from '@/lib/storage'
 import { useAppStore } from '@/mocks'
 import { CitationCard, DemoEmptyState, SectionCard, StatusBadge, ConfirmationCard } from '@/components/common'
 import { PageHeader } from '@/pages/workspace/PageHeader'
@@ -38,6 +40,7 @@ import {
   initialInstructions,
   instructionTemplates,
   instructionVersions,
+  isInstruction,
   previewAnswer,
   previewRefusal,
   PREVIEW_QUESTIONS,
@@ -87,6 +90,14 @@ function draftOf(ins: Instruction): DraftState {
   }
 }
 
+const INSTRUCTIONS_KEY = KEY_NAMESPACE.instructions.list
+
+/** 读取持久化指令：有历史数据用历史数据（元素级校验剔除损坏项），否则回退演示默认集 */
+function loadInstructions(): Instruction[] {
+  const loaded = loadLSArray<Instruction>(INSTRUCTIONS_KEY, isInstruction)
+  return loaded.length > 0 ? loaded : initialInstructions
+}
+
 /** 把指令文本中的 {变量} 渲染为蓝底 Chip（预览区用） */
 function renderWithVariables(text: string, resolve: boolean) {
   const parts = text.split(/(\{[^}]+\})/g)
@@ -108,7 +119,7 @@ export default function Instructions() {
   const { state } = useAppStore()
   // 冷启动空态：未载入演示数据时展示引导空态（评审 P1-N1）
   const demoOff = state.demoData === false
-  const [instructions, setInstructions] = useState<Instruction[]>(initialInstructions)
+  const [instructions, setInstructions] = useState<Instruction[]>(loadInstructions)
   const [selectedId, setSelectedId] = useState('ins-sales')
   const selected = instructions.find((i) => i.id === selectedId) ?? instructions[0]
 
@@ -136,6 +147,12 @@ export default function Instructions() {
   const [scopeChannels, setScopeChannels] = useState<string[]>([])
   /** 最近一次确认的范围（草稿首次发布时沿用） */
   const [lastScope, setLastScope] = useState<string[]>(DEFAULT_PUBLISH_SCOPE)
+
+  // 指令 CRUD/发布/回滚持久化：任一变更回写 localStorage（刷新不丢）；冷启动空态不写入
+  useEffect(() => {
+    if (demoOff) return
+    saveLS(INSTRUCTIONS_KEY, instructions)
+  }, [instructions, demoOff])
 
   // ---------- 测试预览 ----------
   const [question, setQuestion] = useState(PREVIEW_QUESTIONS[0])
@@ -255,7 +272,7 @@ export default function Instructions() {
 
   const handleUseTemplate = (tpl: InstructionTemplate) => {
     const copy: Instruction = {
-      id: `ins-copy-${Date.now()}`,
+      id: uid(),
       name: `${tpl.name}副本`,
       type: '自定义',
       typeNote: `源自${tpl.name}模板`,
@@ -277,7 +294,7 @@ export default function Instructions() {
 
   const handleNewInstruction = () => {
     const blank: Instruction = {
-      id: `ins-new-${Date.now()}`,
+      id: uid(),
       name: '未命名自定义指令',
       type: '自定义',
       version: 'v0.1-draft',

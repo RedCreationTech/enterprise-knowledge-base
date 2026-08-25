@@ -122,6 +122,29 @@ export const initialInstructions: Instruction[] = [
   },
 ]
 
+/** localStorage 元素级校验（loadLSArray 用）：剔除损坏/非指令条目 */
+export function isInstruction(x: unknown): x is Instruction {
+  if (typeof x !== 'object' || x === null) return false
+  const s = x as Record<string, unknown>
+  return (
+    typeof s.id === 'string' &&
+    typeof s.name === 'string' &&
+    (s.type === '系统' || s.type === '自定义') &&
+    typeof s.version === 'string' &&
+    Array.isArray(s.scope) &&
+    s.scope.every((v) => typeof v === 'string') &&
+    typeof s.scopeLabel === 'string' &&
+    typeof s.updatedAt === 'string' &&
+    typeof s.updatedBy === 'string' &&
+    (s.status === '生效中' || s.status === '草稿' || s.status === '已停用') &&
+    (s.style === '专业严谨' || s.style === '简洁直接' || s.style === '亲切易懂') &&
+    typeof s.strictness === 'number' &&
+    (s.rejectStrategy === '明确告知并给出建议' || s.rejectStrategy === '转人工' || s.rejectStrategy === '仅回答公开内容') &&
+    typeof s.showCitations === 'boolean' &&
+    typeof s.text === 'string'
+  )
+}
+
 /** 变量插入 Chips（点击插入光标处，预览渲染为真实值） */
 export const INSTRUCTION_VARIABLES = ['{企业名称}', '{知识范围}', '{助手名称}', '{当前日期}'] as const
 

@@ -34,6 +34,10 @@ export const KEY_NAMESPACE = {
     /** 知识空间单一事实源：KnowledgeSpaces 与 KnowledgeBase 共用（刷新/重启不丢） */
     spaces: `${LS_PREFIX}spaces`,
   },
+  instructions: {
+    /** 指令管理 CRUD/发布/回滚结果（刷新不丢） */
+    list: `${LS_PREFIX}instructions`,
+  },
 } as const
 
 /** 读取并 JSON.parse；key 不存在或解析失败/损坏时返回 fallback */
