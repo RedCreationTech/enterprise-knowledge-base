@@ -3,6 +3,8 @@
  * 标题区：面包屑「应用与集成 / 应用中心」+ H1 + 副标题 + Secondary「提交需求」
  * 三栏：左小知推荐面板 / 中浅蓝 Banner + 搜索 + 分类 Tab + 2 列 AppCard 网格 / 右应用详情栏（主 CTA「安装并开始试用」）
  * 栅格：≥1536 3+6+3；1366–1535 详情栏转 400px Drawer；1280–1365 AI 面板折叠为可展开摘要条
+ * 滚动：≥1366 三栏同高（calc(100dvh-140px)）各自独立滚动（左/右 sticky，中列 overflow-y-auto）；1280–1365 中列全宽走页面滚动
+ * 卡片：featured（跨 2 列渐变大卡）/ standard（常规 2 行）/ compact（横排紧凑）三变体，按 AppItem.size 渲染
  * 安装走 4 步 Modal（权限→范围→授权→安装测试）；试用期「暂不安装」必须选原因 → SKIPPED_WITH_REASON → /workspace/daily
  */
 import { useEffect, useMemo, useRef, useState } from 'react'
@@ -107,11 +109,14 @@ const AI_MSG_3 = '是否需要我帮你安装并配置该应用？'
 
 const INSTALL_STEP_TITLES = ['权限确认', '选择范围', '授权', '安装与测试']
 
+type AppCardSize = 'featured' | 'standard' | 'compact'
+
 interface DisplayApp {
   id: string
   name: string
   logo: string
   status: AppStatus
+  size: AppCardSize
   extra: AppExtra
 }
 
@@ -204,7 +209,7 @@ export default function InstallApp() {
           : a.status === '需要授权'
             ? '需要授权'
             : '可试用'
-        return { id: a.id, name: a.name, logo: a.logo, status, extra }
+        return { id: a.id, name: a.name, logo: a.logo, status, size: a.size ?? 'standard', extra }
       }),
     [state.journey.installedApps],
   )
@@ -270,6 +275,8 @@ export default function InstallApp() {
       setTab('全部')
       setQuery('')
       gridRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      // ≥1366 中列独立滚动：同步复位中列内部滚动，确保 Banner 回到可视区顶部
+      gridRef.current?.scrollTo?.({ top: 0, behavior: 'smooth' })
     } else if (chip === '如何自定义应用？') {
       selectApp('custom-api')
       setTab('全部')
@@ -440,7 +447,7 @@ export default function InstallApp() {
       <div className="grid items-start gap-4 min-[1366px]:grid-cols-[300px_minmax(0,1fr)] 2xl:grid-cols-[380px_minmax(0,1fr)_360px]">
         {/* 左栏：AI 推荐面板（≥1366 显示；1280–1365 折叠为 Banner 下摘要条） */}
         <ChatPanel
-          className="hidden h-[640px] min-[1366px]:block 2xl:sticky 2xl:top-[88px]"
+          className="hidden min-[1366px]:block min-[1366px]:h-[calc(100dvh-140px)] 2xl:sticky 2xl:top-[88px]"
           chips={['查看更多应用', '如何自定义应用？']}
           selectedChip="查看更多应用"
           onChipSelect={handleChip}
@@ -464,8 +471,8 @@ export default function InstallApp() {
           }
         />
 
-        {/* 中栏：应用网格 */}
-        <div ref={gridRef} className="flex min-w-0 flex-col gap-4">
+        {/* 中栏：应用网格（≥1366 与左右栏同高、独立滚动；1280–1365 全宽走页面滚动） */}
+        <div ref={gridRef} className="flex min-w-0 flex-col gap-4 min-[1366px]:h-[calc(100dvh-140px)] min-[1366px]:overflow-y-auto">
           {/* Banner（浅蓝横条卡：h3 + caption 统计句，插画 ≤120px；display 级标题已下移至标题区） */}
           <motion.div
             initial={{ opacity: 0, y: 16 }}
@@ -541,10 +548,12 @@ export default function InstallApp() {
             ))}
           </div>
 
-          {/* AppCard 网格（≥1536 中 6 列内 2 列卡片；1280–1365 全宽 3 列卡片） */}
-          <div className="grid grid-cols-1 gap-3 lg:grid-cols-2 xl:grid-cols-3 min-[1366px]:grid-cols-2">
+          {/* AppCard 网格（featured 跨 2 列 / standard 常规 2 行 / compact 横排紧凑；≥1536 中 6 列内 2 列卡片；1280–1365 全宽 3 列卡片） */}
+          <div className="grid grid-cols-1 items-start gap-3 lg:grid-cols-2 xl:grid-cols-3 min-[1366px]:grid-cols-2">
             {filtered.map((a, idx) => {
               const isSel = a.id === selectedId
+              const isFeatured = a.size === 'featured'
+              const isCompact = a.size === 'compact'
               return (
                 <motion.div
                   key={a.id}
@@ -556,46 +565,106 @@ export default function InstallApp() {
                   transition={{ duration: 0.24, delay: Math.min(idx, 9) * 0.06, ease: EASE }}
                   onClick={() => selectApp(a.id)}
                   className={cn(
-                    'flex cursor-pointer flex-col gap-2.5 rounded-xl border bg-white p-4 transition-all duration-micro ease-brand hover:-translate-y-0.5 hover:shadow-card',
-                    isSel ? 'border-[1.5px] border-brand-500 bg-surface-cardSel shadow-card' : 'border-neutral-200',
+                    'cursor-pointer transition-all duration-micro ease-brand hover:-translate-y-0.5 hover:shadow-card',
+                    isFeatured
+                      ? 'flex flex-col gap-3 rounded-xl border bg-gradient-to-r from-brand-50 via-white to-white p-5 sm:col-span-2'
+                      : isCompact
+                        ? 'flex items-center gap-3 rounded-xl border bg-white p-3'
+                        : 'flex flex-col gap-2.5 rounded-xl border bg-white p-4',
+                    isSel && 'border-[1.5px] border-brand-500 shadow-card',
+                    !isFeatured && isSel && 'bg-surface-cardSel',
+                    !isSel && 'border-neutral-200',
                     highlightApi && a.id === 'custom-api' && 'animate-pulse border-brand-500',
                   )}
                 >
-                  <div className="flex items-start justify-between gap-2">
-                    <img src={a.logo} alt="" className="h-10 w-10 rounded-md" />
-                    <StatusBadge status={a.status} className={a.status === '可试用' ? 'bg-cyan-bg text-cyan' : undefined} />
-                  </div>
-                  <div>
-                    <p className="text-[15px] font-semibold text-neutral-950">{a.name}</p>
-                    <p className="mt-1 line-clamp-2 text-body-sm text-neutral-500">{a.extra.usage}</p>
-                  </div>
-                  <div className="mt-auto flex items-center justify-between">
-                    <span className="text-caption text-neutral-400">{a.extra.category}</span>
-                    {a.status === '可试用' ? (
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          setSelectedId(a.id)
-                          openInstall()
-                        }}
-                        className="h-8 rounded-md bg-brand-600 px-3 text-body-sm text-white transition-colors duration-micro ease-brand hover:bg-brand-500 active:bg-brand-700"
-                      >
-                        安装
-                      </button>
-                    ) : (
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          openSettings(a.id, 'scope')
-                        }}
-                        className="h-8 rounded-md border border-[#BFD0F2] bg-white px-3 text-body-sm text-brand-600 transition-colors duration-micro ease-brand hover:bg-brand-50"
-                      >
-                        管理应用
-                      </button>
-                    )}
-                  </div>
+                  {isFeatured ? (
+                    <>
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-brand-100">
+                          <img src={a.logo} alt="" className="h-10 w-10" />
+                        </div>
+                        <StatusBadge status={a.status} className={a.status === '可试用' ? 'bg-cyan-bg text-cyan' : undefined} />
+                      </div>
+                      <div>
+                        <p className="text-h2 text-neutral-950">{a.name}</p>
+                        <p className="mt-1 line-clamp-3 text-body-sm text-neutral-500">{a.extra.usage}</p>
+                      </div>
+                      <div className="mt-auto flex items-center justify-between gap-3">
+                        <span className="text-caption text-neutral-400">{a.extra.category}</span>
+                        {a.status === '可试用' ? (
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              setSelectedId(a.id)
+                              openInstall()
+                            }}
+                            className="inline-flex h-9 shrink-0 items-center rounded-md bg-gradient-to-r from-brand-500 to-brand-600 px-4 text-body-sm font-semibold text-white transition-colors duration-micro ease-brand hover:brightness-105 active:brightness-95"
+                          >
+                            立即安装
+                          </button>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              openSettings(a.id, 'scope')
+                            }}
+                            className="inline-flex h-9 shrink-0 items-center rounded-md border border-[#BFD0F2] bg-white px-4 text-body-sm font-semibold text-brand-600 transition-colors duration-micro ease-brand hover:bg-brand-50"
+                          >
+                            管理应用
+                          </button>
+                        )}
+                      </div>
+                    </>
+                  ) : isCompact ? (
+                    <>
+                      <img src={a.logo} alt="" className="h-8 w-8 shrink-0 rounded-md" />
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-[15px] font-semibold text-neutral-950">{a.name}</p>
+                        <p className="truncate text-caption text-neutral-400">{a.extra.category}</p>
+                      </div>
+                      <StatusBadge status={a.status} className={a.status === '可试用' ? 'bg-cyan-bg text-cyan' : undefined} />
+                    </>
+                  ) : (
+                    <>
+                      <div className="flex items-start justify-between gap-2">
+                        <img src={a.logo} alt="" className="h-10 w-10 rounded-md" />
+                        <StatusBadge status={a.status} className={a.status === '可试用' ? 'bg-cyan-bg text-cyan' : undefined} />
+                      </div>
+                      <div>
+                        <p className="text-[15px] font-semibold text-neutral-950">{a.name}</p>
+                        <p className="mt-1 line-clamp-2 text-body-sm text-neutral-500">{a.extra.usage}</p>
+                      </div>
+                      <div className="mt-auto flex items-center justify-between">
+                        <span className="text-caption text-neutral-400">{a.extra.category}</span>
+                        {a.status === '可试用' ? (
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              setSelectedId(a.id)
+                              openInstall()
+                            }}
+                            className="h-8 rounded-md bg-brand-600 px-3 text-body-sm text-white transition-colors duration-micro ease-brand hover:bg-brand-500 active:bg-brand-700"
+                          >
+                            安装
+                          </button>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              openSettings(a.id, 'scope')
+                            }}
+                            className="h-8 rounded-md border border-[#BFD0F2] bg-white px-3 text-body-sm text-brand-600 transition-colors duration-micro ease-brand hover:bg-brand-50"
+                          >
+                            管理应用
+                          </button>
+                        )}
+                      </div>
+                    </>
+                  )}
                 </motion.div>
               )
             })}

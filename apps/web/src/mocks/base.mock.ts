@@ -287,17 +287,19 @@ export interface AppItem {
   logo: string
   category: string
   desc: string
+  /** 应用中心卡片展示变体：featured 大卡跨列 / standard 常规卡 / compact 横排紧凑（默认 standard） */
+  size?: 'featured' | 'standard' | 'compact'
 }
 
 export const apps: AppItem[] = [
-  { id: 'feishu-qa', name: '飞书问答插件', status: '可试用', logo: '/logo-feishu.svg', category: '问答助手', desc: '在飞书对话中直接提问企业知识' },
-  { id: 'wecom-qa', name: '企业微信知识助手', status: '已安装', logo: '/logo-wecom.svg', category: '问答助手', desc: '企业微信会话内的可信问答入口' },
-  { id: 'webchat', name: '官网客服组件', status: '可试用', logo: '/logo-webchat.svg', category: '客户服务', desc: '嵌入官网的在线客服问答组件' },
-  { id: 'dingtalk-bot', name: '钉钉机器人', status: '可试用', logo: '/logo-dingtalk.svg', category: '问答助手', desc: '钉钉群聊中的知识问答机器人' },
-  { id: 'custom-api', name: '自定义API', status: '已安装', logo: '/logo-api.svg', category: '开发集成', desc: '通过 API 将可信答案接入自有系统' },
-  { id: 'daily-report', name: '知识日报', status: '可试用', logo: '/logo-report.svg', category: '运营分析', desc: '每日推送知识使用与待办摘要' },
-  { id: 'feishu-doc', name: '飞书文档插件', status: '可试用', logo: '/logo-doc-plugin.svg', category: '文档协同', desc: '在飞书文档内引用与校验知识' },
-  { id: 'sso', name: '单点登录SSO', status: '已安装', logo: '/logo-sso.svg', category: '安全集成', desc: '企业统一身份认证与权限同步' },
+  { id: 'feishu-qa', name: '飞书问答插件', status: '可试用', logo: '/logo-feishu.svg', category: '问答助手', desc: '在飞书对话中直接提问企业知识', size: 'featured' },
+  { id: 'wecom-qa', name: '企业微信知识助手', status: '已安装', logo: '/logo-wecom.svg', category: '问答助手', desc: '企业微信会话内的可信问答入口', size: 'featured' },
+  { id: 'webchat', name: '官网客服组件', status: '可试用', logo: '/logo-webchat.svg', category: '客户服务', desc: '嵌入官网的在线客服问答组件', size: 'standard' },
+  { id: 'dingtalk-bot', name: '钉钉机器人', status: '可试用', logo: '/logo-dingtalk.svg', category: '问答助手', desc: '钉钉群聊中的知识问答机器人', size: 'standard' },
+  { id: 'custom-api', name: '自定义API', status: '已安装', logo: '/logo-api.svg', category: '开发集成', desc: '通过 API 将可信答案接入自有系统', size: 'compact' },
+  { id: 'daily-report', name: '知识日报', status: '可试用', logo: '/logo-report.svg', category: '运营分析', desc: '每日推送知识使用与待办摘要', size: 'standard' },
+  { id: 'feishu-doc', name: '飞书文档插件', status: '可试用', logo: '/logo-doc-plugin.svg', category: '文档协同', desc: '在飞书文档内引用与校验知识', size: 'standard' },
+  { id: 'sso', name: '单点登录SSO', status: '已安装', logo: '/logo-sso.svg', category: '安全集成', desc: '企业统一身份认证与权限同步', size: 'compact' },
 ]
 
 export interface DailyBase {
