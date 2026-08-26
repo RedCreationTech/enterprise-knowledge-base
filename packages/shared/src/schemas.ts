@@ -99,6 +99,9 @@ export const MemberResponse = z.object({
   joinedAt: z.string(),
 })
 
+/** GET /org/members 响应：成员数组（服务端返回裸数组，非 {items} 信封）。 */
+export const MemberListResponse = z.array(MemberResponse)
+
 /** POST /org/members 请求体：role/dept 可选（默认 普通成员/''），email 需合法格式 */
 export const MemberCreateBody = z.object({
   name: z.string().min(1),
@@ -147,6 +150,9 @@ export const SpaceResponse = z.object({
   archived: z.boolean(),
   createdAt: z.string(),
 })
+
+/** GET /spaces 响应：空间数组（服务端返回裸数组，非 {items} 信封）。 */
+export const SpaceListResponse = z.array(SpaceResponse)
 
 /** POST /spaces 请求体：name 必填（其余字段走默认：count 0 / 健康 / 180 天 / 未归档） */
 export const SpaceCreateBody = z.object({ name: z.string().min(1) })
