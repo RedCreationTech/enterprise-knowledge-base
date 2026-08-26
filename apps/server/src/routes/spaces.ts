@@ -32,9 +32,10 @@ export function registerSpaces(app: FastifyInstance) {
     if (id === DEFAULT_SPACE_ID && patch.name !== undefined) {
       throw httpError(400, `${DEFAULT_SPACE_NAME}不可重命名`)
     }
-    const space = patchSpace(id, patch)
-    if (!space) throw httpError(404, '空间不存在')
-    return { ok: true, data: SpaceResponse.parse(space) }
+    const result = patchSpace(id, patch)
+    if (result === null) throw httpError(404, '空间不存在')
+    if (result.status === 'duplicate') throw httpError(409, '空间名称已存在', 'SPACE_DUPLICATE')
+    return { ok: true, data: SpaceResponse.parse(result.space) }
   })
 
   app.delete('/spaces/:id', async (req) => {

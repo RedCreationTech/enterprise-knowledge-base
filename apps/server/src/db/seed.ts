@@ -58,7 +58,7 @@ function seedSpacesAndDocs() {
         CATEGORIES[(n * 5) % CATEGORIES.length],
         STATUSES[(n * 7) % STATUSES.length],
         OWNERS[(n * 11) % OWNERS.length],
-        `2026-${String((n % 12) + 1).padStart(2, '0')}-${String((n % 28) + 1).padStart(2, '0')}`,
+        `2024-${String(4 + (n % 5)).padStart(2, '0')}-${String((n % 28) + 1).padStart(2, '0')}`,
         SOURCES[(n * 13) % SOURCES.length],
       )
     }

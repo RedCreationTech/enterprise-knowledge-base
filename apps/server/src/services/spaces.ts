@@ -93,9 +93,22 @@ const SPACE_COLUMNS: Record<keyof SpacePatchInput, string> = {
   archived: 'archived',
 }
 
-export function patchSpace(id: string, patch: SpacePatchInput): Space | null {
+export type PatchSpaceResult = { status: 'ok'; space: Space } | { status: 'duplicate' }
+
+/**
+ * 部分更新空间：name 可选（重名 → duplicate，路由 409）；
+ * 默认伞空间不可重命名在路由层已挡（400），此处只管业务更新。
+ * 空间不存在返回 null（404）。
+ */
+export function patchSpace(id: string, patch: SpacePatchInput): PatchSpaceResult | null {
   const exists = db.prepare('SELECT id FROM spaces WHERE id = ?').get(id)
   if (!exists) return null
+
+  // 重名校验（排除自身：改回同名放行）
+  if (patch.name !== undefined) {
+    const dup = db.prepare('SELECT id FROM spaces WHERE name = ? AND id != ?').get(patch.name, id)
+    if (dup) return { status: 'duplicate' }
+  }
 
   const sets: string[] = []
   const values: unknown[] = []
@@ -109,7 +122,7 @@ export function patchSpace(id: string, patch: SpacePatchInput): Space | null {
   if (sets.length > 0) {
     db.prepare(`UPDATE spaces SET ${sets.join(', ')} WHERE id = ?`).run(...values, id)
   }
-  return getSpace(id)
+  return { status: 'ok', space: getSpace(id)! }
 }
 
 /**
@@ -149,7 +162,7 @@ export function uploadDoc(spaceId: string, body: DocUploadBodyInput): Doc | null
     status: DEFAULT_DOC_STATUS,
     owner: body.owner ?? DEFAULT_DOC_OWNER,
     updatedAt: new Date().toISOString().slice(0, 10),
-    source: DEFAULT_DOC_SOURCE,
+    source: body.source ?? DEFAULT_DOC_SOURCE,
   }
   const insertAndCount = db.transaction(() => {
     db.prepare(

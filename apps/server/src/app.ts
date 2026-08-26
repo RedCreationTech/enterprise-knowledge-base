@@ -7,6 +7,7 @@ import { registerAuth } from './routes/auth.js'
 import { registerJourney } from './routes/journey.js'
 import { registerOrg } from './routes/org.js'
 import { registerSpaces } from './routes/spaces.js'
+import { registerDocs } from './routes/docs.js'
 import { createSchema } from './db/schema.js'
 import { seedIfEmpty } from './db/seed.js'
 
@@ -21,6 +22,7 @@ export async function buildApp() {
     registerJourney(api)
     registerOrg(api)
     registerSpaces(api)
+    registerDocs(api)
   }, { prefix: API_BASE })
   registerErrorHandler(app)
   return app

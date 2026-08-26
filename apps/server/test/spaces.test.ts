@@ -152,6 +152,29 @@ test('PATCH /spaces/:id -> 重命名/健康/周期/归档并持久化；404 缺�
   assert.equal(bad.json().error.code, 'BAD_REQUEST')
 })
 
+test('PATCH /spaces/:id 重命名 -> 与既有空间重名 409（不落库）', async () => {
+  const res = await app.inject({
+    method: 'PATCH',
+    url: `${API_BASE}/spaces/s-product`,
+    payload: { name: '制度与流程' },
+  })
+  assert.equal(res.statusCode, 409)
+  const body = res.json()
+  assert.equal(body.ok, false)
+  assert.equal(body.error.code, 'SPACE_DUPLICATE')
+  assert.match(body.error.message, /已存在/)
+
+  // 名称未变、总数未变
+  const spaces = await getSpaces()
+  assert.equal(spaces.length, 5)
+  assert.equal(spaces.find((s) => s.id === 's-product')?.name, '产品资料')
+
+  // 改回自身同名（无变化）应放行
+  const same = await app.inject({ method: 'PATCH', url: `${API_BASE}/spaces/s-product`, payload: { name: '产品资料' } })
+  assert.equal(same.statusCode, 200)
+  assert.equal(same.json().data.name, '产品资料')
+})
+
 test('PATCH /spaces/:id 默认空间 -> 重命名 400，改健康/周期允许', async () => {
   const rename = await app.inject({
     method: 'PATCH',

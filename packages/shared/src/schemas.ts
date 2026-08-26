@@ -172,14 +172,64 @@ export const DocResponse = z.object({
   source: z.string(),
 })
 
-/** POST /spaces/:id/upload 请求体：title/type/category 必填，owner 可选 */
+/** POST /spaces/:id/upload 请求体：title/type/category 必填，owner/source 可选 */
 export const DocUploadBody = z.object({
   title: z.string().min(1),
   type: z.string().min(1),
   category: z.string().min(1),
   owner: z.string().optional(),
+  source: z.string().optional(),
 })
 
 export type SpaceCreateBodyInput = z.infer<typeof SpaceCreateBody>
 export type SpacePatchInput = z.infer<typeof SpacePatch>
 export type DocUploadBodyInput = z.infer<typeof DocUploadBody>
+
+// ---------- 文档域 ----------
+
+/** GET /docs 查询参数：过滤条件可选；page>=1、size 1..100，默认 1/10（query 字符串经 coerce 转数字） */
+export const DocListQuery = z.object({
+  space: z.string().optional(),
+  search: z.string().optional(),
+  type: z.string().optional(),
+  status: z.string().optional(),
+  category: z.string().optional(),
+  page: z.coerce.number().int().min(1).default(1),
+  size: z.coerce.number().int().min(1).max(100).default(10),
+})
+
+/** GET /docs 响应：分页 + 过滤 + 总数 */
+export const DocListResponse = z.object({
+  items: z.array(DocResponse),
+  total: z.number(),
+  page: z.number(),
+  size: z.number(),
+})
+
+/** POST /docs/upload 请求体：spaceId 必填（目标空间），title/type/category 必填，owner/source 可选 */
+export const DocsUploadBody = DocUploadBody.extend({ spaceId: z.string().min(1) })
+
+/** PATCH /docs/:id 请求体：title/type/category/status/owner/spaceId 任意可选（显式白名单） */
+export const DocPatch = z.object({
+  title: z.string().min(1).optional(),
+  type: z.string().min(1).optional(),
+  category: z.string().min(1).optional(),
+  status: z.string().min(1).optional(),
+  owner: z.string().optional(),
+  spaceId: z.string().min(1).optional(),
+})
+
+/** POST /docs/batch-archive 请求体 */
+export const BatchArchiveBody = z.object({ ids: z.array(z.string()) })
+
+/** POST /docs/batch-move 请求体 */
+export const BatchMoveBody = z.object({ ids: z.array(z.string()), spaceId: z.string().min(1) })
+
+/** 批量操作响应：{ updated } */
+export const BatchResponse = z.object({ updated: z.number() })
+
+export type DocListQueryInput = z.infer<typeof DocListQuery>
+export type DocsUploadBodyInput = z.infer<typeof DocsUploadBody>
+export type DocPatchInput = z.infer<typeof DocPatch>
+export type BatchArchiveBodyInput = z.infer<typeof BatchArchiveBody>
+export type BatchMoveBodyInput = z.infer<typeof BatchMoveBody>
