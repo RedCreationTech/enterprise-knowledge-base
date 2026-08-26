@@ -26,6 +26,8 @@ import {
   ListTodo,
   MessagesSquare,
   Network,
+  PanelLeftClose,
+  PanelLeftOpen,
   Plug,
   Rocket,
   ScrollText,
@@ -41,6 +43,9 @@ import { CopilotDrawer } from '@/components/CopilotDrawer'
 import { HeaderSearch } from '@/components/layout/HeaderSearch'
 import { NotificationsMenu } from '@/components/layout/NotificationsMenu'
 import { UserMenu } from '@/components/layout/UserMenu'
+
+/** 侧边栏整栏折叠状态的 localStorage 键（'1' = 折叠为图标窄栏） */
+const SIDEBAR_COLLAPSED_KEY = 'ekb.sidebar.collapsed'
 
 interface NavItem {
   label: string
@@ -107,13 +112,30 @@ export interface WorkspaceShellProps {
   children?: ReactNode
 }
 
-function WorkspaceHeader({ onOpenCopilot }: { onOpenCopilot: () => void }) {
+function WorkspaceHeader({
+  sidebarCollapsed,
+  onToggleSidebar,
+  onOpenCopilot,
+}: {
+  sidebarCollapsed: boolean
+  onToggleSidebar: () => void
+  onOpenCopilot: () => void
+}) {
   const { state } = useAppStore()
   return (
     <header className="sticky top-0 z-40 flex h-16 items-center justify-between gap-4 border-b border-neutral-200 bg-white px-6">
       <div className="flex shrink-0 items-center gap-2.5">
         <img src="/logo.svg" alt="企业知识库" className="h-7 w-7 rounded-md" />
         <span className="text-h3 text-neutral-950">企业知识库</span>
+        <button
+          type="button"
+          title={sidebarCollapsed ? '展开侧边栏' : '折叠侧边栏'}
+          aria-label={sidebarCollapsed ? '展开侧边栏' : '折叠侧边栏'}
+          onClick={onToggleSidebar}
+          className="flex h-9 w-9 items-center justify-center rounded-md text-neutral-500 transition-colors duration-micro ease-brand hover:bg-neutral-100 hover:text-neutral-700"
+        >
+          {sidebarCollapsed ? <PanelLeftOpen className="h-4 w-4" /> : <PanelLeftClose className="h-4 w-4" />}
+        </button>
       </div>
       <div className="hidden min-w-0 flex-1 justify-center lg:flex">
         <HeaderSearch />
@@ -152,7 +174,7 @@ function WorkspaceHeader({ onOpenCopilot }: { onOpenCopilot: () => void }) {
   )
 }
 
-function NavList({ groups }: { groups: NavGroup[] }) {
+function NavList({ groups, collapsed }: { groups: NavGroup[]; collapsed: boolean }) {
   const { state } = useAppStore()
   const location = useLocation()
   // 每日待办计数：与 store 任务同源（待处理 + 进行中），完成自动 -1
@@ -169,6 +191,30 @@ function NavList({ groups }: { groups: NavGroup[] }) {
   }, [activeGroup])
   const toggleGroup = (section: string) =>
     setExpanded((prev) => (prev === section ? null : section)) // 点开已展开的分组 → 收起（允许全部收起）
+
+  // 折叠态：图标窄栏 —— 隐藏分组标题与计数 pill，全部导航项渲染为图标按钮（title 提示）
+  if (collapsed) {
+    return (
+      <nav className="flex flex-col items-center gap-1 px-3">
+        {groups.flatMap((group) => group.items).map((item) => (
+          <NavLink
+            key={item.label}
+            to={item.path}
+            end={item.path === '/workspace/dashboard'}
+            title={item.label}
+            className={({ isActive }) =>
+              cn(
+                'flex h-10 w-10 items-center justify-center rounded-md transition-colors duration-micro ease-brand',
+                isActive ? 'bg-brand-100 text-brand-600' : 'text-neutral-700 hover:bg-neutral-100',
+              )
+            }
+          >
+            <item.icon className="h-4 w-4 shrink-0" />
+          </NavLink>
+        ))}
+      </nav>
+    )
+  }
 
   return (
     <nav className="flex flex-col gap-1 px-3">
@@ -254,23 +300,44 @@ function PlanCard() {
 
 export function WorkspaceShell({ children }: WorkspaceShellProps) {
   const [copilotOpen, setCopilotOpen] = useState(false)
+  // 侧边栏整栏折叠：初始值读 localStorage（'1' = 折叠）；读写均 try/catch（storage 不可用时静默降级）
+  const [sidebarCollapsed, setSidebarCollapsed] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem(SIDEBAR_COLLAPSED_KEY) === '1'
+    } catch {
+      return false
+    }
+  })
+  const toggleSidebar = () =>
+    setSidebarCollapsed((prev) => {
+      const next = !prev
+      try {
+        localStorage.setItem(SIDEBAR_COLLAPSED_KEY, next ? '1' : '0')
+      } catch {
+        // storage 不可用（隐私模式/配额）时仅不持久化，不影响本次切换
+      }
+      return next
+    })
 
   return (
     <div className="flex min-h-[100dvh] flex-col bg-surface-page">
-      <WorkspaceHeader onOpenCopilot={() => setCopilotOpen(true)} />
+      <WorkspaceHeader sidebarCollapsed={sidebarCollapsed} onToggleSidebar={toggleSidebar} onOpenCopilot={() => setCopilotOpen(true)} />
       <div className="mx-auto flex w-full max-w-[1920px] flex-1 items-stretch">
         <aside
           data-tour="sidebar"
-          className="sticky top-16 flex h-[calc(100dvh-64px)] w-[184px] shrink-0 flex-col border-r border-neutral-200 bg-white"
+          className={cn(
+            'sticky top-16 flex h-[calc(100dvh-64px)] w-[184px] shrink-0 flex-col border-r border-neutral-200 bg-white transition-[width] duration-comp ease-brand',
+            sidebarCollapsed && 'w-[64px]',
+          )}
         >
-          <div className="flex items-center gap-2 px-4 py-3">
+          <div className={cn('flex items-center gap-2 px-4 py-3', sidebarCollapsed && 'justify-center px-0')}>
             <img src="/logo.svg" alt="" className="h-7 w-7 shrink-0 rounded-md" />
-            <p className="min-w-0 truncate text-body-sm font-semibold text-neutral-950">{org.name}</p>
+            {!sidebarCollapsed && <p className="min-w-0 truncate text-body-sm font-semibold text-neutral-950">{org.name}</p>}
           </div>
           <div className="min-h-0 flex-1 overflow-y-auto pb-3">
-            <NavList groups={NAV_FULL} />
+            <NavList groups={NAV_FULL} collapsed={sidebarCollapsed} />
           </div>
-          <PlanCard />
+          {!sidebarCollapsed && <PlanCard />}
         </aside>
         <main className="min-w-0 flex-1">
           <div className="mx-auto w-full max-w-content px-6 pt-4 pb-6">{children ?? <Outlet />}</div>
