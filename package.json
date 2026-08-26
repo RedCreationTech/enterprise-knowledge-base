@@ -6,6 +6,7 @@
   "scripts": {
     "dev:web": "npm run dev --workspace @kb/web",
     "dev:server": "npm run dev --workspace @kb/server",
+    "dev": "npm run dev:web & npm run dev:server",
     "build": "npm run build --workspace @kb/shared && npm run build --workspace @kb/web && npm run build --workspace @kb/server",
     "lint": "npm run lint --workspace @kb/web && npm run lint --workspace @kb/server",
     "test": "npm run test --workspaces --if-present"
