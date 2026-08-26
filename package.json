@@ -5,6 +5,8 @@
   "workspaces": ["apps/*", "packages/*"],
   "scripts": {
     "predev": "npm run build --workspace @kb/shared",
+    "predev:web": "npm run build --workspace @kb/shared",
+    "predev:server": "npm run build --workspace @kb/shared",
     "prelint": "npm run build --workspace @kb/shared",
     "pretest": "npm run build --workspace @kb/shared",
     "dev:web": "npm run dev --workspace @kb/web",
