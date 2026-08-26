@@ -380,3 +380,33 @@ export const QaResponse = z.discriminatedUnion('answered', [QaHitResponse, QaRef
 
 export type KnowledgeSiteSearchBodyInput = z.infer<typeof KnowledgeSiteSearchBody>
 export type QaBodyInput = z.infer<typeof QaBody>
+
+// ---------- 搜索域 ----------
+
+/** 搜索命中条目（id/name/meta/path：path 为前端路由提示，用于跳转）。 */
+export const SearchItemSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  meta: z.string(),
+  path: z.string(),
+})
+
+/** 搜索分组：key（docs/questions/articles/spaces）+ label（中文标题）+ items。 */
+export const SearchGroupSchema = z.object({
+  key: z.string(),
+  label: z.string(),
+  items: z.array(SearchItemSchema),
+})
+
+/** GET /search 查询参数：q 必填（trim 后空串 400）；limit 每组分页上限（默认 5，1..20）。 */
+export const SearchQuery = z.object({
+  q: z.string().trim().min(1),
+  limit: z.coerce.number().int().min(1).max(20).default(5),
+})
+
+/** GET /search 响应：分组结果（无命中时 groups 为空数组，200）。 */
+export const SearchResponse = z.object({
+  groups: z.array(SearchGroupSchema),
+})
+
+export type SearchQueryInput = z.infer<typeof SearchQuery>

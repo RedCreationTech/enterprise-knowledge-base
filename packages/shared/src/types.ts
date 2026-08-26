@@ -125,3 +125,23 @@ export interface QaRefusal {
 }
 
 export type QaResult = QaHit | QaRefusal
+
+// ---------- 搜索域 ----------
+
+/** 搜索命中条目：id/name/meta/path（path 为前端路由提示，用于跳转）。 */
+export interface SearchItem {
+  id: string
+  name: string
+  meta: string
+  path: string
+}
+
+/**
+ * 搜索分组：key（docs/questions/articles/spaces）+ label（中文标题）+ items。
+ * 分组语义镜像前端 HeaderSearch（文档/问题…分组展示），items 已按每组分页上限截断。
+ */
+export interface SearchGroup {
+  key: string
+  label: string
+  items: SearchItem[]
+}
