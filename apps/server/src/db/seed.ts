@@ -459,7 +459,7 @@ function seedAssistants() {
 
 /**
  * 10 个会话 seed（口径对齐前端 chat-history 页）：
- * - 来源渠道 4：工作台/飞书/企业微信/Web 门户（历史列表渠道筛选口径）。
+ * - 来源渠道 4：知识网站/飞书/企业微信/Web 门户（历史列表渠道筛选口径，对齐前端 Channel 枚举）。
  * - 会话标题取首问（前端列表无独立标题字段，title = firstQuestion 口径）。
  * - 消息 user/assistant 交替；assistant 回复复用答案池（turns 的池条目 id），
  *   未命中池的追问用通用回复（镜像 historyData simpleMessages 尾段文案）。
@@ -467,7 +467,7 @@ function seedAssistants() {
  */
 const chatSessions: Array<{ id: string; title: string; source: string; createdAt: string; turns: Array<[string, string | null]> }> = [
   {
-    id: 'chat-1', title: '差旅住宿标准是多少？', source: '工作台', createdAt: '2026-05-29T10:12:00',
+    id: 'chat-1', title: '差旅住宿标准是多少？', source: '知识网站', createdAt: '2026-05-29T10:12:00',
     turns: [
       ['差旅住宿标准是多少？', 'ap-16'],
       ['好的，那超出标准如何申请特批？', null],
@@ -496,7 +496,7 @@ const chatSessions: Array<{ id: string; title: string; source: string; createdAt
     ],
   },
   {
-    id: 'chat-5', title: '年假如何申请？', source: '工作台', createdAt: '2026-05-28T16:02:00',
+    id: 'chat-5', title: '年假如何申请？', source: '知识网站', createdAt: '2026-05-28T16:02:00',
     turns: [['年假如何申请？', 'ap-17']],
   },
   {
@@ -530,7 +530,7 @@ const chatSessions: Array<{ id: string; title: string; source: string; createdAt
     ],
   },
   {
-    id: 'chat-10', title: '质保期如何计算？', source: '工作台', createdAt: '2026-05-27T09:36:00',
+    id: 'chat-10', title: '质保期如何计算？', source: '知识网站', createdAt: '2026-05-27T09:36:00',
     turns: [['质保期如何计算？', 'ap-13']],
   },
 ]

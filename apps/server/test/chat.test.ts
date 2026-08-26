@@ -74,7 +74,7 @@ test('GET /chat/sessions -> 10 个 seed 会话（id/title/source/createdAt/userI
   // 首条为今天最新会话 chat-1（差旅住宿标准）
   assert.equal(list[0].id, 'chat-1')
   assert.equal(list[0].title, '差旅住宿标准是多少？')
-  assert.equal(list[0].source, '工作台')
+  assert.equal(list[0].source, '知识网站')
   assert.equal(list[0].userId, 'u-1')
 
   // 字段齐全
@@ -89,12 +89,12 @@ test('GET /chat/sessions -> 10 个 seed 会话（id/title/source/createdAt/userI
   }
 })
 
-test('GET /chat/sessions -> 来源渠道 4 口径：工作台/飞书/企业微信/Web 门户 均有会话', async () => {
+test('GET /chat/sessions -> 来源渠道 4 口径：知识网站/飞书/企业微信/Web 门户 均有会话', async () => {
   const list = await listSessions()
   const sources = new Set(list.map((s) => s.source))
   assert.deepEqual(
     [...sources].sort(),
-    ['企业微信', '工作台', 'Web 门户', '飞书'].sort(),
+    ['企业微信', '知识网站', 'Web 门户', '飞书'].sort(),
   )
 })
 

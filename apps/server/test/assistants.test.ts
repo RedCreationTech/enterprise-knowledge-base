@@ -292,3 +292,37 @@ test('POST /assistants/:id/publish -> 无草稿 -> 409 NO_DRAFT；未知 id -> 4
   assert.equal(missing.statusCode, 404)
   assert.equal(missing.json().error.code, 'NOT_FOUND')
 })
+
+test('POST /assistants/:id/publish -> 畸形草稿：JSON null / 数组 / 字段类型不符 -> 400 BAD_DRAFT（不 500、不污染 live 字段）', async () => {
+  // JSON.parse 合法但非对象：draft='null'（原先会 500，或把 live 字段置空）
+  await app.inject({ method: 'PATCH', url: `${API_BASE}/assistants/asst-kb`, payload: { draft: 'null' } })
+  const nullRes = await app.inject({ method: 'POST', url: `${API_BASE}/assistants/asst-kb/publish` })
+  assert.equal(nullRes.statusCode, 400)
+  assert.equal(nullRes.json().error.code, 'BAD_DRAFT')
+
+  // JSON.parse 合法但非对象：数组
+  await app.inject({ method: 'PATCH', url: `${API_BASE}/assistants/asst-kb`, payload: { draft: '["企业知识助手"]' } })
+  const arrRes = await app.inject({ method: 'POST', url: `${API_BASE}/assistants/asst-kb/publish` })
+  assert.equal(arrRes.statusCode, 400)
+  assert.equal(arrRes.json().error.code, 'BAD_DRAFT')
+
+  // 字段类型不符：enabled:"false"（原先会被 truthy 污染为 enabled=true）
+  await app.inject({ method: 'PATCH', url: `${API_BASE}/assistants/asst-kb`, payload: { draft: '{"enabled":"false"}' } })
+  const typeRes = await app.inject({ method: 'POST', url: `${API_BASE}/assistants/asst-kb/publish` })
+  assert.equal(typeRes.statusCode, 400)
+  assert.equal(typeRes.json().error.code, 'BAD_DRAFT')
+
+  // 字段类型不符：name:123（原先会污染 live name 为 "123.0"）
+  await app.inject({ method: 'PATCH', url: `${API_BASE}/assistants/asst-kb`, payload: { draft: '{"name":123}' } })
+  const nameRes = await app.inject({ method: 'POST', url: `${API_BASE}/assistants/asst-kb/publish` })
+  assert.equal(nameRes.statusCode, 400)
+  assert.equal(nameRes.json().error.code, 'BAD_DRAFT')
+
+  // 校验失败不落库、不污染 live 字段：version 仍 1、name 原样、draft 保留、无版本行
+  const a = assistantById(await listAssistants(), 'asst-kb')!
+  assert.equal(a.version, 1)
+  assert.equal(a.name, '企业知识助手')
+  assert.equal(a.enabled, true)
+  assert.equal(a.draft, '{"name":123}')
+  assert.equal(versionRows('asst-kb').length, 0)
+})

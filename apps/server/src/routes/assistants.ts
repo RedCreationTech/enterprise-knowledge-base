@@ -48,7 +48,7 @@ export function registerAssistants(app: FastifyInstance) {
     const result = publishAssistant(id)
     if (result.status === 'not-found') throw httpError(404, '助手不存在')
     if (result.status === 'no-draft') throw httpError(409, '没有待发布的草稿', 'NO_DRAFT')
-    if (result.status === 'bad-draft') throw httpError(400, '草稿配置非法')
+    if (result.status === 'bad-draft') throw httpError(400, '草稿配置非法', 'BAD_DRAFT')
     return { ok: true, data: AssistantResponse.parse(result.assistant) }
   })
 }

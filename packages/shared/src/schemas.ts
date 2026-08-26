@@ -425,8 +425,23 @@ export const AssistantPatch = z.object({
   draft: z.string().optional(),
 })
 
+/**
+ * 发布草稿（draft 字段的 JSON 形态）：name/icon/desc/scope/enabled 全部可选（允许部分配置，缺省回落 live 值）。
+ * POST /assistants/:id/publish 时对解析后的 JSON 做类型校验——非对象（null/数组/原始值）
+ * 或字段类型不符（如 enabled:"false"）→ 400 BAD_DRAFT，防止污染 live 字段或 500。
+ * 注意：不包含前端 mock 的 knowledge/audience/principles/welcome/suggested——契约在 Web 接入阶段再固定。
+ */
+export const AssistantDraftSchema = z.object({
+  name: z.string().optional(),
+  icon: z.string().optional(),
+  desc: z.string().optional(),
+  scope: z.string().optional(),
+  enabled: z.boolean().optional(),
+})
+
 export type AssistantCreateBodyInput = z.infer<typeof AssistantCreateBody>
 export type AssistantPatchInput = z.infer<typeof AssistantPatch>
+export type AssistantDraftInput = z.infer<typeof AssistantDraftSchema>
 
 // ---------- 对话/历史域 ----------
 

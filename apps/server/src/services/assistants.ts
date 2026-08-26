@@ -1,5 +1,6 @@
 import { randomUUID } from 'node:crypto'
 import { db } from '../db/client.js'
+import { AssistantDraftSchema } from '@kb/shared'
 import type { Assistant } from '@kb/shared'
 import type { AssistantCreateBodyInput, AssistantPatchInput } from '@kb/shared'
 
@@ -145,7 +146,7 @@ export type PublishAssistantResult =
   | { status: 'ok'; assistant: Assistant }
   | { status: 'not-found' } // 助手缺失（404）
   | { status: 'no-draft' } // draft 为空：无可发布草稿（409 NO_DRAFT）
-  | { status: 'bad-draft' } // draft 非空但非法 JSON（400）
+  | { status: 'bad-draft' } // draft 非空但非法 JSON / 非对象 / 字段类型不符（400 BAD_DRAFT）
 
 /**
  * POST /assistants/:id/publish：draft 非空 → 将草稿配置应用到 live 字段、version+1、
@@ -163,6 +164,12 @@ export function publishAssistant(id: string): PublishAssistantResult {
   } catch {
     return { status: 'bad-draft' }
   }
+
+  // zod 校验解析后的 JSON：非对象（null/数组/原始值）或字段类型不符（如 enabled:"false"）→ bad-draft，
+  // 不落库、不污染 live 字段（校验在任何事务之前完成）。
+  const draft = AssistantDraftSchema.safeParse(config)
+  if (!draft.success) return { status: 'bad-draft' }
+  config = draft.data
 
   // 草稿配置 → live 字段（缺省回落当前值），并保存完整发布配置快照
   const live: DraftConfig = {
