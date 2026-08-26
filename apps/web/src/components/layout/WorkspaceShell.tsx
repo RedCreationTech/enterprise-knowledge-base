@@ -195,13 +195,14 @@ function NavList({ groups, collapsed }: { groups: NavGroup[]; collapsed: boolean
   // 折叠态：图标窄栏 —— 隐藏分组标题与计数 pill，全部导航项渲染为图标按钮（title 提示）
   if (collapsed) {
     return (
-      <nav className="flex flex-col items-center gap-1 px-3">
+      <nav className="flex flex-col items-center gap-1 px-2.5">
         {groups.flatMap((group) => group.items).map((item) => (
           <NavLink
             key={item.label}
             to={item.path}
             end={item.path === '/workspace/dashboard'}
             title={item.label}
+            aria-label={item.label}
             className={({ isActive }) =>
               cn(
                 'flex h-10 w-10 items-center justify-center rounded-md transition-colors duration-micro ease-brand',
