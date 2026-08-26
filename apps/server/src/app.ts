@@ -9,6 +9,7 @@ import { registerOrg } from './routes/org.js'
 import { registerSpaces } from './routes/spaces.js'
 import { registerDocs } from './routes/docs.js'
 import { registerConnectors } from './routes/connectors.js'
+import { registerKnowledge } from './routes/knowledge.js'
 import { createSchema } from './db/schema.js'
 import { seedIfEmpty } from './db/seed.js'
 
@@ -25,6 +26,7 @@ export async function buildApp() {
     registerSpaces(api)
     registerDocs(api)
     registerConnectors(api)
+    registerKnowledge(api)
   }, { prefix: API_BASE })
   registerErrorHandler(app)
   return app

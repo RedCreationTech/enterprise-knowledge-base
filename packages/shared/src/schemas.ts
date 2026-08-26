@@ -286,3 +286,97 @@ export const SyncTasksResponse = z.object({
 })
 
 export type ConnectorPatchInput = z.infer<typeof ConnectorPatch>
+
+// ---------- 知识地图/网站/问答域 ----------
+
+/** 知识地图节点（id/category/docId/position；docId 为 null 表示分类节点）。 */
+export const KnowledgeMapNodeSchema = z.object({
+  id: z.string(),
+  category: z.string(),
+  docId: z.string().nullable(),
+  position: z.object({ x: z.number(), y: z.number() }),
+})
+
+/** 知识地图分类（口径对齐前端 mapData.ts MAP_CATEGORIES：count/questions/health）。 */
+export const KnowledgeMapCategorySchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  count: z.number().int().min(0),
+  questions: z.number().int().min(0),
+  health: z.number().int().min(0).max(100),
+})
+
+/** 知识地图关系边（doc→category / question→doc）。 */
+export const KnowledgeMapRelationSchema = z.object({
+  from: z.string(),
+  to: z.string(),
+  type: z.string(),
+})
+
+/** GET /knowledge-map 响应：categories + nodes + relations。 */
+export const KnowledgeMapResponse = z.object({
+  categories: z.array(KnowledgeMapCategorySchema),
+  nodes: z.array(KnowledgeMapNodeSchema),
+  relations: z.array(KnowledgeMapRelationSchema),
+})
+
+/** 知识网站文章（id/title/content/category/updatedAt/status）。 */
+export const KnowledgeSiteArticleSchema = z.object({
+  id: z.string(),
+  title: z.string(),
+  content: z.string(),
+  category: z.string(),
+  updatedAt: z.string(),
+  status: z.string(),
+})
+
+/** GET /knowledge-site 响应：知识网站文章/栏目列表。 */
+export const KnowledgeSiteResponse = z.object({
+  items: z.array(KnowledgeSiteArticleSchema),
+})
+
+/** POST /knowledge-site/search 请求体：q 必填（trim 后空串 400）。 */
+export const KnowledgeSiteSearchBody = z.object({
+  q: z.string().trim().min(1),
+})
+
+/** POST /knowledge-site/search 响应：标题/内容 LIKE 命中的文章。 */
+export const KnowledgeSiteSearchResponse = z.object({
+  items: z.array(KnowledgeSiteArticleSchema),
+})
+
+/** POST /knowledge-site/qa 请求体：question 必填（trim 后空串 400）。 */
+export const QaBody = z.object({
+  question: z.string().trim().min(1),
+})
+
+/** 答案池引用（doc/version/page/role，口径对齐 base.mock ANSWER_POOL citations）。 */
+export const QaCitationSchema = z.object({
+  doc: z.string(),
+  version: z.string(),
+  page: z.string(),
+  role: z.string(),
+})
+
+/** QA 命中：答案 + 引用 + 可信度（0–100 整数）。 */
+export const QaHitResponse = z.object({
+  answered: z.literal(true),
+  answer: z.string(),
+  citations: z.array(QaCitationSchema),
+  confidence: z.number().int().min(0).max(100),
+})
+
+/** QA 未命中：诚实拒答（原因/已检索范围/缺失知识类型/建议——不伪装成答案）。 */
+export const QaRefusalResponse = z.object({
+  answered: z.literal(false),
+  reason: z.string(),
+  searchedCount: z.number().int().min(0),
+  missingType: z.string(),
+  suggestions: z.array(z.string()),
+})
+
+/** POST /knowledge-site/qa 响应：命中/拒答按 answered 判别。 */
+export const QaResponse = z.discriminatedUnion('answered', [QaHitResponse, QaRefusalResponse])
+
+export type KnowledgeSiteSearchBodyInput = z.infer<typeof KnowledgeSiteSearchBody>
+export type QaBodyInput = z.infer<typeof QaBody>

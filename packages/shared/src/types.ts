@@ -52,3 +52,76 @@ export interface SyncTask {
   failedCount: number
   at: string
 }
+
+// ---------- 知识地图/网站/问答域 ----------
+
+/** 知识地图节点（设计 §5：id/category/docId/position/relations）。docId 为 null 表示分类节点（◆）。 */
+export interface KnowledgeMapNode {
+  id: string
+  category: string
+  docId: string | null
+  position: { x: number; y: number }
+}
+
+/** 知识地图分类（口径对齐前端 mapData.ts MAP_CATEGORIES：count/questions/health）。 */
+export interface KnowledgeMapCategory {
+  id: string
+  name: string
+  count: number
+  questions: number
+  health: number
+}
+
+/** 知识地图关系边（doc→category / question→doc）。 */
+export interface KnowledgeMapRelation {
+  from: string
+  to: string
+  type: string
+}
+
+/** GET /knowledge-map 响应：categories + nodes + relations。 */
+export interface KnowledgeMapData {
+  categories: KnowledgeMapCategory[]
+  nodes: KnowledgeMapNode[]
+  relations: KnowledgeMapRelation[]
+}
+
+/** 知识网站文章/栏目（设计 §5：id/title/content/category/updatedAt/status）。 */
+export interface KnowledgeSiteArticle {
+  id: string
+  title: string
+  content: string
+  category: string
+  updatedAt: string
+  status: string
+}
+
+/** 答案池引用（doc/version/page/role，口径对齐 base.mock ANSWER_POOL citations）。 */
+export interface QaCitation {
+  doc: string
+  version: string
+  page: string
+  role: string
+}
+
+/** QA 命中：答案 + 引用 + 可信度。 */
+export interface QaHit {
+  answered: true
+  answer: string
+  citations: QaCitation[]
+  confidence: number
+}
+
+/**
+ * QA 未命中：诚实拒答（镜像前端 NoAnswerCard/REFUSAL_GENERIC 语义）——
+ * 原因/已检索范围（searchedCount）/缺失知识类型/最接近主题建议（不伪装成答案）。
+ */
+export interface QaRefusal {
+  answered: false
+  reason: string
+  searchedCount: number
+  missingType: string
+  suggestions: string[]
+}
+
+export type QaResult = QaHit | QaRefusal

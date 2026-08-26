@@ -11,4 +11,7 @@ export function createSchema() {
   T(`CREATE TABLE IF NOT EXISTS docs (id TEXT PRIMARY KEY, spaceId TEXT, title TEXT, type TEXT, category TEXT, status TEXT, owner TEXT, updatedAt TEXT, source TEXT)`)
   T(`CREATE TABLE IF NOT EXISTS connectors (id TEXT PRIMARY KEY, name TEXT, kind TEXT, connected INTEGER, disabled INTEGER, docs INTEGER, lastSyncAt TEXT, config TEXT)`)
   T(`CREATE TABLE IF NOT EXISTS sync_tasks (id TEXT PRIMARY KEY, connectorId TEXT, status TEXT, progress INTEGER, failedCount INTEGER, at TEXT)`)
+  T(`CREATE TABLE IF NOT EXISTS knowledge_map (id TEXT PRIMARY KEY, category TEXT, docId TEXT, position TEXT, relations TEXT)`)
+  T(`CREATE TABLE IF NOT EXISTS knowledge_site (id TEXT PRIMARY KEY, title TEXT, content TEXT, category TEXT, updatedAt TEXT, status TEXT)`)
+  T(`CREATE TABLE IF NOT EXISTS answer_pool (id TEXT PRIMARY KEY, question TEXT, answer TEXT, citations TEXT, confidence INTEGER)`)
 }
