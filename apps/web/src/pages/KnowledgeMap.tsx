@@ -1,7 +1,10 @@
 /**
  * 知识地图 KnowledgeMap（/workspace/knowledge-map，knowledge-map.md）
- * 顶部筛选工具条；左 9 列 SVG 图谱画布（中心 Hub + 5 分类放射 + 文档/问题节点 + 8 孤立文档，
- * 节点大小按被问次数，拖拽平移 / 滚轮缩放 / Hover Tooltip / 点击联动详情面板）；
+ * 顶部筛选工具条（含视图模式切换：图谱/列表/分类树 + 动态图例）；
+ * 左 9 列 SVG 图谱画布（中心 Hub + 5 分类放射 + 文档/问题节点 + 8 孤立文档，
+ * 节点大小按被问次数，拖拽平移 / 滚轮缩放 / Hover Tooltip / 点击联动详情面板；
+ * 图谱内维度重组：分类/类型/状态/作者 切换节点着色与图例，异常红边保留）；
+ * 列表视图（文档表格）/ 分类树视图（分类→文档层级缩进）共用同一份 filteredDocs；
  * 右 3 列节点详情检查器；主 CTA「处理孤立文档（8）」560px Drawer + L2 批量确认。
  */
 import { useMemo, useRef, useState } from 'react'
@@ -44,7 +47,7 @@ import {
   questionNodeSize,
   questionRecordsFor,
 } from '@/pages/workspace/mapData'
-import type { DocNode, OrphanDoc, QuestionNode } from '@/pages/workspace/mapData'
+import type { CategoryNode, DocNode, DocValidity, MapCategory, OrphanDoc, QuestionNode } from '@/pages/workspace/mapData'
 
 const Q_ACTION_KEY = KEY_NAMESPACE.knowledgeMap.questionActions
 /** Phase 3 Task 6 迁移回退旧 key：读取时迁移到新 key 并删除旧 key */
@@ -97,6 +100,65 @@ const CAT_RADIUS = 190
 const CAT_COLOR = '#7357E8'
 const DOC_COLOR = '#2F74FF'
 const Q_COLOR = '#159FB7'
+
+/* ---------- 多维度视图：视图模式 + 图谱维度重组 ---------- */
+
+type ViewMode = 'graph' | 'list' | 'tree'
+type Dim = 'category' | 'type' | 'validity' | 'owner'
+
+const VIEW_MODES: { value: ViewMode; label: string }[] = [
+  { value: 'graph', label: '图谱' },
+  { value: 'list', label: '列表' },
+  { value: 'tree', label: '分类树' },
+]
+const DIM_OPTIONS: { value: Dim; label: string }[] = [
+  { value: 'category', label: '分类' },
+  { value: 'type', label: '类型' },
+  { value: 'validity', label: '状态' },
+  { value: 'owner', label: '作者' },
+]
+
+/** 维度配色：分类（5 分类色）/ 作者（5 人）/ 状态（4 态，异常红沿用） */
+const CATEGORY_COLORS: Record<MapCategory, string> = {
+  产品介绍: '#2F74FF',
+  使用指南: '#22B573',
+  常见问题: '#7357E8',
+  API文档: '#F3A53A',
+  售后服务: '#26A9C4',
+}
+const CATEGORY_FILLS: Record<MapCategory, string> = {
+  产品介绍: '#EAF2FF',
+  使用指南: '#EAF9F1',
+  常见问题: '#F1EEFF',
+  API文档: '#FFF7E7',
+  售后服务: '#E8FAFC',
+}
+const OWNER_COLORS: Record<string, string> = {
+  张伟: '#2F74FF',
+  李娜: '#22B573',
+  王强: '#7357E8',
+  赵敏: '#F3A53A',
+  陈可: '#26A9C4',
+}
+const OWNER_FILLS: Record<string, string> = {
+  张伟: '#EAF2FF',
+  李娜: '#EAF9F1',
+  王强: '#F1EEFF',
+  赵敏: '#FFF7E7',
+  陈可: '#E8FAFC',
+}
+const VALIDITY_COLORS: Record<DocValidity, string> = {
+  正常: '#16A563',
+  复审将到期: '#F3A53A',
+  可能过期: '#E5484D',
+  存在冲突: '#E5484D',
+}
+const VALIDITY_FILLS: Record<DocValidity, string> = {
+  正常: '#EAF9F1',
+  复审将到期: '#FFF7E7',
+  可能过期: '#FFF0F0',
+  存在冲突: '#FFF0F0',
+}
 
 interface LayoutNode {
   id: string
@@ -172,6 +234,9 @@ export default function KnowledgeMap() {
   const [typeFilter, setTypeFilter] = useState<(typeof MAP_TYPE_FILTERS)[number]>('全部')
   const [validityFilter, setValidityFilter] = useState<(typeof MAP_VALIDITY_FILTERS)[number]>('全部')
   const [search, setSearch] = useState('')
+  // 多维度视图：图谱 / 列表 / 分类树 切换 + 图谱内维度重组（默认「类型」保持原配色）
+  const [viewMode, setViewMode] = useState<ViewMode>('graph')
+  const [dim, setDim] = useState<Dim>('type')
   const [selection, setSelection] = useState<Selection | null>(null)
   const [tooltip, setTooltip] = useState<TooltipState | null>(null)
   const [orphans, setOrphans] = useState<OrphanDoc[]>(ORPHAN_DOCS)
@@ -193,7 +258,8 @@ export default function KnowledgeMap() {
   const canvasRef = useRef<HTMLDivElement | null>(null)
   const svgRef = useRef<SVGSVGElement | null>(null)
 
-  const visibleDocs = useMemo(
+  /** 三个视图（图谱/列表/分类树）共用同一份过滤后的文档（沿用类型/状态/搜索筛选） */
+  const filteredDocs = useMemo(
     () =>
       MAP_DOCS.filter((d) => {
         if (typeFilter !== '全部' && d.category !== typeFilter) return false
@@ -203,7 +269,7 @@ export default function KnowledgeMap() {
       }),
     [typeFilter, validityFilter, search],
   )
-  const visibleDocIds = useMemo(() => new Set(visibleDocs.map((d) => d.id)), [visibleDocs])
+  const visibleDocIds = useMemo(() => new Set(filteredDocs.map((d) => d.id)), [filteredDocs])
   const visibleQuestions = useMemo(
     () =>
       MAP_QUESTIONS.filter((q) => {
@@ -229,8 +295,57 @@ export default function KnowledgeMap() {
     [typeFilter],
   )
 
-  const shownCount = 1 + visibleCategories.length + visibleDocs.length + visibleQuestions.length
-  const isEmpty = visibleDocs.length === 0 && visibleQuestions.length === 0 && visibleOrphans.length === 0
+  const shownCount = 1 + visibleCategories.length + filteredDocs.length + visibleQuestions.length
+  const isEmpty = filteredDocs.length === 0 && visibleQuestions.length === 0 && visibleOrphans.length === 0
+  /** 列表/分类树视图的空态只看文档；图谱沿用 isEmpty（含问题/孤立） */
+  const viewEmpty = viewMode === 'graph' ? isEmpty : filteredDocs.length === 0
+
+  /** 当前维度下对文档分组（dimGroups 供图例计数 / 维度重组复用） */
+  const dimGroups = useMemo(() => {
+    const groups = new Map<string, DocNode[]>()
+    for (const d of filteredDocs) {
+      const key = dim === 'category' ? d.category : dim === 'validity' ? d.validity : dim === 'owner' ? d.owner : '文档'
+      const list = groups.get(key) ?? []
+      list.push(d)
+      groups.set(key, list)
+    }
+    return groups
+  }, [dim, filteredDocs])
+
+  /** 图例按当前维度动态展示（含分组计数） */
+  const dimLegend = useMemo(() => {
+    const countFor = (k: string) => dimGroups.get(k)?.length ?? 0
+    if (dim === 'type') {
+      return [
+        { label: '文档', color: DOC_COLOR, shape: 'dot' as const, count: filteredDocs.length },
+        { label: '问题', color: Q_COLOR, shape: 'dot' as const, count: visibleQuestions.length },
+        { label: '分类', color: CAT_COLOR, shape: 'diamond' as const, count: visibleCategories.length },
+      ]
+    }
+    if (dim === 'category') {
+      return MAP_CATEGORIES.map((c) => ({ label: c.name, color: CATEGORY_COLORS[c.name], shape: 'dot' as const, count: countFor(c.name) }))
+    }
+    if (dim === 'validity') {
+      return (['正常', '复审将到期', '可能过期', '存在冲突'] as const).map((v) => ({ label: v, color: VALIDITY_COLORS[v], shape: 'dot' as const, count: countFor(v) }))
+    }
+    return (['张伟', '李娜', '王强', '赵敏', '陈可'] as const).map((o) => ({ label: o, color: OWNER_COLORS[o], shape: 'dot' as const, count: countFor(o) }))
+  }, [dim, dimGroups, filteredDocs.length, visibleQuestions.length, visibleCategories.length])
+
+  /** 按当前维度返回文档节点配色（fill 浅底 + stroke 主色；异常红边在渲染处覆盖） */
+  const docDimColors = (d: DocNode): { fill: string; stroke: string } => {
+    switch (dim) {
+      case 'category':
+        return { fill: CATEGORY_FILLS[d.category], stroke: CATEGORY_COLORS[d.category] }
+      case 'type':
+        return { fill: '#EAF2FF', stroke: DOC_COLOR }
+      case 'validity':
+        return { fill: VALIDITY_FILLS[d.validity], stroke: VALIDITY_COLORS[d.validity] }
+      case 'owner':
+        return { fill: OWNER_FILLS[d.owner] ?? '#EEF2F7', stroke: OWNER_COLORS[d.owner] ?? '#64748B' }
+      default:
+        return { fill: '#EAF2FF', stroke: DOC_COLOR }
+    }
+  }
 
   const onWheel = (e: React.WheelEvent) => {
     const delta = e.deltaY > 0 ? -0.1 : 0.1
@@ -425,6 +540,25 @@ export default function KnowledgeMap() {
 
       {/* 筛选工具条 */}
       <div className="mb-4 flex min-h-11 flex-wrap items-center gap-2 rounded-xl border border-neutral-200 bg-white px-3 py-2">
+        {/* 视图模式切换：图谱 / 列表 / 分类树 */}
+        <div role="tablist" aria-label="视图模式" className="flex items-center gap-1 rounded-lg border border-neutral-200 bg-neutral-50 p-1">
+          {VIEW_MODES.map((m) => (
+            <button
+              key={m.value}
+              type="button"
+              role="tab"
+              aria-selected={viewMode === m.value}
+              className={cn(
+                'h-8 rounded-md px-3 text-body-sm font-medium transition-colors duration-micro ease-brand',
+                viewMode === m.value ? 'bg-brand-600 text-white shadow-card' : 'text-neutral-600 hover:bg-white/70 hover:text-neutral-800',
+              )}
+              onClick={() => setViewMode(m.value)}
+            >
+              {m.label}
+            </button>
+          ))}
+        </div>
+        <span className="mx-1 h-5 w-px bg-neutral-200" />
         <select
           value={space}
           onChange={(e) => {
@@ -459,37 +593,61 @@ export default function KnowledgeMap() {
               className="h-9 w-60 rounded-md border border-[#DCE4EF] pl-8 pr-3 text-body-sm text-neutral-800 outline-none placeholder:text-neutral-400 focus:border-brand-500 focus:shadow-input"
             />
           </div>
-          <span className="hidden items-center gap-2 text-caption text-neutral-400 2xl:flex">
-            <span className="flex items-center gap-1"><span className="h-2.5 w-2.5 rounded-full bg-brand-500" />文档</span>
-            <span className="flex items-center gap-1"><span className="h-2.5 w-2.5 rotate-45 bg-violet" />分类</span>
-            <span className="flex items-center gap-1"><span className="h-2.5 w-2.5 bg-cyan" />问题</span>
-            <span>节点越大被问越多 · 红色描边=异常</span>
-          </span>
+          <div className="flex max-w-full flex-wrap items-center justify-end gap-x-3 gap-y-1 text-caption text-neutral-400">
+            {dimLegend.map((item) => (
+              <span key={item.label} className="flex items-center gap-1 whitespace-nowrap">
+                <span className={cn('h-2.5 w-2.5', item.shape === 'diamond' ? 'rotate-45 rounded-[2px]' : 'rounded-full')} style={{ backgroundColor: item.color }} />
+                {item.label}
+                <span className="text-neutral-300">{item.count}</span>
+              </span>
+            ))}
+            <span className="flex items-center gap-1 whitespace-nowrap">
+              <span className="h-2.5 w-2.5 rounded-full bg-danger" />
+              红边=异常 · 节点越大被问越多
+            </span>
+          </div>
         </div>
       </div>
 
       <div className="grid grid-cols-12 gap-4">
-        {/* 图谱画布 */}
+        {/* 图谱画布 / 文档列表 / 分类树 */}
         <div className="col-span-12 xl:col-span-9">
-          <div ref={canvasRef} className="relative min-h-[560px] overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-card">
-            {isEmpty ? (
-              <div className="flex h-[560px] flex-col items-center justify-center text-center">
-                <img src="/empty-docs.svg" alt="" className="w-52 opacity-90" />
-                <h3 className="mt-3 text-h3 text-neutral-800">当前筛选下没有节点</h3>
-                <p className="mt-1 text-body-sm text-neutral-500">试试放宽类型或有效期筛选条件</p>
-                <button
-                  type="button"
-                  className={BTN_TERTIARY + ' mt-2'}
-                  onClick={() => {
-                    setTypeFilter('全部')
-                    setValidityFilter('全部')
-                    setSearch('')
-                  }}
-                >
-                  清除筛选
-                </button>
+          {viewEmpty ? (
+            <div className="flex h-[560px] flex-col items-center justify-center rounded-xl border border-neutral-200 bg-white text-center shadow-card">
+              <img src="/empty-docs.svg" alt="" className="w-52 opacity-90" />
+              <h3 className="mt-3 text-h3 text-neutral-800">当前筛选下没有节点</h3>
+              <p className="mt-1 text-body-sm text-neutral-500">试试放宽类型或有效期筛选条件</p>
+              <button
+                type="button"
+                className={BTN_TERTIARY + ' mt-2'}
+                onClick={() => {
+                  setTypeFilter('全部')
+                  setValidityFilter('全部')
+                  setSearch('')
+                }}
+              >
+                清除筛选
+              </button>
+            </div>
+          ) : viewMode === 'graph' ? (
+            <div ref={canvasRef} className="relative min-h-[560px] overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-card">
+              {/* 图谱内维度选择器：分类 / 类型 / 状态 / 作者 */}
+              <div className="absolute left-4 top-4 z-10 flex items-center gap-1 rounded-lg border border-neutral-200 bg-white p-1 shadow-card">
+                {DIM_OPTIONS.map((o) => (
+                  <button
+                    key={o.value}
+                    type="button"
+                    aria-pressed={dim === o.value}
+                    className={cn(
+                      'h-7 rounded-md px-2.5 text-body-sm font-medium transition-colors duration-micro ease-brand',
+                      dim === o.value ? 'bg-brand-600 text-white' : 'text-neutral-600 hover:bg-neutral-100 hover:text-neutral-800',
+                    )}
+                    onClick={() => setDim(o.value)}
+                  >
+                    {o.label}
+                  </button>
+                ))}
               </div>
-            ) : (
               <svg
                 ref={svgRef}
                 viewBox="0 0 1000 640"
@@ -510,7 +668,7 @@ export default function KnowledgeMap() {
                     return <line key={`e-${c.id}`} x1={HUB.x} y1={HUB.y} x2={p.x} y2={p.y} stroke="#E4EAF2" strokeWidth={1.5} />
                   })}
                   {/* 连线：分类 → 文档 → 问题 */}
-                  {visibleDocs.map((d) => {
+                  {filteredDocs.map((d) => {
                     const c = layout.catPos.get(d.category)!
                     const p = layout.docPos.get(d.id)!
                     return <line key={`e-${d.id}`} x1={c.x} y1={c.y} x2={p.x} y2={p.y} stroke="#E4EAF2" strokeWidth={1.2} />
@@ -533,11 +691,15 @@ export default function KnowledgeMap() {
                       </motion.g>
                     )
                   })}
-                  {/* 问题节点（■） */}
+                  {/* 问题节点（■，非「类型」维度时跟随关联文档的维度色） */}
                   {visibleQuestions.map((q) => {
                     const p = layout.qPos.get(q.id)!
                     const s = questionNodeSize(q.asked)
                     const on = selection?.kind === 'question' && selection.q.id === q.id
+                    const qDoc = MAP_DOCS.find((dd) => dd.id === q.docId)
+                    const typeDim = dim === 'type'
+                    const qFill = typeDim ? Q_COLOR : qDoc ? docDimColors(qDoc).fill : Q_COLOR
+                    const qStroke = typeDim ? 'none' : qDoc ? docDimColors(qDoc).stroke : 'none'
                     return (
                       <motion.g
                         key={q.id}
@@ -549,16 +711,19 @@ export default function KnowledgeMap() {
                         onMouseMove={(e) => showTooltip(e, q.text, [`被问 ${q.asked} 次 · 成功回答率 ${q.successRate}%`])}
                         onMouseLeave={() => setTooltip(null)}
                       >
-                        <rect x={p.x - s / 2} y={p.y - s / 2} width={s} height={s} rx={3} fill={Q_COLOR} opacity={0.92} />
+                        <rect x={p.x - s / 2} y={p.y - s / 2} width={s} height={s} rx={3} fill={qFill} opacity={typeDim ? 0.92 : 1} stroke={qStroke} strokeWidth={typeDim ? 0 : 1.5} />
                         {on && <rect x={p.x - s / 2 - 4} y={p.y - s / 2 - 4} width={s + 8} height={s + 8} rx={5} fill="none" stroke="#2F74FF" strokeWidth={2} />}
                       </motion.g>
                     )
                   })}
-                  {/* 文档节点（●） */}
-                  {visibleDocs.map((d, i) => {
+                  {/* 文档节点（●，按维度着色；异常红边保留） */}
+                  {filteredDocs.map((d, i) => {
                     const p = layout.docPos.get(d.id)!
                     const r = docNodeSize(d.asked) / 2
                     const abnormal = d.validity === '存在冲突' || d.validity === '可能过期'
+                    const { fill: dimFill, stroke: dimStroke } = docDimColors(d)
+                    const fill = abnormal ? '#FFF0F0' : dimFill
+                    const stroke = abnormal ? '#E5484D' : dimStroke
                     const on = selection?.kind === 'doc' && selection.doc.id === d.id
                     return (
                       <motion.g
@@ -575,8 +740,8 @@ export default function KnowledgeMap() {
                           cx={p.x}
                           cy={p.y}
                           r={r}
-                          fill={abnormal ? '#FFF0F0' : '#EAF2FF'}
-                          stroke={abnormal ? '#E5484D' : DOC_COLOR}
+                          fill={fill}
+                          stroke={stroke}
                           strokeWidth={abnormal ? 2 : 1.5}
                         />
                         <text x={p.x} y={p.y + 4} textAnchor="middle" fontSize={r > 18 ? 13 : 11} fontWeight={600} fill={abnormal ? '#E5484D' : '#174FCF'}>
@@ -618,7 +783,7 @@ export default function KnowledgeMap() {
                         onMouseMove={(e) => showTooltip(e, c.name, [`${c.count} 份内容 · ${c.questions} 个问题 · 健康度 ${c.health} 分`])}
                         onMouseLeave={() => setTooltip(null)}
                       >
-                        <rect x={p.x - 24} y={p.y - 24} width={48} height={48} rx={8} transform={`rotate(45 ${p.x} ${p.y})`} fill={CAT_COLOR} />
+                        <rect x={p.x - 24} y={p.y - 24} width={48} height={48} rx={8} transform={`rotate(45 ${p.x} ${p.y})`} fill={dim === 'category' ? CATEGORY_COLORS[c.name] : CAT_COLOR} />
                         <text x={p.x} y={p.y + 4} textAnchor="middle" fontSize={13} fontWeight={700} fill="#fff">
                           {c.count}
                         </text>
@@ -646,39 +811,52 @@ export default function KnowledgeMap() {
                   </g>
                 </g>
               </svg>
-            )}
 
-            {/* Tooltip */}
-            {tooltip && !isEmpty && (
-              <div
-                className="pointer-events-none absolute z-10 max-w-[280px] rounded-lg border border-neutral-200 bg-white px-3 py-2 shadow-float"
-                style={{ left: tooltip.x, top: tooltip.y }}
-              >
-                <p className="text-body-sm font-medium text-neutral-950">{tooltip.title}</p>
-                {tooltip.lines.map((l) => (
-                  <p key={l} className="mt-0.5 text-caption text-neutral-500">{l}</p>
-                ))}
-              </div>
-            )}
+              {/* Tooltip */}
+              {tooltip && (
+                <div
+                  className="pointer-events-none absolute z-10 max-w-[280px] rounded-lg border border-neutral-200 bg-white px-3 py-2 shadow-float"
+                  style={{ left: tooltip.x, top: tooltip.y }}
+                >
+                  <p className="text-body-sm font-medium text-neutral-950">{tooltip.title}</p>
+                  {tooltip.lines.map((l) => (
+                    <p key={l} className="mt-0.5 text-caption text-neutral-500">{l}</p>
+                  ))}
+                </div>
+              )}
 
-            {/* 缩放控件 + 统计字幕 */}
-            <div className="absolute bottom-4 left-4 flex items-center gap-2">
-              <div className="flex overflow-hidden rounded-md border border-neutral-200 bg-white shadow-card">
-                <button type="button" aria-label="放大" className="flex h-8 w-8 items-center justify-center text-neutral-600 hover:bg-neutral-100" onClick={() => setView((v) => ({ ...v, k: Math.min(2, Math.round((v.k + 0.1) * 10) / 10) }))}>
-                  <Plus className="h-4 w-4" />
-                </button>
-                <button type="button" aria-label="缩小" className="flex h-8 w-8 items-center justify-center border-x border-neutral-200 text-neutral-600 hover:bg-neutral-100" onClick={() => setView((v) => ({ ...v, k: Math.max(0.5, Math.round((v.k - 0.1) * 10) / 10) }))}>
-                  <Minus className="h-4 w-4" />
-                </button>
-                <button type="button" aria-label="复位" className="flex h-8 w-8 items-center justify-center text-neutral-600 hover:bg-neutral-100" onClick={() => setView({ x: 0, y: 0, k: 1 })}>
-                  <Maximize className="h-4 w-4" />
-                </button>
+              {/* 缩放控件 + 统计字幕 */}
+              <div className="absolute bottom-4 left-4 flex items-center gap-2">
+                <div className="flex overflow-hidden rounded-md border border-neutral-200 bg-white shadow-card">
+                  <button type="button" aria-label="放大" className="flex h-8 w-8 items-center justify-center text-neutral-600 hover:bg-neutral-100" onClick={() => setView((v) => ({ ...v, k: Math.min(2, Math.round((v.k + 0.1) * 10) / 10) }))}>
+                    <Plus className="h-4 w-4" />
+                  </button>
+                  <button type="button" aria-label="缩小" className="flex h-8 w-8 items-center justify-center border-x border-neutral-200 text-neutral-600 hover:bg-neutral-100" onClick={() => setView((v) => ({ ...v, k: Math.max(0.5, Math.round((v.k - 0.1) * 10) / 10) }))}>
+                    <Minus className="h-4 w-4" />
+                  </button>
+                  <button type="button" aria-label="复位" className="flex h-8 w-8 items-center justify-center text-neutral-600 hover:bg-neutral-100" onClick={() => setView({ x: 0, y: 0, k: 1 })}>
+                    <Maximize className="h-4 w-4" />
+                  </button>
+                </div>
+                <span className="rounded-md bg-white/90 px-2.5 py-1.5 text-caption text-neutral-500 shadow-card">
+                  显示 {shownCount} 个节点 · {visibleOrphans.length} 个孤立 · 3 个热点
+                </span>
               </div>
-              <span className="rounded-md bg-white/90 px-2.5 py-1.5 text-caption text-neutral-500 shadow-card">
-                显示 {shownCount} 个节点 · {visibleOrphans.length} 个孤立 · 3 个热点
-              </span>
             </div>
-          </div>
+          ) : viewMode === 'list' ? (
+            <DocListView
+              docs={filteredDocs}
+              selectedId={selection?.kind === 'doc' ? selection.doc.id : undefined}
+              onSelect={(d) => setSelection({ kind: 'doc', doc: d })}
+            />
+          ) : (
+            <CategoryTreeView
+              categories={visibleCategories}
+              docs={filteredDocs}
+              selectedId={selection?.kind === 'doc' ? selection.doc.id : undefined}
+              onSelect={(d) => setSelection({ kind: 'doc', doc: d })}
+            />
+          )}
         </div>
 
         {/* 详情面板 */}
@@ -1085,5 +1263,141 @@ function QuestionPanel({ q, onToast }: { q: QuestionNode; onToast: (k: 'success'
         </button>
       </div>
     </motion.section>
+  )
+}
+
+/* ---------- 多维度视图子组件（列表 / 分类树） ---------- */
+
+/** 状态徽标（浅底深字，颜色 + 文字双编码） */
+function ValidityBadge({ validity }: { validity: DocValidity }) {
+  const styles: Record<DocValidity, string> = {
+    正常: 'bg-success-bg text-success',
+    复审将到期: 'bg-warning-bg text-warning',
+    可能过期: 'bg-warning-bg text-warning',
+    存在冲突: 'bg-danger-bg text-danger',
+  }
+  return <span className={cn('inline-flex items-center rounded-pill px-2 py-0.5 text-caption font-medium', styles[validity])}>{validity}</span>
+}
+
+/** 文档列表视图：名称/分类/状态/作者/被问/被引/版本（复用维度色与状态色） */
+function DocListView({
+  docs,
+  selectedId,
+  onSelect,
+}: {
+  docs: DocNode[]
+  selectedId?: string
+  onSelect: (d: DocNode) => void
+}) {
+  if (docs.length === 0) return null
+  return (
+    <div className="overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-card">
+      <div className="overflow-x-auto">
+        <table className="w-full min-w-[760px] text-left text-body-sm">
+          <thead>
+            <tr className="h-10 bg-surface-soft text-caption text-neutral-500">
+              <th className="w-auto px-4 font-medium">名称</th>
+              <th className="w-32 px-3 font-medium">分类</th>
+              <th className="w-28 px-3 font-medium">状态</th>
+              <th className="w-20 px-3 font-medium">作者</th>
+              <th className="w-16 px-3 text-right font-medium">被问</th>
+              <th className="w-16 px-3 text-right font-medium">被引</th>
+              <th className="w-20 px-4 text-right font-medium">版本</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-neutral-100">
+            {docs.map((d) => {
+              const selected = selectedId === d.id
+              return (
+                <tr
+                  key={d.id}
+                  onClick={() => onSelect(d)}
+                  className={cn(
+                    'h-12 cursor-pointer transition-colors duration-micro ease-brand hover:bg-brand-50',
+                    selected && 'bg-surface-cardSel',
+                  )}
+                >
+                  <td className="px-4">
+                    <span className="flex items-center gap-1.5">
+                      <span className="truncate font-medium text-neutral-950">{d.name}</span>
+                      {d.hot && <span className="shrink-0 text-caption" title="热点文档">🔥</span>}
+                    </span>
+                  </td>
+                  <td className="px-3">
+                    <span className="flex items-center gap-1.5 whitespace-nowrap text-neutral-700">
+                      <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ backgroundColor: CATEGORY_COLORS[d.category] }} />
+                      {d.category}
+                    </span>
+                  </td>
+                  <td className="px-3"><ValidityBadge validity={d.validity} /></td>
+                  <td className="px-3 whitespace-nowrap text-neutral-700">{d.owner}</td>
+                  <td className="px-3 text-right tabular-nums text-neutral-800">{d.asked}</td>
+                  <td className="px-3 text-right tabular-nums text-neutral-800">{d.cited}</td>
+                  <td className="px-4 text-right whitespace-nowrap text-neutral-500">{d.version}</td>
+                </tr>
+              )
+            })}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  )
+}
+
+/** 分类树视图：分类（一级）→ 其文档（二级，层级缩进），点击文档联动右侧详情 */
+function CategoryTreeView({
+  categories,
+  docs,
+  selectedId,
+  onSelect,
+}: {
+  categories: CategoryNode[]
+  docs: DocNode[]
+  selectedId?: string
+  onSelect: (d: DocNode) => void
+}) {
+  const groups = categories
+    .map((c) => ({ cat: c, catDocs: docs.filter((d) => d.category === c.name) }))
+    .filter((g) => g.catDocs.length > 0)
+  if (groups.length === 0) return null
+  return (
+    <div className="max-h-[560px] overflow-y-auto rounded-xl border border-neutral-200 bg-white p-4 shadow-card">
+      {groups.map((g) => (
+        <div key={g.cat.id} className="mb-4 last:mb-0">
+          <div className="flex items-center gap-2">
+            <span className="h-2.5 w-2.5 rotate-45 rounded-[2px]" style={{ backgroundColor: CATEGORY_COLORS[g.cat.name] }} />
+            <h4 className="text-body-sm font-semibold text-neutral-950">{g.cat.name}</h4>
+            <span className="rounded-pill bg-neutral-100 px-2 py-0.5 text-caption text-neutral-500">{g.catDocs.length} 份</span>
+          </div>
+          <ul className="mt-2 ml-1.5 space-y-1 border-l border-neutral-200 pl-4">
+            {g.catDocs.map((d) => {
+              const abnormal = d.validity === '存在冲突' || d.validity === '可能过期'
+              const selected = selectedId === d.id
+              return (
+                <li key={d.id}>
+                  <button
+                    type="button"
+                    onClick={() => onSelect(d)}
+                    className={cn(
+                      'flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left transition-colors duration-micro ease-brand hover:bg-brand-50',
+                      selected && 'bg-surface-cardSel',
+                    )}
+                  >
+                    <span
+                      className="h-2 w-2 shrink-0 rounded-full"
+                      style={{ backgroundColor: abnormal ? '#E5484D' : CATEGORY_COLORS[d.category] }}
+                      title={abnormal ? d.validity : d.category}
+                    />
+                    <span className="truncate text-body-sm text-neutral-800">{d.name}</span>
+                    {d.hot && <span className="shrink-0 text-caption" title="热点文档">🔥</span>}
+                    <span className="ml-auto shrink-0 text-caption text-neutral-400">被问 {d.asked} · {d.validity}</span>
+                  </button>
+                </li>
+              )
+            })}
+          </ul>
+        </div>
+      ))}
+    </div>
   )
 }
