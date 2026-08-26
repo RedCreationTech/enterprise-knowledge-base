@@ -19,7 +19,7 @@
 
 ---
 
-### Task B1: 启动装配 + 错误语义 + 测试隔离 + seed 口径对齐
+### Task 1: 启动装配 + 错误语义 + 测试隔离 + seed 口径对齐
 
 **Files:**
 - Modify: `apps/server/src/app.ts`（buildApp 内调用 `createSchema()` + `seedIfEmpty()`）、`apps/server/src/middleware/error-handler.ts`（400/401/403/404/409/500 映射）、`apps/server/src/db/client.ts`（支持 `KB_DB_PATH` 环境变量，便于测试隔离）、`apps/server/src/db/seed.ts`（对齐：org.industry='软件与信息技术服务'、org.demoData、users.passwordHash 预留字段、members 角色/部门用全局 CoreRole 口径 管理员/知识管理员/空间管理员/文档审核员/助手运营员/普通成员 + 部门与 permissionsData 一致）、`apps/server/src/db/schema.ts`（org 加 demoData 列、users 加 passwordHash 列）
@@ -55,7 +55,7 @@ test('错误信封状态码映射', async () => {
 
 ---
 
-### Task B2: 认证/旅程域
+### Task 2: 认证/旅程域
 
 **Files:**
 - Create: `apps/server/src/services/journey.ts`、`apps/server/src/routes/journey.ts`、`apps/server/test/journey.test.ts`
@@ -70,7 +70,7 @@ test('错误信封状态码映射', async () => {
 
 ---
 
-### Task B3: 组织/成员/套餐域
+### Task 3: 组织/成员/套餐域
 
 **Files:**
 - Create: `apps/server/src/services/org.ts`、`apps/server/src/routes/org.ts`、`apps/server/test/org.test.ts`
@@ -83,7 +83,7 @@ test('错误信封状态码映射', async () => {
 
 ---
 
-### Task B4: 知识空间域
+### Task 4: 知识空间域
 
 **Files:**
 - Create: `apps/server/src/services/spaces.ts`、`apps/server/src/routes/spaces.ts`、`apps/server/test/spaces.test.ts`
@@ -96,7 +96,7 @@ test('错误信封状态码映射', async () => {
 
 ---
 
-### Task B5: 文档域
+### Task 5: 文档域
 
 **Files:**
 - Create: `apps/server/src/services/docs.ts`、`apps/server/src/routes/docs.ts`、`apps/server/test/docs.test.ts`
@@ -109,7 +109,7 @@ test('错误信封状态码映射', async () => {
 
 ---
 
-### Task B6: 数据来源/连接器域
+### Task 6: 数据来源/连接器域
 
 **Files:**
 - Create: `apps/server/src/services/connectors.ts`、`apps/server/src/routes/connectors.ts`、`apps/server/test/connectors.test.ts`
@@ -122,7 +122,7 @@ test('错误信封状态码映射', async () => {
 
 ---
 
-### Task B7: 知识地图/网站/问答域
+### Task 7: 知识地图/网站/问答域
 
 **Files:**
 - Create: `apps/server/src/services/knowledge.ts`、`apps/server/src/routes/knowledge.ts`、`apps/server/test/knowledge.test.ts`
@@ -135,7 +135,7 @@ test('错误信封状态码映射', async () => {
 
 ---
 
-### Task B8: 搜索域
+### Task 8: 搜索域
 
 **Files:**
 - Create: `apps/server/src/services/search.ts`、`apps/server/src/routes/search.ts`、`apps/server/test/search.test.ts`
@@ -147,7 +147,7 @@ test('错误信封状态码映射', async () => {
 
 ---
 
-### Task B9: 前端接入验证（代表性域走 API 模式）
+### Task 9: 前端接入验证（代表性域走 API 模式）
 
 **Files:**
 - Modify: `apps/web/src/api/index.ts`（导出 org/spaces/journey endpoint 函数，调用 `apiRequest`）、`apps/web/vite.config.ts`（确认代理目标可经 `VITE_PROXY_TARGET` 覆盖）
