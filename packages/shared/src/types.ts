@@ -21,3 +21,34 @@ export interface Space { id: string; name: string; count: number; health: SpaceH
 
 /** 文档（设计 §5 口径：id/spaceId/title/type/category/status/owner/updatedAt/source）。 */
 export interface Doc { id: string; spaceId: string; title: string; type: string; category: string; status: string; owner: string; updatedAt: string; source: string }
+
+/**
+ * 连接器 kind 口径（与前端 sourcesData.ts 的 SOURCE_TYPES.kind 同源）：
+ * crawl（URL/Sitemap/RSS 抓取）、oauth（OAuth 授权同步）、api（开放 API 接入）。
+ */
+export const CONNECTOR_KINDS = ['crawl', 'oauth', 'api'] as const
+export type ConnectorKind = (typeof CONNECTOR_KINDS)[number]
+
+/**
+ * 连接器/数据来源（设计 §5 口径：id/name/kind/connected/disabled/docs/lastSyncAt/config）。
+ * connected/disabled 从 SQLite INTEGER 映射为布尔；lastSyncAt 未同步过为 null。
+ */
+export interface Connector {
+  id: string
+  name: string
+  kind: ConnectorKind
+  connected: boolean
+  disabled: boolean
+  docs: number
+  lastSyncAt: string | null
+}
+
+/** 同步任务（设计 §5 口径：id/connectorId/status/progress/failedCount/at）。 */
+export interface SyncTask {
+  id: string
+  connectorId: string | null
+  status: string
+  progress: number
+  failedCount: number
+  at: string
+}

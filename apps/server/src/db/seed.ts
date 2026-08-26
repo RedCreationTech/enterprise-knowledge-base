@@ -65,6 +65,51 @@ function seedSpacesAndDocs() {
   }
 }
 
+/**
+ * 连接器 seed（口径对齐前端 sourcesData.ts CONNECTORS + METRICS.connectedDocs）：
+ * 4 张内置卡（企业网盘/飞书文档/钉钉文档/企业微信）；connected 依 sourcesData：
+ * 网盘、飞书已连接，钉钉、企微未连接（副标题「已连接来源 X/4」→ 2/4）。
+ * docs：网盘 862、飞书 318（METRICS 口径，合计 1,180，加本地上传 106 = 1,286）。
+ * kind：网盘 api、其余 oauth（OAuth 型内置连接器，connect 端点适用）。
+ * lastSyncAt 用演示基准日（TODAY=2026-05-29）派生，未连接连接器为 NULL。
+ */
+const connectors = [
+  { id: 'netdisk', name: '企业网盘', kind: 'api', connected: 1, disabled: 0, docs: 862, lastSyncAt: '2026-05-29T10:20:00', config: '{}' },
+  { id: 'feishu', name: '飞书文档', kind: 'oauth', connected: 1, disabled: 0, docs: 318, lastSyncAt: '2026-05-29T09:45:00', config: '{}' },
+  { id: 'dingtalk', name: '钉钉文档', kind: 'oauth', connected: 0, disabled: 0, docs: 0, lastSyncAt: null, config: '{}' },
+  { id: 'wecom', name: '企业微信', kind: 'oauth', connected: 0, disabled: 0, docs: 0, lastSyncAt: null, config: '{}' },
+] as const
+
+/**
+ * 同步任务 seed（口径对齐前端 sourcesData.ts SYNC_TASKS 5 条，at 用演示基准日派生）：
+ * t1 网盘增量/今天10:20、t2 飞书增量/今天09:45、t3 网盘ACL/昨天18:20、
+ * t4 飞书全量校验失败/昨天16:30（3 份未能处理 → failedCount 3）、t5 本地上传批次/05-15。
+ * connectorId：t5 本地上传非连接器卡 → NULL；status/progress/failedCount 走任务口径。
+ */
+const syncTasks = [
+  { id: 't1', connectorId: 'netdisk', status: '已完成', progress: 100, failedCount: 0, at: '2026-05-29T10:20:00' },
+  { id: 't2', connectorId: 'feishu', status: '已完成', progress: 100, failedCount: 0, at: '2026-05-29T09:45:00' },
+  { id: 't3', connectorId: 'netdisk', status: '已完成', progress: 100, failedCount: 0, at: '2026-05-28T18:20:00' },
+  { id: 't4', connectorId: 'feishu', status: '失败', progress: 0, failedCount: 3, at: '2026-05-28T16:30:00' },
+  { id: 't5', connectorId: null, status: '已完成', progress: 100, failedCount: 0, at: '2026-05-15T18:32:00' },
+] as const
+
+function seedConnectorsAndTasks() {
+  const insConn = db.prepare(
+    'INSERT INTO connectors (id, name, kind, connected, disabled, docs, lastSyncAt, config) VALUES (?,?,?,?,?,?,?,?)',
+  )
+  for (const c of connectors) {
+    insConn.run(c.id, c.name, c.kind, c.connected, c.disabled, c.docs, c.lastSyncAt, c.config)
+  }
+
+  const insTask = db.prepare(
+    'INSERT INTO sync_tasks (id, connectorId, status, progress, failedCount, at) VALUES (?,?,?,?,?,?)',
+  )
+  for (const t of syncTasks) {
+    insTask.run(t.id, t.connectorId, t.status, t.progress, t.failedCount, t.at)
+  }
+}
+
 export function seedIfEmpty() {
   const n = (db.prepare('SELECT COUNT(*) c FROM org').get() as { c: number }).c
   if (n > 0) return
@@ -75,4 +120,5 @@ export function seedIfEmpty() {
   db.prepare(`INSERT INTO users (id, memberId, email, passwordHash, role) VALUES ('u-1', 'm-zw', 'zhangwei@example.com', NULL, '管理员')`).run()
   db.prepare(`INSERT INTO trial_journey (id,activated,step,installedApps,uninstalledApps,userInstalledApps,invitesSent,configProgress) VALUES (1,0,0,'["wecom-qa","custom-api","sso"]','[]','[]',0,0)`).run()
   seedSpacesAndDocs()
+  seedConnectorsAndTasks()
 }

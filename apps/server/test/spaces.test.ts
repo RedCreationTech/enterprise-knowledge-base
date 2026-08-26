@@ -13,7 +13,7 @@ const app = await buildApp()
 /** 回到 seed 基线：业务表清空后重新播种（5 空间 + 128 文档）。 */
 function resetSeed() {
   db.exec(
-    'DELETE FROM org; DELETE FROM plan; DELETE FROM members; DELETE FROM users; DELETE FROM trial_journey; DELETE FROM trial_applications; DELETE FROM spaces; DELETE FROM docs',
+    'DELETE FROM org; DELETE FROM plan; DELETE FROM members; DELETE FROM users; DELETE FROM trial_journey; DELETE FROM trial_applications; DELETE FROM spaces; DELETE FROM docs; DELETE FROM connectors; DELETE FROM sync_tasks',
   )
   seedIfEmpty()
 }

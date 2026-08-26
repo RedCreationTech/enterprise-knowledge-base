@@ -9,4 +9,6 @@ export function createSchema() {
   T(`CREATE TABLE IF NOT EXISTS trial_applications (id INTEGER PRIMARY KEY AUTOINCREMENT, companyName TEXT NOT NULL, contact TEXT NOT NULL, agreeToTerms INTEGER NOT NULL, createdAt TEXT NOT NULL)`)
   T(`CREATE TABLE IF NOT EXISTS spaces (id TEXT PRIMARY KEY, name TEXT, count INTEGER, health TEXT, reviewCycle INTEGER, archived INTEGER, createdAt TEXT)`)
   T(`CREATE TABLE IF NOT EXISTS docs (id TEXT PRIMARY KEY, spaceId TEXT, title TEXT, type TEXT, category TEXT, status TEXT, owner TEXT, updatedAt TEXT, source TEXT)`)
+  T(`CREATE TABLE IF NOT EXISTS connectors (id TEXT PRIMARY KEY, name TEXT, kind TEXT, connected INTEGER, disabled INTEGER, docs INTEGER, lastSyncAt TEXT, config TEXT)`)
+  T(`CREATE TABLE IF NOT EXISTS sync_tasks (id TEXT PRIMARY KEY, connectorId TEXT, status TEXT, progress INTEGER, failedCount INTEGER, at TEXT)`)
 }

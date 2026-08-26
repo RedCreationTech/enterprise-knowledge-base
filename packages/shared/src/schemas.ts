@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { CORE_ROLES, MEMBER_STATUSES, SPACE_HEALTHS } from './types.js'
+import { CORE_ROLES, MEMBER_STATUSES, SPACE_HEALTHS, CONNECTOR_KINDS } from './types.js'
 export const okSchema = z.object({ status: z.string() })
 export const errorSchema = z.object({ code: z.string(), message: z.string() })
 export const envelopeSchema = z.union([
@@ -233,3 +233,56 @@ export type DocsUploadBodyInput = z.infer<typeof DocsUploadBody>
 export type DocPatchInput = z.infer<typeof DocPatch>
 export type BatchArchiveBodyInput = z.infer<typeof BatchArchiveBody>
 export type BatchMoveBodyInput = z.infer<typeof BatchMoveBody>
+
+// ---------- 数据来源/连接器域 ----------
+
+/** kind 枚举：与 types.ts 的 ConnectorKind 同源（crawl/oauth/api）。 */
+export const ConnectorKindSchema = z.enum(CONNECTOR_KINDS)
+
+/** 连接器响应元素（GET /connectors 列表项 / connect / sync / patch 返回值）。 */
+export const ConnectorResponse = z.object({
+  id: z.string(),
+  name: z.string(),
+  kind: ConnectorKindSchema,
+  connected: z.boolean(),
+  disabled: z.boolean(),
+  docs: z.number().int().min(0),
+  lastSyncAt: z.string().nullable(),
+})
+
+/** 数据来源页副标题口径摘要（已连接来源 X/4、连接器文档 1,286 份、本地上传 106 份）。 */
+export const ConnectorSummary = z.object({
+  connectedCount: z.number().int().min(0),
+  totalDocs: z.number().int().min(0),
+  localUpload: z.number().int().min(0),
+})
+
+/** GET /connectors 响应：连接器列表 + 副标题派生摘要（嵌入同一响应，前端一次请求即得）。 */
+export const ConnectorListResponse = z.object({
+  items: z.array(ConnectorResponse),
+  summary: ConnectorSummary,
+})
+
+/** PATCH /connectors/:id 请求体：仅 disabled/docs/lastSyncAt 白名单（启停用/文档数/上次同步时间）。 */
+export const ConnectorPatch = z.object({
+  disabled: z.boolean().optional(),
+  docs: z.number().int().min(0).optional(),
+  lastSyncAt: z.string().optional(),
+})
+
+/** 同步任务响应元素（POST /connectors/:id/sync 返回值 / GET /sync-tasks 列表项）。 */
+export const SyncTaskResponse = z.object({
+  id: z.string(),
+  connectorId: z.string().nullable(),
+  status: z.string(),
+  progress: z.number().int().min(0).max(100),
+  failedCount: z.number().int().min(0),
+  at: z.string(),
+})
+
+/** GET /sync-tasks 响应：近期同步任务（at 倒序）。 */
+export const SyncTasksResponse = z.object({
+  items: z.array(SyncTaskResponse),
+})
+
+export type ConnectorPatchInput = z.infer<typeof ConnectorPatch>
