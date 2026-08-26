@@ -2,7 +2,8 @@
  * 知识地图 KnowledgeMap（/workspace/knowledge-map，knowledge-map.md）
  * 顶部筛选工具条（含视图模式切换：图谱/列表/分类树 + 动态图例）；
  * 左 9 列 SVG 图谱画布（中心 Hub + 5 分类放射 + 文档/问题节点 + 8 孤立文档，
- * 节点大小按被问次数，拖拽平移 / 滚轮缩放 / Hover Tooltip / 点击联动详情面板；
+ * 节点大小按被问次数，拖拽平移（带边界钳制）/ 滚轮与双击缩放（以光标为中心）/
+ * 缩放工具栏（+ − 适配视口 重置 1:1 + 缩放百分比）/ 小地图 / Hover Tooltip / 点击联动详情面板；
  * 图谱内维度重组：分类/类型/状态/作者 切换节点着色与图例，异常红边保留）；
  * 列表视图（文档表格）/ 分类树视图（分类→文档层级缩进）共用同一份 filteredDocs；
  * 右 3 列节点详情检查器；主 CTA「处理孤立文档（8）」560px Drawer + L2 批量确认。
@@ -21,6 +22,7 @@ import {
   Maximize,
   Minus,
   Plus,
+  RotateCcw,
   Search,
   TriangleAlert,
   UserPlus,
@@ -100,6 +102,15 @@ const CAT_RADIUS = 190
 const CAT_COLOR = '#7357E8'
 const DOC_COLOR = '#2F74FF'
 const Q_COLOR = '#159FB7'
+
+/* ---------- 缩放/平移参数 ---------- */
+const MIN_K = 0.2
+const MAX_K = 3
+const WORLD_W = 1000
+const WORLD_H = 640
+/** 平移边界：保证世界坐标至少留出该宽度与视口相交，图不会完全丢失 */
+const PAN_MARGIN = 40
+const clamp = (n: number, min: number, max: number) => Math.min(max, Math.max(min, n))
 
 /* ---------- 多维度视图：视图模式 + 图谱维度重组 ---------- */
 
@@ -254,7 +265,7 @@ export default function KnowledgeMap() {
 
   // 画布平移缩放
   const [view, setView] = useState({ x: 0, y: 0, k: 1 })
-  const dragRef = useRef<{ startX: number; startY: number; baseX: number; baseY: number; moved: boolean } | null>(null)
+  const dragRef = useRef<{ startX: number; startY: number; baseX: number; baseY: number; moved: boolean; scale: number } | null>(null)
   const canvasRef = useRef<HTMLDivElement | null>(null)
   const svgRef = useRef<SVGSVGElement | null>(null)
 
@@ -347,14 +358,98 @@ export default function KnowledgeMap() {
     }
   }
 
+  /** 屏幕坐标 → viewBox 坐标（用 getScreenCTM 精确换算，含 letterbox）；失败时退回矩形近似 */
+  const clientToViewBox = (clientX: number, clientY: number): { x: number; y: number } | null => {
+    const svg = svgRef.current
+    const ctm = svg?.getScreenCTM()
+    if (svg && ctm) {
+      const pt = new DOMPoint(clientX, clientY).matrixTransform(ctm.inverse())
+      return { x: pt.x, y: pt.y }
+    }
+    const rect = canvasRef.current?.getBoundingClientRect()
+    if (!rect) return null
+    return {
+      x: ((clientX - rect.left) * WORLD_W) / rect.width,
+      y: ((clientY - rect.top) * WORLD_H) / rect.height,
+    }
+  }
+
+  /** 平移/缩放边界钳制：视口（viewBox 单位）与世界坐标保持至少 PAN_MARGIN 相交 */
+  const clampPan = (v: { x: number; y: number; k: number }) => {
+    const wv = WORLD_W / v.k
+    const hv = WORLD_H / v.k
+    let left = -v.x / v.k
+    let top = -v.y / v.k
+    left = wv >= WORLD_W ? (WORLD_W - wv) / 2 : clamp(left, PAN_MARGIN - wv, WORLD_W - PAN_MARGIN)
+    top = hv >= WORLD_H ? (WORLD_H - hv) / 2 : clamp(top, PAN_MARGIN - hv, WORLD_H - PAN_MARGIN)
+    return { x: -left * v.k, y: -top * v.k, k: v.k }
+  }
+
+  /** 以锚点（viewBox 坐标）为中心缩放，锚点下内容保持不动；无锚点默认画布中心 */
+  const zoomTo = (nextK: number, anchor?: { x: number; y: number }) => {
+    const k = clamp(nextK, MIN_K, MAX_K)
+    setView((v) => {
+      const ax = anchor?.x ?? WORLD_W / 2
+      const ay = anchor?.y ?? WORLD_H / 2
+      const wx = (ax - v.x) / v.k
+      const wy = (ay - v.y) / v.k
+      return clampPan({ x: ax - wx * k, y: ay - wy * k, k })
+    })
+  }
+
+  /** 重置 1:1：回 {x:0, y:0, k:1} */
+  const resetView = () => setView({ x: 0, y: 0, k: 1 })
+
+  /** 适配视口：按当前可见节点包围盒缩放并居中到画布 */
+  const fitView = () => {
+    const pts: { x: number; y: number }[] = [{ x: HUB.x, y: HUB.y }]
+    visibleCategories.forEach((c) => {
+      const p = layout.catPos.get(c.name)
+      if (p) pts.push(p)
+    })
+    filteredDocs.forEach((d) => {
+      const p = layout.docPos.get(d.id)
+      if (p) pts.push(p)
+    })
+    visibleQuestions.forEach((q) => {
+      const p = layout.qPos.get(q.id)
+      if (p) pts.push(p)
+    })
+    visibleOrphans.forEach((o) => {
+      const p = layout.orphanPos.get(o.id)
+      if (p) pts.push(p)
+    })
+    if (pts.length === 0) return
+    const xs = pts.map((p) => p.x)
+    const ys = pts.map((p) => p.y)
+    const minX = Math.min(...xs)
+    const maxX = Math.max(...xs)
+    const minY = Math.min(...ys)
+    const maxY = Math.max(...ys)
+    const pad = 70
+    const bw = Math.max(maxX - minX, 1)
+    const bh = Math.max(maxY - minY, 1)
+    const k = clamp(Math.min((WORLD_W - pad * 2) / bw, (WORLD_H - pad * 2) / bh), MIN_K, MAX_K)
+    const cx = (minX + maxX) / 2
+    const cy = (minY + maxY) / 2
+    setView(clampPan({ x: WORLD_W / 2 - cx * k, y: WORLD_H / 2 - cy * k, k }))
+  }
+
+  /** 滚轮缩放（以光标为中心，仅图谱视图）：k' = clamp(k * (deltaY<0 ? 1.1 : 0.9), 0.2, 3) */
   const onWheel = (e: React.WheelEvent) => {
-    const delta = e.deltaY > 0 ? -0.1 : 0.1
-    setView((v) => ({ ...v, k: Math.min(2, Math.max(0.5, Math.round((v.k + delta) * 10) / 10)) }))
+    e.preventDefault()
+    zoomTo(view.k * (e.deltaY < 0 ? 1.1 : 0.9), clientToViewBox(e.clientX, e.clientY) ?? undefined)
+  }
+
+  /** 双击缩放：k*1.6（clamp 到 [0.2, 3]） */
+  const onDoubleClick = (e: React.MouseEvent<SVGSVGElement>) => {
+    zoomTo(view.k * 1.6, clientToViewBox(e.clientX, e.clientY) ?? undefined)
   }
 
   const onPointerDown = (e: React.PointerEvent<SVGSVGElement>) => {
     // 仅在位移超过阈值后才 setPointerCapture，否则 click 会被 retarget 到 svg，节点 onClick 失效
-    dragRef.current = { startX: e.clientX, startY: e.clientY, baseX: view.x, baseY: view.y, moved: false }
+    const scale = svgRef.current?.getScreenCTM()?.a ?? 1
+    dragRef.current = { startX: e.clientX, startY: e.clientY, baseX: view.x, baseY: view.y, moved: false, scale }
   }
   const onPointerMove = (e: React.PointerEvent<SVGSVGElement>) => {
     const d = dragRef.current
@@ -365,7 +460,7 @@ export default function KnowledgeMap() {
       d.moved = true
       e.currentTarget.setPointerCapture(e.pointerId)
     }
-    if (d.moved) setView((v) => ({ ...v, x: d.baseX + dx, y: d.baseY + dy }))
+    if (d.moved) setView((v) => clampPan({ x: d.baseX + dx / d.scale, y: d.baseY + dy / d.scale, k: v.k }))
   }
   const onPointerUp = () => {
     dragRef.current = null
@@ -648,11 +743,57 @@ export default function KnowledgeMap() {
                   </button>
                 ))}
               </div>
+              {/* 缩放工具栏：+ / − / 适配视口 / 重置 1:1 + 当前缩放百分比（浮动右上角，仅图谱视图） */}
+              <div
+                role="group"
+                aria-label="缩放控制"
+                className="absolute right-4 top-4 z-20 flex items-center gap-0.5 rounded-lg border border-neutral-200 bg-white p-1 shadow-card"
+              >
+                <button
+                  type="button"
+                  aria-label="放大"
+                  title="放大"
+                  className="flex h-7 w-7 items-center justify-center rounded-md text-neutral-600 transition-colors duration-micro ease-brand hover:bg-neutral-100 hover:text-neutral-800"
+                  onClick={() => zoomTo(view.k * 1.1)}
+                >
+                  <Plus className="h-4 w-4" />
+                </button>
+                <span className="w-11 text-center text-caption tabular-nums text-neutral-600" aria-live="polite">
+                  {Math.round(view.k * 100)}%
+                </span>
+                <button
+                  type="button"
+                  aria-label="缩小"
+                  title="缩小"
+                  className="flex h-7 w-7 items-center justify-center rounded-md text-neutral-600 transition-colors duration-micro ease-brand hover:bg-neutral-100 hover:text-neutral-800"
+                  onClick={() => zoomTo(view.k * 0.9)}
+                >
+                  <Minus className="h-4 w-4" />
+                </button>
+                <span className="mx-1 h-4 w-px bg-neutral-200" />
+                <button
+                  type="button"
+                  className="flex h-7 items-center gap-1 rounded-md px-2 text-body-sm text-neutral-700 transition-colors duration-micro ease-brand hover:bg-neutral-100 hover:text-neutral-800"
+                  onClick={fitView}
+                >
+                  <Maximize className="h-3.5 w-3.5" />
+                  适配视口
+                </button>
+                <button
+                  type="button"
+                  className="flex h-7 items-center gap-1 rounded-md px-2 text-body-sm text-neutral-700 transition-colors duration-micro ease-brand hover:bg-neutral-100 hover:text-neutral-800"
+                  onClick={resetView}
+                >
+                  <RotateCcw className="h-3.5 w-3.5" />
+                  重置 1:1
+                </button>
+              </div>
               <svg
                 ref={svgRef}
                 viewBox="0 0 1000 640"
                 className="h-[560px] w-full cursor-grab touch-none select-none active:cursor-grabbing"
                 onWheel={onWheel}
+                onDoubleClick={onDoubleClick}
                 onPointerDown={onPointerDown}
                 onPointerMove={onPointerMove}
                 onPointerUp={onPointerUp}
@@ -825,22 +966,59 @@ export default function KnowledgeMap() {
                 </div>
               )}
 
-              {/* 缩放控件 + 统计字幕 */}
-              <div className="absolute bottom-4 left-4 flex items-center gap-2">
-                <div className="flex overflow-hidden rounded-md border border-neutral-200 bg-white shadow-card">
-                  <button type="button" aria-label="放大" className="flex h-8 w-8 items-center justify-center text-neutral-600 hover:bg-neutral-100" onClick={() => setView((v) => ({ ...v, k: Math.min(2, Math.round((v.k + 0.1) * 10) / 10) }))}>
-                    <Plus className="h-4 w-4" />
-                  </button>
-                  <button type="button" aria-label="缩小" className="flex h-8 w-8 items-center justify-center border-x border-neutral-200 text-neutral-600 hover:bg-neutral-100" onClick={() => setView((v) => ({ ...v, k: Math.max(0.5, Math.round((v.k - 0.1) * 10) / 10) }))}>
-                    <Minus className="h-4 w-4" />
-                  </button>
-                  <button type="button" aria-label="复位" className="flex h-8 w-8 items-center justify-center text-neutral-600 hover:bg-neutral-100" onClick={() => setView({ x: 0, y: 0, k: 1 })}>
-                    <Maximize className="h-4 w-4" />
-                  </button>
-                </div>
+              {/* 统计字幕（左下角） */}
+              <div className="absolute bottom-4 left-4">
                 <span className="rounded-md bg-white/90 px-2.5 py-1.5 text-caption text-neutral-500 shadow-card">
                   显示 {shownCount} 个节点 · {visibleOrphans.length} 个孤立 · 3 个热点
                 </span>
+              </div>
+
+              {/* 小地图（右下角）：节点分布 + 视口矩形，随平移/缩放实时更新；pointer-events-none 避免抢交互 */}
+              <div
+                aria-hidden="true"
+                className="pointer-events-none absolute bottom-4 right-4 z-10 hidden w-[176px] overflow-hidden rounded-lg border border-neutral-200 bg-white p-1 shadow-card lg:block"
+              >
+                <svg viewBox="0 0 1000 640" className="block h-auto w-full">
+                  <rect width={WORLD_W} height={WORLD_H} fill="#F8FAFC" />
+                  <circle cx={HUB.x} cy={HUB.y} r={22} fill="#1E63F4" />
+                  {visibleCategories.map((c) => {
+                    const p = layout.catPos.get(c.name)!
+                    return (
+                      <rect
+                        key={`mm-c-${c.id}`}
+                        x={p.x - 10}
+                        y={p.y - 10}
+                        width={20}
+                        height={20}
+                        rx={3}
+                        transform={`rotate(45 ${p.x} ${p.y})`}
+                        fill={CATEGORY_COLORS[c.name]}
+                      />
+                    )
+                  })}
+                  {filteredDocs.map((d) => {
+                    const p = layout.docPos.get(d.id)!
+                    const abnormal = d.validity === '存在冲突' || d.validity === '可能过期'
+                    return <circle key={`mm-d-${d.id}`} cx={p.x} cy={p.y} r={11} fill={abnormal ? '#E5484D' : docDimColors(d).stroke} />
+                  })}
+                  {visibleQuestions.map((q) => {
+                    const p = layout.qPos.get(q.id)!
+                    return <rect key={`mm-q-${q.id}`} x={p.x - 7} y={p.y - 7} width={14} height={14} rx={2} fill={Q_COLOR} />
+                  })}
+                  {visibleOrphans.map((o) => {
+                    const p = layout.orphanPos.get(o.id)!
+                    return <circle key={`mm-o-${o.id}`} cx={p.x} cy={p.y} r={9} fill="none" stroke="#94A3B8" strokeWidth={3} />
+                  })}
+                  <rect
+                    x={-view.x / view.k}
+                    y={-view.y / view.k}
+                    width={WORLD_W / view.k}
+                    height={WORLD_H / view.k}
+                    fill="rgba(47,116,255,0.07)"
+                    stroke="#2F74FF"
+                    strokeWidth={3}
+                  />
+                </svg>
               </div>
             </div>
           ) : viewMode === 'list' ? (
