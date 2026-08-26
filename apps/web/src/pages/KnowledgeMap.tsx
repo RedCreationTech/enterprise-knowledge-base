@@ -11,7 +11,7 @@
  * 右 3 列「热点知识 Top 3」栏在详情抽屉打开时让位隐藏，图谱始终保持在 9 列主区；
  * 主 CTA「处理孤立文档（8）」560px Drawer + L2 批量确认。
  */
-import { useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import {
   Archive,
@@ -81,9 +81,40 @@ const MIN_K = 0.2
 const MAX_K = 3
 const WORLD_W = 1000
 const WORLD_H = 640
-/** 平移边界：保证世界坐标至少留出该宽度与视口相交，图不会完全丢失 */
+/** 平移边界钳制：视口（viewBox 单位）与世界坐标保持至少 PAN_MARGIN 相交，图不会完全丢失 */
 const PAN_MARGIN = 40
 const clamp = (n: number, min: number, max: number) => Math.min(max, Math.max(min, n))
+
+/** 平移边界钳制（纯函数，滚轮/拖拽/工具栏共用）：返回钳制后的 {x, y, k} */
+const clampPan = (v: { x: number; y: number; k: number }) => {
+  const wv = WORLD_W / v.k
+  const hv = WORLD_H / v.k
+  let left = -v.x / v.k
+  let top = -v.y / v.k
+  left = wv >= WORLD_W ? (WORLD_W - wv) / 2 : clamp(left, PAN_MARGIN - wv, WORLD_W - PAN_MARGIN)
+  top = hv >= WORLD_H ? (WORLD_H - hv) / 2 : clamp(top, PAN_MARGIN - hv, WORLD_H - PAN_MARGIN)
+  return { x: -left * v.k, y: -top * v.k, k: v.k }
+}
+
+/** client 坐标 → viewBox 坐标（纯函数；优先 getScreenCTM 精确换算含 letterbox，失败退回矩形近似） */
+const clientAnchor = (
+  clientX: number,
+  clientY: number,
+  svg: SVGSVGElement | null,
+  canvas: HTMLDivElement | null,
+): { x: number; y: number } | null => {
+  const ctm = svg?.getScreenCTM()
+  if (svg && ctm) {
+    const pt = new DOMPoint(clientX, clientY).matrixTransform(ctm.inverse())
+    return { x: pt.x, y: pt.y }
+  }
+  const rect = canvas?.getBoundingClientRect()
+  if (!rect) return null
+  return {
+    x: ((clientX - rect.left) * WORLD_W) / rect.width,
+    y: ((clientY - rect.top) * WORLD_H) / rect.height,
+  }
+}
 
 /* ---------- 多维度视图：视图模式 + 图谱维度重组 ---------- */
 
@@ -330,31 +361,8 @@ export default function KnowledgeMap() {
   }
 
   /** 屏幕坐标 → viewBox 坐标（用 getScreenCTM 精确换算，含 letterbox）；失败时退回矩形近似 */
-  const clientToViewBox = (clientX: number, clientY: number): { x: number; y: number } | null => {
-    const svg = svgRef.current
-    const ctm = svg?.getScreenCTM()
-    if (svg && ctm) {
-      const pt = new DOMPoint(clientX, clientY).matrixTransform(ctm.inverse())
-      return { x: pt.x, y: pt.y }
-    }
-    const rect = canvasRef.current?.getBoundingClientRect()
-    if (!rect) return null
-    return {
-      x: ((clientX - rect.left) * WORLD_W) / rect.width,
-      y: ((clientY - rect.top) * WORLD_H) / rect.height,
-    }
-  }
-
-  /** 平移/缩放边界钳制：视口（viewBox 单位）与世界坐标保持至少 PAN_MARGIN 相交 */
-  const clampPan = (v: { x: number; y: number; k: number }) => {
-    const wv = WORLD_W / v.k
-    const hv = WORLD_H / v.k
-    let left = -v.x / v.k
-    let top = -v.y / v.k
-    left = wv >= WORLD_W ? (WORLD_W - wv) / 2 : clamp(left, PAN_MARGIN - wv, WORLD_W - PAN_MARGIN)
-    top = hv >= WORLD_H ? (WORLD_H - hv) / 2 : clamp(top, PAN_MARGIN - hv, WORLD_H - PAN_MARGIN)
-    return { x: -left * v.k, y: -top * v.k, k: v.k }
-  }
+  const clientToViewBox = (clientX: number, clientY: number): { x: number; y: number } | null =>
+    clientAnchor(clientX, clientY, svgRef.current, canvasRef.current)
 
   /** 以锚点（viewBox 坐标）为中心缩放，锚点下内容保持不动；无锚点默认画布中心 */
   const zoomTo = (nextK: number, anchor?: { x: number; y: number }) => {
@@ -406,11 +414,30 @@ export default function KnowledgeMap() {
     setView(clampPan({ x: WORLD_W / 2 - cx * k, y: WORLD_H / 2 - cy * k, k }))
   }
 
-  /** 滚轮缩放（以光标为中心，仅图谱视图）：k' = clamp(k * (deltaY<0 ? 1.1 : 0.9), 0.2, 3) */
-  const onWheel = (e: React.WheelEvent) => {
-    e.preventDefault()
-    zoomTo(view.k * (e.deltaY < 0 ? 1.1 : 0.9), clientToViewBox(e.clientX, e.clientY) ?? undefined)
-  }
+  /** 滚轮缩放（以光标为中心，仅图谱视图）：k' = clamp(k * (deltaY<0 ? 1.1 : 0.9), 0.2, 3)。
+   *  React 19 会把 React onWheel 挂成 passive 监听，preventDefault 无效 → 滚轮缩放会连带滚动页面；
+   *  这里在画布容器（canvasRef）上挂原生非 passive wheel 监听，preventDefault 生效，
+   *  并在函数式 setView 内读取最新 view.k 计算缩放因子（顺带消除渲染闭包 view.k 的陈旧值问题）。 */
+  useEffect(() => {
+    if (viewMode !== 'graph') return
+    const el = canvasRef.current
+    if (!el) return
+    const onNativeWheel = (e: WheelEvent) => {
+      e.preventDefault()
+      const anchor = clientAnchor(e.clientX, e.clientY, svgRef.current, canvasRef.current) ?? undefined
+      const factor = e.deltaY < 0 ? 1.1 : 0.9
+      setView((v) => {
+        const k = clamp(v.k * factor, MIN_K, MAX_K)
+        const ax = anchor?.x ?? WORLD_W / 2
+        const ay = anchor?.y ?? WORLD_H / 2
+        const wx = (ax - v.x) / v.k
+        const wy = (ay - v.y) / v.k
+        return clampPan({ x: ax - wx * k, y: ay - wy * k, k })
+      })
+    }
+    el.addEventListener('wheel', onNativeWheel, { passive: false })
+    return () => el.removeEventListener('wheel', onNativeWheel)
+  }, [viewMode])
 
   /** 双击缩放：k*1.6（clamp 到 [0.2, 3]） */
   const onDoubleClick = (e: React.MouseEvent<SVGSVGElement>) => {
@@ -604,7 +631,16 @@ export default function KnowledgeMap() {
             </div>
           ))}
           <div className="flex items-center gap-2">
-            <button type="button" className={BTN_SECONDARY} onClick={() => void exportPng()}>
+            <button
+              type="button"
+              className={cn(
+                BTN_SECONDARY,
+                'disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:border-neutral-200 disabled:hover:text-neutral-800',
+              )}
+              disabled={viewMode !== 'graph'}
+              title={viewMode !== 'graph' ? '仅图谱视图可导出' : undefined}
+              onClick={() => void exportPng()}
+            >
               <Download className="h-4 w-4" />
               导出图谱 PNG
             </button>
@@ -774,7 +810,6 @@ export default function KnowledgeMap() {
                 ref={svgRef}
                 viewBox="0 0 1000 640"
                 className="h-[560px] w-full cursor-grab touch-none select-none active:cursor-grabbing"
-                onWheel={onWheel}
                 onDoubleClick={onDoubleClick}
                 onClick={onCanvasClick}
                 onPointerDown={onPointerDown}
@@ -1243,11 +1278,13 @@ export default function KnowledgeMap() {
         )}
       </SideDrawer>
 
-      {/* 节点详情抽屉（右侧 overlay，打开时热点 Top3 栏让位） */}
+      {/* 节点详情抽屉（右侧 overlay，打开时热点 Top3 栏让位）；嵌套 SideDrawer（引用/问答）打开时
+          本层 Esc 让位，避免一次按 Esc 关掉所有层（见 KnowledgeMapDetailDrawer nestedOpen） */}
       <KnowledgeMapDetailDrawer
         selectedNode={selectedNode}
         space={space}
         onClose={closeDetail}
+        nestedOpen={!!citeDrawerDoc || !!qaRecord}
         onOpenDoc={() => navigate('/workspace/knowledge-base')}
         onShowCitations={(doc) => setCiteDrawerDoc(doc)}
         onShowQuestion={(doc, question) => setQaRecord({ doc, question })}
@@ -1320,9 +1357,18 @@ function DocListView({
               return (
                 <tr
                   key={d.id}
+                  tabIndex={0}
+                  role="button"
+                  aria-label={`查看「${d.name}」详情`}
                   onClick={() => onSelect(d)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault()
+                      onSelect(d)
+                    }
+                  }}
                   className={cn(
-                    'h-12 cursor-pointer transition-colors duration-micro ease-brand hover:bg-brand-50',
+                    'h-12 cursor-pointer transition-colors duration-micro ease-brand hover:bg-brand-50 focus-visible:bg-brand-50 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-brand-500',
                     selected && 'bg-surface-cardSel',
                   )}
                 >

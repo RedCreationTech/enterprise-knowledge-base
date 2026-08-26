@@ -62,6 +62,9 @@ export interface KnowledgeMapDetailDrawerProps {
   selectedNode: Selection | null
   /** 当前空间视角（顶部选择器值，文档「所属空间」用） */
   space: string
+  /** 是否有嵌套 SideDrawer（引用记录 / 问答记录）打开：为 true 时本层 Esc 让位，
+   *  避免一次按 Esc 把嵌套层和本层一起关掉（嵌套层 Esc 先关，下一次 Esc 才关本层） */
+  nestedOpen?: boolean
   onClose: () => void
   onOpenDoc: () => void
   onShowCitations: (doc: DocNode) => void
@@ -325,6 +328,7 @@ function CategoryContent({ name, onViewCategory }: { name: string; onViewCategor
 export function KnowledgeMapDetailDrawer({
   selectedNode,
   space,
+  nestedOpen = false,
   onClose,
   onOpenDoc,
   onShowCitations,
@@ -351,15 +355,17 @@ export function KnowledgeMapDetailDrawer({
     return undefined
   }, [open])
 
-  // Esc 关闭
+  // Esc 关闭（嵌套 SideDrawer 打开时让位：只关最上层，Esc 不会一次关掉所有层）
   useEffect(() => {
     if (!open) return
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose()
+      if (e.key !== 'Escape') return
+      if (nestedOpen) return
+      onClose()
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [open, onClose])
+  }, [open, nestedOpen, onClose])
 
   const headIcon =
     selectedNode?.kind === 'doc' ? (
@@ -393,7 +399,6 @@ export function KnowledgeMapDetailDrawer({
             transition={{ duration: 0.24, ease: [0.2, 0.8, 0.2, 1] }}
             className="fixed inset-y-0 right-0 z-[61] flex w-full max-w-[380px] flex-col bg-white shadow-float outline-none"
             role="dialog"
-            aria-modal="true"
             aria-label={title}
             tabIndex={-1}
           >
