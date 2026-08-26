@@ -3,10 +3,13 @@
  * 顶部筛选工具条（含视图模式切换：图谱/列表/分类树 + 动态图例）；
  * 左 9 列 SVG 图谱画布（中心 Hub + 5 分类放射 + 文档/问题节点 + 8 孤立文档，
  * 节点大小按被问次数，拖拽平移（带边界钳制）/ 滚轮与双击缩放（以光标为中心）/
- * 缩放工具栏（+ − 适配视口 重置 1:1 + 缩放百分比）/ 小地图 / Hover Tooltip / 点击联动详情面板；
+ * 缩放工具栏（+ − 适配视口 重置 1:1 + 缩放百分比）/ 小地图 / Hover Tooltip /
+ * 点击节点打开右侧详情抽屉（overlay 不挤占图谱，空白/Esc/遮罩关闭）；
  * 图谱内维度重组：分类/类型/状态/作者 切换节点着色与图例，异常红边保留）；
- * 列表视图（文档表格）/ 分类树视图（分类→文档层级缩进）共用同一份 filteredDocs；
- * 右 3 列节点详情检查器；主 CTA「处理孤立文档（8）」560px Drawer + L2 批量确认。
+ * 列表视图（文档表格）/ 分类树视图（分类→文档层级缩进）共用同一份 filteredDocs，
+ * 行点击同样打开详情抽屉；
+ * 右 3 列「热点知识 Top 3」栏在详情抽屉打开时让位隐藏，图谱始终保持在 9 列主区；
+ * 主 CTA「处理孤立文档（8）」560px Drawer + L2 批量确认。
  */
 import { useMemo, useRef, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
@@ -24,18 +27,18 @@ import {
   Plus,
   RotateCcw,
   Search,
-  TriangleAlert,
   UserPlus,
 } from 'lucide-react'
 import { useNavigate } from 'react-router'
 import { cn } from '@/lib/utils'
 import { useAppStore } from '@/mocks'
-import { ConfirmationCard, DemoEmptyState, ProgressRing } from '@/components/common'
+import { ConfirmationCard, DemoEmptyState } from '@/components/common'
 import { PageHeader } from '@/pages/workspace/PageHeader'
 import { SideDrawer } from '@/pages/workspace/SideDrawer'
 import { Modal } from '@/pages/workspace/Modal'
 import { useAppToast } from '@/lib/toast'
-import { KEY_NAMESPACE, migrateRawKey } from '@/lib/storage'
+import { KnowledgeMapDetailDrawer } from '@/pages/workspace/KnowledgeMapDetailDrawer'
+import type { Selection } from '@/pages/workspace/KnowledgeMapDetailDrawer'
 import {
   MAP_CATEGORIES,
   MAP_DOCS,
@@ -49,37 +52,7 @@ import {
   questionNodeSize,
   questionRecordsFor,
 } from '@/pages/workspace/mapData'
-import type { CategoryNode, DocNode, DocValidity, MapCategory, OrphanDoc, QuestionNode } from '@/pages/workspace/mapData'
-
-const Q_ACTION_KEY = KEY_NAMESPACE.knowledgeMap.questionActions
-/** Phase 3 Task 6 迁移回退旧 key：读取时迁移到新 key 并删除旧 key */
-const LEGACY_Q_ACTION_KEY = 'knowledge-map:question-actions'
-
-type QuestionAction = 'faq' | 'testset'
-
-function readQuestionActions(): Record<string, QuestionAction[]> {
-  try {
-    migrateRawKey(LEGACY_Q_ACTION_KEY, Q_ACTION_KEY)
-    const raw = localStorage.getItem(Q_ACTION_KEY)
-    return raw ? (JSON.parse(raw) as Record<string, QuestionAction[]>) : {}
-  } catch {
-    return {}
-  }
-}
-
-/** 幂等记录问题动作（创建 FAQ / 加入测试集）；返回 false 表示已加入过 */
-function recordQuestionAction(qid: string, action: QuestionAction): boolean {
-  const all = readQuestionActions()
-  const list = all[qid] ?? []
-  if (list.includes(action)) return false
-  all[qid] = [...list, action]
-  try {
-    localStorage.setItem(Q_ACTION_KEY, JSON.stringify(all))
-  } catch {
-    // 隐私模式等写入失败时静默降级为当次有效
-  }
-  return true
-}
+import type { CategoryNode, DocNode, DocValidity, MapCategory, OrphanDoc } from '@/pages/workspace/mapData'
 
 function downloadFile(href: string, filename: string) {
   const a = document.createElement('a')
@@ -222,11 +195,6 @@ function computeLayout() {
   return { catPos, docPos, qPos, orphanPos }
 }
 
-type Selection =
-  | { kind: 'doc'; doc: DocNode }
-  | { kind: 'category'; name: string }
-  | { kind: 'question'; q: QuestionNode }
-
 interface TooltipState {
   x: number
   y: number
@@ -248,7 +216,10 @@ export default function KnowledgeMap() {
   // 多维度视图：图谱 / 列表 / 分类树 切换 + 图谱内维度重组（默认「类型」保持原配色）
   const [viewMode, setViewMode] = useState<ViewMode>('graph')
   const [dim, setDim] = useState<Dim>('type')
-  const [selection, setSelection] = useState<Selection | null>(null)
+  /** 当前选中节点（驱动图谱高亮 + 右侧详情抽屉）；点击空白/Esc/遮罩关闭 */
+  const [selectedNode, setSelectedNode] = useState<Selection | null>(null)
+  const openDetail = (node: Selection) => setSelectedNode(node)
+  const closeDetail = () => setSelectedNode(null)
   const [tooltip, setTooltip] = useState<TooltipState | null>(null)
   const [orphans, setOrphans] = useState<OrphanDoc[]>(ORPHAN_DOCS)
   const [orphanDrawerOpen, setOrphanDrawerOpen] = useState(false)
@@ -462,8 +433,19 @@ export default function KnowledgeMap() {
     }
     if (d.moved) setView((v) => clampPan({ x: d.baseX + dx / d.scale, y: d.baseY + dy / d.scale, k: v.k }))
   }
+  /** 拖拽结束后紧跟的 click 会被 pointer capture retarget 到 svg，用它吞掉一次，避免误关抽屉 */
+  const dragEndedRef = useRef(false)
   const onPointerUp = () => {
+    if (dragRef.current?.moved) dragEndedRef.current = true
     dragRef.current = null
+  }
+  /** 点击画布空白关闭详情抽屉（节点 onClick 已自行 stopPropagation 语义：target 不等于 svg） */
+  const onCanvasClick = (e: React.MouseEvent<SVGSVGElement>) => {
+    if (dragEndedRef.current) {
+      dragEndedRef.current = false
+      return
+    }
+    if (e.target === e.currentTarget) closeDetail()
   }
 
   const showTooltip = (e: React.MouseEvent, title: string, lines: string[]) => {
@@ -794,6 +776,7 @@ export default function KnowledgeMap() {
                 className="h-[560px] w-full cursor-grab touch-none select-none active:cursor-grabbing"
                 onWheel={onWheel}
                 onDoubleClick={onDoubleClick}
+                onClick={onCanvasClick}
                 onPointerDown={onPointerDown}
                 onPointerMove={onPointerMove}
                 onPointerUp={onPointerUp}
@@ -836,7 +819,7 @@ export default function KnowledgeMap() {
                   {visibleQuestions.map((q) => {
                     const p = layout.qPos.get(q.id)!
                     const s = questionNodeSize(q.asked)
-                    const on = selection?.kind === 'question' && selection.q.id === q.id
+                    const on = selectedNode?.kind === 'question' && selectedNode.q.id === q.id
                     const qDoc = MAP_DOCS.find((dd) => dd.id === q.docId)
                     const typeDim = dim === 'type'
                     const qFill = typeDim ? Q_COLOR : qDoc ? docDimColors(qDoc).fill : Q_COLOR
@@ -848,7 +831,7 @@ export default function KnowledgeMap() {
                         animate={{ opacity: 1, scale: 1 }}
                         transition={{ duration: 0.18 }}
                         style={{ cursor: 'pointer' }}
-                        onClick={() => setSelection({ kind: 'question', q })}
+                        onClick={() => openDetail({ kind: 'question', q })}
                         onMouseMove={(e) => showTooltip(e, q.text, [`被问 ${q.asked} 次 · 成功回答率 ${q.successRate}%`])}
                         onMouseLeave={() => setTooltip(null)}
                       >
@@ -865,7 +848,7 @@ export default function KnowledgeMap() {
                     const { fill: dimFill, stroke: dimStroke } = docDimColors(d)
                     const fill = abnormal ? '#FFF0F0' : dimFill
                     const stroke = abnormal ? '#E5484D' : dimStroke
-                    const on = selection?.kind === 'doc' && selection.doc.id === d.id
+                    const on = selectedNode?.kind === 'doc' && selectedNode.doc.id === d.id
                     return (
                       <motion.g
                         key={d.id}
@@ -873,7 +856,7 @@ export default function KnowledgeMap() {
                         animate={{ opacity: 1, scale: 1 }}
                         transition={{ duration: 0.18, delay: Math.min(i, 9) * 0.06 }}
                         style={{ cursor: 'pointer' }}
-                        onClick={() => setSelection({ kind: 'doc', doc: d })}
+                        onClick={() => openDetail({ kind: 'doc', doc: d })}
                         onMouseMove={(e) => showTooltip(e, docTooltip(d)[0], [...docTooltip(d)[1]])}
                         onMouseLeave={() => setTooltip(null)}
                       >
@@ -912,7 +895,7 @@ export default function KnowledgeMap() {
                   {/* 分类节点（◆） */}
                   {visibleCategories.map((c, i) => {
                     const p = layout.catPos.get(c.name)!
-                    const on = selection?.kind === 'category' && selection.name === c.name
+                    const on = selectedNode?.kind === 'category' && selectedNode.name === c.name
                     return (
                       <motion.g
                         key={c.id}
@@ -920,7 +903,7 @@ export default function KnowledgeMap() {
                         animate={{ opacity: 1, scale: 1 }}
                         transition={{ duration: 0.18, delay: Math.min(i, 9) * 0.06 }}
                         style={{ cursor: 'pointer' }}
-                        onClick={() => setSelection({ kind: 'category', name: c.name })}
+                        onClick={() => openDetail({ kind: 'category', name: c.name })}
                         onMouseMove={(e) => showTooltip(e, c.name, [`${c.count} 份内容 · ${c.questions} 个问题 · 健康度 ${c.health} 分`])}
                         onMouseLeave={() => setTooltip(null)}
                       >
@@ -938,7 +921,7 @@ export default function KnowledgeMap() {
                   {/* 中心 Hub */}
                   <g
                     style={{ cursor: 'pointer' }}
-                    onClick={() => setSelection(null)}
+                    onClick={closeDetail}
                     onMouseMove={(e) => showTooltip(e, 'KnowledgeHub · 全部知识', ['128 份资料 · 156 个问题 · 12 名成员'])}
                     onMouseLeave={() => setTooltip(null)}
                   >
@@ -1024,32 +1007,32 @@ export default function KnowledgeMap() {
           ) : viewMode === 'list' ? (
             <DocListView
               docs={filteredDocs}
-              selectedId={selection?.kind === 'doc' ? selection.doc.id : undefined}
-              onSelect={(d) => setSelection({ kind: 'doc', doc: d })}
+              selectedId={selectedNode?.kind === 'doc' ? selectedNode.doc.id : undefined}
+              onSelect={(d) => openDetail({ kind: 'doc', doc: d })}
             />
           ) : (
             <CategoryTreeView
               categories={visibleCategories}
               docs={filteredDocs}
-              selectedId={selection?.kind === 'doc' ? selection.doc.id : undefined}
-              onSelect={(d) => setSelection({ kind: 'doc', doc: d })}
+              selectedId={selectedNode?.kind === 'doc' ? selectedNode.doc.id : undefined}
+              onSelect={(d) => openDetail({ kind: 'doc', doc: d })}
             />
           )}
         </div>
 
-        {/* 详情面板 */}
-        <div className="col-span-12 xl:col-span-3">
-          <div className="xl:sticky xl:top-4">
-            <AnimatePresence mode="wait">
-              {!selection ? (
-                <motion.section
-                  key="hot"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.18 }}
-                  className="rounded-xl border border-neutral-200 bg-white p-5 shadow-card"
-                >
+        {/* 右侧栏：详情抽屉打开时让位隐藏，保证图谱在 9 列主区不被动 */}
+        <AnimatePresence>
+          {!selectedNode && (
+            <motion.div
+              key="hot-sidebar"
+              className="col-span-12 xl:col-span-3"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.18 }}
+            >
+              <div className="xl:sticky xl:top-4">
+                <section className="rounded-xl border border-neutral-200 bg-white p-5 shadow-card">
                   <h3 className="flex items-center gap-1.5 text-h3 text-neutral-950">
                     <Flame className="h-5 w-5 text-warning" />
                     热点知识 Top 3
@@ -1057,11 +1040,7 @@ export default function KnowledgeMap() {
                   <ul className="mt-3 space-y-3">
                     {hotDocs.map((d) => (
                       <li key={d.id}>
-                        <button
-                          type="button"
-                          className="w-full text-left"
-                          onClick={() => setSelection({ kind: 'doc', doc: d })}
-                        >
+                        <button type="button" className="w-full text-left" onClick={() => openDetail({ kind: 'doc', doc: d })}>
                           <p className="truncate text-body-sm font-medium text-neutral-800 hover:text-brand-600">{d.name}</p>
                           <div className="mt-1 flex items-center gap-2">
                             <div className="h-1.5 flex-1 overflow-hidden rounded-pill bg-brand-100">
@@ -1076,24 +1055,11 @@ export default function KnowledgeMap() {
                   <p className="mt-4 border-t border-neutral-100 pt-3 text-caption text-neutral-400">
                     点击画布中的节点查看详情；红色描边表示存在冲突或可能过期。
                   </p>
-                </motion.section>
-              ) : selection.kind === 'doc' ? (
-                <DocPanel
-                  key={selection.doc.id}
-                  doc={selection.doc}
-                  onOpenDoc={() => navigate('/workspace/knowledge-base')}
-                  onGoProcess={() => navigate('/workspace/knowledge-base')}
-                  onShowCitations={() => setCiteDrawerDoc(selection.doc)}
-                  onShowQuestion={(q) => setQaRecord({ doc: selection.doc, question: q })}
-                />
-              ) : selection.kind === 'category' ? (
-                <CategoryPanel key={selection.name} name={selection.name} onViewCategory={() => navigate('/workspace/knowledge-site')} />
-              ) : (
-                <QuestionPanel key={selection.q.id} q={selection.q} onToast={(kind, msg) => toast[kind](msg)} />
-              )}
-            </AnimatePresence>
-          </div>
-        </div>
+                </section>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
       {/* 孤立文档 Drawer */}
@@ -1277,6 +1243,18 @@ export default function KnowledgeMap() {
         )}
       </SideDrawer>
 
+      {/* 节点详情抽屉（右侧 overlay，打开时热点 Top3 栏让位） */}
+      <KnowledgeMapDetailDrawer
+        selectedNode={selectedNode}
+        space={space}
+        onClose={closeDetail}
+        onOpenDoc={() => navigate('/workspace/knowledge-base')}
+        onShowCitations={(doc) => setCiteDrawerDoc(doc)}
+        onShowQuestion={(doc, question) => setQaRecord({ doc, question })}
+        onViewCategory={() => navigate('/workspace/knowledge-site')}
+        onToast={(kind, msg) => toast[kind](msg)}
+      />
+
       {/* 批量指派 L2 确认 */}
       <Modal open={batchConfirm} onClose={() => setBatchConfirm(false)} width={520}>
         <ConfirmationCard
@@ -1294,153 +1272,6 @@ export default function KnowledgeMap() {
       </Modal>
 
     </div>
-  )
-}
-
-/* ---------- 详情面板子组件 ---------- */
-
-function DocPanel({
-  doc,
-  onOpenDoc,
-  onGoProcess,
-  onShowCitations,
-  onShowQuestion,
-}: {
-  doc: DocNode
-  onOpenDoc: () => void
-  onGoProcess: () => void
-  onShowCitations: () => void
-  onShowQuestion: (q: string) => void
-}) {
-  const abnormal = doc.validity === '存在冲突' || doc.validity === '可能过期'
-  return (
-    <motion.section
-      initial={{ opacity: 0, x: 12 }}
-      animate={{ opacity: 1, x: 0 }}
-      exit={{ opacity: 0 }}
-      transition={{ duration: 0.18 }}
-      className="rounded-xl border border-neutral-200 bg-white p-5 shadow-card"
-    >
-      {abnormal && (
-        <div className="mb-3 flex items-center justify-between gap-2 rounded-lg bg-danger-bg px-3 py-2">
-          <p className="flex items-center gap-1.5 text-body-sm text-danger">
-            <TriangleAlert className="h-4 w-4 shrink-0" />
-            {doc.validity}
-          </p>
-          <button type="button" className="text-body-sm font-medium text-danger hover:underline" onClick={onGoProcess}>
-            去处理 →
-          </button>
-        </div>
-      )}
-      <h3 className="text-h3 text-neutral-950">{doc.name}</h3>
-      <dl className="mt-3 space-y-2 text-body-sm">
-        <div className="flex gap-3"><dt className="w-16 shrink-0 text-neutral-500">分类</dt><dd className="text-neutral-800">{doc.category} · {doc.version}</dd></div>
-        <div className="flex gap-3"><dt className="w-16 shrink-0 text-neutral-500">Owner</dt><dd className="text-neutral-800">{doc.owner}</dd></div>
-        <div className="flex gap-3"><dt className="w-16 shrink-0 text-neutral-500">有效期</dt><dd className="text-neutral-800">{doc.validityNote}</dd></div>
-        <div className="flex gap-3"><dt className="w-16 shrink-0 text-neutral-500">热度</dt><dd className="text-neutral-800">被问 {doc.asked} 次 · 被引用 {doc.cited} 次</dd></div>
-      </dl>
-      <p className="mt-4 text-body-sm font-medium text-neutral-800">关联问题 Top 3</p>
-      <ul className="mt-1.5 space-y-1">
-        {doc.topQuestions.map((q) => (
-          <li key={q}>
-            <button type="button" className="text-left text-body-sm text-brand-600 hover:underline" onClick={() => onShowQuestion(q)}>
-              · {q}
-            </button>
-          </li>
-        ))}
-      </ul>
-      <div className="mt-4 flex flex-wrap gap-2 border-t border-neutral-100 pt-3">
-        <button type="button" className="inline-flex h-9 items-center rounded-md border border-neutral-200 bg-white px-3 text-body-sm text-neutral-800 hover:border-brand-300" onClick={onOpenDoc}>
-          打开文档
-        </button>
-        <button type="button" className="inline-flex h-9 items-center rounded-md px-2 text-body-sm text-brand-600 hover:bg-brand-50" onClick={onShowCitations}>
-          查看引用记录
-        </button>
-      </div>
-    </motion.section>
-  )
-}
-
-function CategoryPanel({ name, onViewCategory }: { name: string; onViewCategory: () => void }) {
-  const cat = MAP_CATEGORIES.find((c) => c.name === name)!
-  return (
-    <motion.section
-      initial={{ opacity: 0, x: 12 }}
-      animate={{ opacity: 1, x: 0 }}
-      exit={{ opacity: 0 }}
-      transition={{ duration: 0.18 }}
-      className="rounded-xl border border-neutral-200 bg-white p-5 shadow-card"
-    >
-      <h3 className="text-h3 text-neutral-950">{cat.name}</h3>
-      <div className="mt-4 flex items-center gap-4">
-        <ProgressRing value={cat.health} size={84} strokeWidth={7} label="健康度" />
-        <dl className="space-y-2 text-body-sm">
-          <div className="flex gap-2"><dt className="text-neutral-500">文档数</dt><dd className="font-medium text-neutral-950">{cat.count} 份</dd></div>
-          <div className="flex gap-2"><dt className="text-neutral-500">问题数</dt><dd className="font-medium text-neutral-950">{cat.questions} 个</dd></div>
-        </dl>
-      </div>
-      <button type="button" className="mt-4 inline-flex h-9 items-center rounded-md px-2 text-body-sm text-brand-600 hover:bg-brand-50" onClick={onViewCategory}>
-        查看该分类 ›
-      </button>
-    </motion.section>
-  )
-}
-
-function QuestionPanel({ q, onToast }: { q: QuestionNode; onToast: (k: 'success' | 'info' | 'warning', m: string) => void }) {
-  const doc = MAP_DOCS.find((d) => d.id === q.docId)
-  const [done, setDone] = useState<QuestionAction[]>(() => readQuestionActions()[q.id] ?? [])
-
-  const handleAction = (action: QuestionAction) => {
-    if (recordQuestionAction(q.id, action)) {
-      setDone((prev) => (prev.includes(action) ? prev : [...prev, action]))
-      onToast('success', action === 'faq' ? '已创建 FAQ 草稿，待李娜审核' : '已加入助手测试集')
-    } else {
-      onToast('info', action === 'faq' ? '该问题已创建过 FAQ 草稿，请勿重复提交' : '该问题已在助手测试集中，请勿重复加入')
-    }
-  }
-
-  return (
-    <motion.section
-      initial={{ opacity: 0, x: 12 }}
-      animate={{ opacity: 1, x: 0 }}
-      exit={{ opacity: 0 }}
-      transition={{ duration: 0.18 }}
-      className="rounded-xl border border-neutral-200 bg-white p-5 shadow-card"
-    >
-      <p className="text-caption text-neutral-400">高频问题</p>
-      <h3 className="mt-1 text-h3 text-neutral-950">{q.text}</h3>
-      <dl className="mt-3 space-y-2 text-body-sm">
-        <div className="flex gap-3"><dt className="w-20 shrink-0 text-neutral-500">被问次数</dt><dd className="text-neutral-800">{q.asked} 次</dd></div>
-        <div className="flex gap-3"><dt className="w-20 shrink-0 text-neutral-500">成功回答率</dt><dd className="text-neutral-800">{q.successRate}%</dd></div>
-        <div className="flex gap-3"><dt className="w-20 shrink-0 text-neutral-500">关联文档</dt><dd className="text-neutral-800">{doc?.name}</dd></div>
-      </dl>
-      <div className="mt-4 flex flex-wrap gap-2 border-t border-neutral-100 pt-3">
-        <button
-          type="button"
-          className={cn(
-            'inline-flex h-9 items-center gap-1 rounded-md px-3 text-body-sm font-medium',
-            done.includes('faq') ? 'border border-success bg-success-bg text-success' : 'bg-brand-600 text-white hover:bg-brand-500',
-          )}
-          onClick={() => handleAction('faq')}
-        >
-          {done.includes('faq') && <Check className="h-3.5 w-3.5" />}
-          {done.includes('faq') ? '已创建 FAQ 草稿' : '创建 FAQ'}
-        </button>
-        <button
-          type="button"
-          className={cn(
-            'inline-flex h-9 items-center gap-1 rounded-md border px-3 text-body-sm',
-            done.includes('testset')
-              ? 'border-success bg-success-bg text-success'
-              : 'border-neutral-200 bg-white text-neutral-800 hover:border-brand-300',
-          )}
-          onClick={() => handleAction('testset')}
-        >
-          {done.includes('testset') && <Check className="h-3.5 w-3.5" />}
-          {done.includes('testset') ? '已加入测试集' : '加入测试集'}
-        </button>
-      </div>
-    </motion.section>
   )
 }
 
