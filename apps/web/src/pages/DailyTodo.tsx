@@ -260,7 +260,7 @@ export default function DailyTodo() {
   )
 
   return (
-    <div className="flex flex-col gap-5">
+    <div className="flex flex-col gap-5 xl:h-[calc(100dvh-104px)] xl:gap-4">
 
       {/* 标题区（Workspace 规范：面包屑 + H1 + 副标题含更新时间；长欢迎语保留在 AI 摘要面板首条消息） */}
       <PageHeader
@@ -299,10 +299,10 @@ export default function DailyTodo() {
         </div>
       </div>
 
-      <div className="grid items-start gap-4 xl:grid-cols-12">
+      <div className="grid items-start gap-4 xl:min-h-0 xl:flex-1 xl:items-stretch xl:grid-cols-12">
         {/* 左栏：AI 摘要面板（≥1536 常驻 3 列，≈380px sticky） */}
         <ChatPanel
-          className="hidden h-[640px] 2xl:sticky 2xl:top-[88px] 2xl:col-span-3 2xl:block"
+          className="hidden 2xl:block 2xl:col-span-3 2xl:min-h-0 2xl:overflow-hidden"
           composerPlaceholder="问我任何关于知识库的问题…"
           timelineFooter={
             <>
@@ -358,7 +358,7 @@ export default function DailyTodo() {
         />
 
         {/* 中栏（1366–1535 占 8 列；≥1536 占 6 列） */}
-        <div className="flex min-w-0 flex-col gap-4 xl:col-span-8 2xl:col-span-6">
+        <div className="flex min-w-0 flex-col gap-4 xl:col-span-8 xl:min-h-0 xl:overflow-y-auto xl:pr-1 2xl:col-span-6">
           {/* 待办提醒概览 5 卡（空态：统计区替换为空态卡，任务列表仍展示新手引导任务） */}
           {demoOff ? (
             <div className="rounded-xl border border-neutral-200 bg-white shadow-card">
@@ -441,7 +441,7 @@ export default function DailyTodo() {
         </div>
 
         {/* 右栏（1366–1535 占 4 列；≥1536 占 3 列）：独立滚动容器，与左侧「智能助手」栏、页面主滚动各自分离（§5.6 滚动分区） */}
-        <div className="flex flex-col gap-4 xl:sticky xl:top-[88px] xl:col-span-4 xl:h-[calc(100dvh-112px)] xl:overflow-y-auto xl:pr-1 2xl:col-span-3">
+        <div className="flex flex-col gap-4 xl:col-span-4 xl:min-h-0 xl:overflow-y-auto xl:pr-1 2xl:col-span-3">
           {/* 快捷操作 */}
           <SectionCard title="快捷操作">
             <div className="grid grid-cols-2 gap-2.5">
@@ -557,7 +557,7 @@ export default function DailyTodo() {
       </div>
 
       {/* 底部 CTA 行 */}
-      <div className="flex items-center justify-center gap-4 pb-2 pt-1">
+      <div className="flex items-center justify-center gap-4 pb-2 pt-1 xl:shrink-0">
         <button
           type="button"
           onClick={() => {
