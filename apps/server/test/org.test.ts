@@ -10,9 +10,9 @@ const { seedIfEmpty } = await import('../src/db/seed.js')
 
 const app = await buildApp()
 
-/** 回到 seed 基线：org/plan/members/users/旅程全表清空后重新播种（6 名成员、seats=20/seatsUsed=12）。 */
+/** 回到 seed 基线：org/plan/members/users/旅程/spaces/docs 全表清空后重新播种（6 名成员、seats=20/seatsUsed=12、5 空间+128 文档）。 */
 function resetSeed() {
-  db.exec('DELETE FROM org; DELETE FROM plan; DELETE FROM members; DELETE FROM users; DELETE FROM trial_journey; DELETE FROM trial_applications')
+  db.exec('DELETE FROM org; DELETE FROM plan; DELETE FROM members; DELETE FROM users; DELETE FROM trial_journey; DELETE FROM trial_applications; DELETE FROM spaces; DELETE FROM docs')
   seedIfEmpty()
 }
 

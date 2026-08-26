@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { CORE_ROLES, MEMBER_STATUSES } from './types.js'
+import { CORE_ROLES, MEMBER_STATUSES, SPACE_HEALTHS } from './types.js'
 export const okSchema = z.object({ status: z.string() })
 export const errorSchema = z.object({ code: z.string(), message: z.string() })
 export const envelopeSchema = z.union([
@@ -131,3 +131,55 @@ export const DeleteResponse = z.object({ deleted: z.boolean() })
 export type OrgPatchInput = z.infer<typeof OrgPatch>
 export type MemberCreateBodyInput = z.infer<typeof MemberCreateBody>
 export type MemberPatchInput = z.infer<typeof MemberPatch>
+
+// ---------- 知识空间域 ----------
+
+/** 空间健康态：与前端 kbData.SPACES 同源（健康 / 待复审）。 */
+export const SpaceHealthSchema = z.enum(SPACE_HEALTHS)
+
+/** GET /spaces 响应元素（archived 已从 SQLite INTEGER 映射为布尔） */
+export const SpaceResponse = z.object({
+  id: z.string(),
+  name: z.string(),
+  count: z.number(),
+  health: SpaceHealthSchema,
+  reviewCycle: z.number(),
+  archived: z.boolean(),
+  createdAt: z.string(),
+})
+
+/** POST /spaces 请求体：name 必填（其余字段走默认：count 0 / 健康 / 180 天 / 未归档） */
+export const SpaceCreateBody = z.object({ name: z.string().min(1) })
+
+/** PATCH /spaces/:id 请求体：name/health/reviewCycle/archived 任意可选 */
+export const SpacePatch = z.object({
+  name: z.string().min(1).optional(),
+  health: SpaceHealthSchema.optional(),
+  reviewCycle: z.number().optional(),
+  archived: z.boolean().optional(),
+})
+
+/** 文档响应元素（POST /spaces/:id/upload 与后续 /docs 共用） */
+export const DocResponse = z.object({
+  id: z.string(),
+  spaceId: z.string(),
+  title: z.string(),
+  type: z.string(),
+  category: z.string(),
+  status: z.string(),
+  owner: z.string(),
+  updatedAt: z.string(),
+  source: z.string(),
+})
+
+/** POST /spaces/:id/upload 请求体：title/type/category 必填，owner 可选 */
+export const DocUploadBody = z.object({
+  title: z.string().min(1),
+  type: z.string().min(1),
+  category: z.string().min(1),
+  owner: z.string().optional(),
+})
+
+export type SpaceCreateBodyInput = z.infer<typeof SpaceCreateBody>
+export type SpacePatchInput = z.infer<typeof SpacePatch>
+export type DocUploadBodyInput = z.infer<typeof DocUploadBody>

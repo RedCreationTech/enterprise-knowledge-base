@@ -11,3 +11,13 @@ export interface Plan { tier: string; storageUsedGB: number; storageTotalGB: num
 export interface Member { id: string; name: string; email: string; role: CoreRole; dept: string; status: MemberStatus; joinedAt: string }
 export interface User { id: string; memberId: string; email: string; role: string }
 export interface Journey { activated: boolean; step: number; installedApps: string[]; uninstalledApps: string[]; userInstalledApps: string[]; invitesSent: boolean; configProgress: number }
+
+/** 空间健康态：与前端 kbData.SPACES 的 health 口径一致（健康 / 待复审）。 */
+export const SPACE_HEALTHS = ['健康', '待复审'] as const
+export type SpaceHealth = (typeof SPACE_HEALTHS)[number]
+
+/** 知识空间：count 为展示计数（默认伞空间 = 全库文档总数，命名空间 = 该空间文档数）。 */
+export interface Space { id: string; name: string; count: number; health: SpaceHealth; reviewCycle: number; archived: boolean; createdAt: string }
+
+/** 文档（设计 §5 口径：id/spaceId/title/type/category/status/owner/updatedAt/source）。 */
+export interface Doc { id: string; spaceId: string; title: string; type: string; category: string; status: string; owner: string; updatedAt: string; source: string }
