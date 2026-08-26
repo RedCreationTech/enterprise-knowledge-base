@@ -564,6 +564,102 @@ function seedChat() {
   }
 }
 
+// ---------- 指令域 seed（口径对齐前端 instructionsData.ts：4 系统预置 readonly + 3 自定义） ----------
+
+/**
+ * 指令 seed（镜像 instructionsData.ts 的 ins-* 定义与文案）：
+ * - 4 系统预置（readonly=true）：客户报价审批/退货政策/员工手册/信息安全——分别承载
+ *   销售报价、客服售后、员工制度、信息安全四类回答口径（文案取自 ins-sales/ins-service/ins-global 及 IT·SOP 模板定位）。
+ * - 3 自定义（readonly=false）：销售标准回答指令（已发布 v2）、客服温和回答指令（已发布 v1）、
+ *   报价严格模式（草稿 v1，镜像 ins-quote-draft）。
+ * - scope 存 JSON 文本（数组）；已发布指令同时写一条 instruction_versions（在用版本冻结可追溯）。
+ */
+const systemInstructions = [
+  {
+    id: 'ins-quote',
+    name: '客户报价审批指令',
+    text: '你是{企业名称}的销售知识助手。回答报价与折扣问题时，必须引用{知识范围}内的最新制度版本；不确定时直接说明，不要推测具体数字。',
+    scope: ['销售知识助手', '工作台'],
+    createdAt: '2026-05-28T14:20:00',
+  },
+  {
+    id: 'ins-return',
+    name: '退货政策指令',
+    text: '你是{企业名称}的客服知识助手。语气温和，优先给出步骤化回答；涉及售后的政策必须引用{知识范围}内的最新版本。',
+    scope: ['企业知识助手', '知识网站'],
+    createdAt: '2026-05-26T10:05:00',
+  },
+  {
+    id: 'ins-staff',
+    name: '员工手册指令',
+    text: '你是{企业名称}的知识助手。仅基于{知识范围}内的资料回答，每个结论都标明来源；没有依据时不要编造。',
+    scope: ['全部助手（兜底）'],
+    createdAt: '2026-04-02T09:00:00',
+  },
+  {
+    id: 'ins-security',
+    name: '信息安全指令',
+    text: '你是{企业名称}的信息安全助手。信息安全相关问题按制度分步引导处理，没有明确依据时拒答并给出下一步建议。',
+    scope: ['企业知识助手', '工作台'],
+    createdAt: '2026-04-05T09:00:00',
+  },
+] as const
+
+const customInstructions = [
+  {
+    id: 'ins-sales',
+    name: '销售标准回答指令',
+    text: '你是{企业名称}的销售知识助手。回答报价与折扣问题时，必须引用{知识范围}内的最新制度版本；不确定时直接说明，不要推测具体数字。',
+    scope: ['销售知识助手', '飞书渠道'],
+    status: '已发布',
+    version: 2,
+    createdAt: '2026-05-28T14:20:00',
+  },
+  {
+    id: 'ins-service',
+    name: '客服温和回答指令',
+    text: '你是{企业名称}的客服知识助手。语气温和，优先给出步骤化回答；涉及售后的政策必须引用{知识范围}内的最新版本。',
+    scope: ['企业微信知识助手'],
+    status: '已发布',
+    version: 1,
+    createdAt: '2026-05-26T10:05:00',
+  },
+  {
+    id: 'ins-quote-draft',
+    name: '报价严格模式（草稿）',
+    text: '报价相关问题的回答必须逐条引用制度原文；没有制度依据时仅回答公开价格政策，不推测内部底价。',
+    scope: ['未发布'],
+    status: '草稿',
+    version: 1,
+    createdAt: '2026-05-29T09:15:00',
+  },
+] as const
+
+/** 首版 diff 标记（与 service 首次发布口径一致：vs 空文本的行级差异）。 */
+function firstVersionDiff(text: string): string {
+  const added = text ? text.split('\n').length : 0
+  return JSON.stringify({ changed: added > 0, added, removed: 0 })
+}
+
+/** 幂等：instructions 已有数据则跳过（其他域测试 resetSeed 不清 instructions，重复插会 UNIQUE 冲突）。 */
+function seedInstructions() {
+  const has = (db.prepare('SELECT COUNT(*) c FROM instructions').get() as { c: number }).c
+  if (has > 0) return
+  const ins = db.prepare('INSERT INTO instructions (id, name, text, scope, status, version, readonly, createdAt) VALUES (?,?,?,?,?,?,?,?)')
+  const insVersion = db.prepare('INSERT INTO instruction_versions (id, instructionId, version, text, diff, publishedAt) VALUES (?,?,?,?,?,?)')
+
+  for (const s of systemInstructions) {
+    ins.run(s.id, s.name, s.text, JSON.stringify(s.scope), '已发布', 1, 1, s.createdAt)
+    insVersion.run(`iv-${s.id}-1`, s.id, 1, s.text, firstVersionDiff(s.text), s.createdAt)
+  }
+  for (const c of customInstructions) {
+    ins.run(c.id, c.name, c.text, JSON.stringify(c.scope), c.status, c.version, 0, c.createdAt)
+    if (c.status === '已发布') {
+      insVersion.run(`iv-${c.id}-${c.version}`, c.id, c.version, c.text, firstVersionDiff(c.text), c.createdAt)
+    }
+  }
+}
+
 export function seedIfEmpty() {
   const n = (db.prepare('SELECT COUNT(*) c FROM org').get() as { c: number }).c
   if (n > 0) return
@@ -578,4 +674,5 @@ export function seedIfEmpty() {
   seedKnowledgeDomain()
   seedAssistants()
   seedChat()
+  seedInstructions()
 }

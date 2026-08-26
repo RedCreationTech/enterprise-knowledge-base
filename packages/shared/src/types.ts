@@ -171,6 +171,53 @@ export interface ChatMessage {
   createdAt: string
 }
 
+// ---------- 指令域 ----------
+
+/**
+ * 指令状态（设计 §6 口径）：草稿 / 已发布。
+ * 语义对齐前端 Instructions「草稿→发布→版本 diff→回滚走草稿」：发布使草稿转已发布并写版本行，
+ * 回滚从历史版本生成新草稿（version 不变，下次发布才递增）。
+ */
+export const INSTRUCTION_STATUSES = ['草稿', '已发布'] as const
+export type InstructionStatus = (typeof INSTRUCTION_STATUSES)[number]
+
+/**
+ * 指令（设计 §6 口径：id/name/text/scope/status/version/readonly/createdAt）。
+ * - scope 为生效范围字符串数组（DB 存 JSON 文本，API 解析为数组）。
+ * - readonly 从 SQLite INTEGER 映射为布尔（系统预置指令只读：PATCH/DELETE/发布/回滚 → 400）。
+ * - version 为当前版本号（新建草稿=1，发布时 +1；回滚不改变）。
+ */
+export interface Instruction {
+  id: string
+  name: string
+  text: string
+  scope: string[]
+  status: InstructionStatus
+  version: number
+  readonly: boolean
+  createdAt: string
+}
+
+/**
+ * 版本差异摘要（instruction_versions.diff 的 JSON 形态，发布时与上一已发布文本做行级 diff）：
+ * changed 是否有变化、added 新增行数、removed 删除行数（前端「版本 diff 高亮」口径）。
+ */
+export interface InstructionVersionDiff {
+  changed: boolean
+  added: number
+  removed: number
+}
+
+/** 指令版本行（id/instructionId/version/text/diff/publishedAt，在用版本冻结可追溯）。 */
+export interface InstructionVersion {
+  id: string
+  instructionId: string
+  version: number
+  text: string
+  diff: InstructionVersionDiff
+  publishedAt: string
+}
+
 // ---------- 搜索域 ----------
 
 /** 搜索命中条目：id/name/meta/path（path 为前端路由提示，用于跳转）。 */

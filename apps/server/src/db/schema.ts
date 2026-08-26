@@ -18,4 +18,6 @@ export function createSchema() {
   T(`CREATE TABLE IF NOT EXISTS assistant_versions (id TEXT PRIMARY KEY, assistantId TEXT, version INTEGER, config TEXT, publishedAt TEXT)`)
   T(`CREATE TABLE IF NOT EXISTS chat_sessions (id TEXT PRIMARY KEY, title TEXT, source TEXT, createdAt TEXT, userId TEXT)`)
   T(`CREATE TABLE IF NOT EXISTS chat_messages (id TEXT PRIMARY KEY, sessionId TEXT, role TEXT, content TEXT, answerId TEXT, createdAt TEXT)`)
+  T(`CREATE TABLE IF NOT EXISTS instructions (id TEXT PRIMARY KEY, name TEXT, text TEXT, scope TEXT, status TEXT, version INTEGER, readonly INTEGER, createdAt TEXT)`)
+  T(`CREATE TABLE IF NOT EXISTS instruction_versions (id TEXT PRIMARY KEY, instructionId TEXT, version INTEGER, text TEXT, diff TEXT, publishedAt TEXT)`)
 }

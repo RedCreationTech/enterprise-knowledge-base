@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { CORE_ROLES, MEMBER_STATUSES, SPACE_HEALTHS, CONNECTOR_KINDS } from './types.js'
+import { CORE_ROLES, MEMBER_STATUSES, SPACE_HEALTHS, CONNECTOR_KINDS, INSTRUCTION_STATUSES } from './types.js'
 export const okSchema = z.object({ status: z.string() })
 export const errorSchema = z.object({ code: z.string(), message: z.string() })
 export const envelopeSchema = z.union([
@@ -517,3 +517,75 @@ export const SearchResponse = z.object({
 })
 
 export type SearchQueryInput = z.infer<typeof SearchQuery>
+
+// ---------- 指令域 ----------
+
+/** 指令状态枚举（草稿/已发布，与 types.ts 的 InstructionStatus 同源）。 */
+export const InstructionStatusSchema = z.enum(INSTRUCTION_STATUSES)
+
+/**
+ * 版本差异摘要（发布时与上一已发布文本的行级 diff）：
+ * changed 是否有变化、added 新增行数、removed 删除行数（前端「版本 diff 高亮」口径）。
+ */
+export const InstructionDiffSchema = z.object({
+  changed: z.boolean(),
+  added: z.number().int().min(0),
+  removed: z.number().int().min(0),
+})
+
+/** 指令响应（GET /instructions 列表项 / POST / PATCH / publish / rollback 返回值）。 */
+export const InstructionResponse = z.object({
+  id: z.string(),
+  name: z.string(),
+  text: z.string(),
+  scope: z.array(z.string()),
+  status: InstructionStatusSchema,
+  version: z.number().int().min(1),
+  readonly: z.boolean(),
+  createdAt: z.string(),
+})
+
+/** GET /instructions 响应：指令数组（服务端返回裸数组，非 {items} 信封）。 */
+export const InstructionListResponse = z.array(InstructionResponse)
+
+/**
+ * POST /instructions 请求体：name 必填；text/scope 可选
+ * （默认 text=''、scope=[]、status=草稿、version=1、readonly=false）。
+ */
+export const InstructionCreateBody = z.object({
+  name: z.string().min(1),
+  text: z.string().optional(),
+  scope: z.array(z.string()).optional(),
+})
+
+/**
+ * PATCH /instructions/:id 请求体：name/text/scope 显式白名单。
+ * 仅草稿可编辑（已发布 → 409 PUBLISHED_NOT_EDITABLE；readonly → 400 READONLY）。
+ */
+export const InstructionPatch = z.object({
+  name: z.string().min(1).optional(),
+  text: z.string().optional(),
+  scope: z.array(z.string()).optional(),
+})
+
+/** POST /instructions/:id/rollback 请求体：version 可选（缺省回滚到最新版本）。 */
+export const InstructionRollbackBody = z.object({
+  version: z.number().int().min(1).optional(),
+})
+
+/** 指令版本行（GET /instructions/:id/versions 列表项；diff 已从 JSON 文本解析为对象）。 */
+export const InstructionVersionResponse = z.object({
+  id: z.string(),
+  instructionId: z.string(),
+  version: z.number().int().min(1),
+  text: z.string(),
+  diff: InstructionDiffSchema,
+  publishedAt: z.string(),
+})
+
+/** GET /instructions/:id/versions 响应：版本历史数组（version 倒序）。 */
+export const InstructionVersionListResponse = z.array(InstructionVersionResponse)
+
+export type InstructionCreateBodyInput = z.infer<typeof InstructionCreateBody>
+export type InstructionPatchInput = z.infer<typeof InstructionPatch>
+export type InstructionRollbackBodyInput = z.infer<typeof InstructionRollbackBody>
