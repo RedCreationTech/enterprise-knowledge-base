@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { CORE_ROLES, MEMBER_STATUSES } from './types.js'
 export const okSchema = z.object({ status: z.string() })
 export const errorSchema = z.object({ code: z.string(), message: z.string() })
 export const envelopeSchema = z.union([
@@ -64,3 +65,69 @@ export const DemoDataResponse = z.object({ demoData: z.boolean() })
 
 export type JourneyPatchInput = z.infer<typeof JourneyPatch>
 export type TrialApplyBodyInput = z.infer<typeof TrialApplyBody>
+
+// ---------- 组织/成员/套餐域 ----------
+
+/** 角色/状态枚举：与 types.ts 的 CoreRole/MemberStatus 同源（zod 枚举 + 字面量联合双保险）。 */
+export const CoreRoleSchema = z.enum(CORE_ROLES)
+export const MemberStatusSchema = z.enum(MEMBER_STATUSES)
+
+/** GET /org 响应（demoData 已从 SQLite INTEGER 映射为布尔） */
+export const OrgResponse = z.object({
+  id: z.string(),
+  name: z.string(),
+  industry: z.string(),
+  contact: z.string(),
+  demoData: z.boolean(),
+})
+
+/** PATCH /org 请求体：name/industry/contact 任意可选，非法类型 400 */
+export const OrgPatch = z.object({
+  name: z.string().optional(),
+  industry: z.string().optional(),
+  contact: z.string().optional(),
+})
+
+/** GET /org/members 响应元素（role 走 CoreRole 口径、status 含待激活） */
+export const MemberResponse = z.object({
+  id: z.string(),
+  name: z.string(),
+  email: z.string(),
+  role: CoreRoleSchema,
+  dept: z.string(),
+  status: MemberStatusSchema,
+  joinedAt: z.string(),
+})
+
+/** POST /org/members 请求体：role/dept 可选（默认 普通成员/''），email 需合法格式 */
+export const MemberCreateBody = z.object({
+  name: z.string().min(1),
+  email: z.email(),
+  role: CoreRoleSchema.optional(),
+  dept: z.string().optional(),
+})
+
+/** PATCH /org/members/:id 请求体：role/status/dept/email 任意可选 */
+export const MemberPatch = z.object({
+  role: CoreRoleSchema.optional(),
+  status: MemberStatusSchema.optional(),
+  dept: z.string().optional(),
+  email: z.email().optional(),
+})
+
+/** GET /plan 响应（口径与前端 mock 一致：试用版 / 0.68/1GB / 20 席 / 2025-06-03） */
+export const PlanResponse = z.object({
+  tier: z.string(),
+  storageUsedGB: z.number(),
+  storageTotalGB: z.number(),
+  seats: z.number(),
+  seatsUsed: z.number(),
+  validUntil: z.string(),
+})
+
+/** DELETE /org/members/:id 响应 */
+export const DeleteResponse = z.object({ deleted: z.boolean() })
+
+export type OrgPatchInput = z.infer<typeof OrgPatch>
+export type MemberCreateBodyInput = z.infer<typeof MemberCreateBody>
+export type MemberPatchInput = z.infer<typeof MemberPatch>
