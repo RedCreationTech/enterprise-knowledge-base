@@ -16,4 +16,6 @@ export function createSchema() {
   T(`CREATE TABLE IF NOT EXISTS answer_pool (id TEXT PRIMARY KEY, question TEXT, answer TEXT, citations TEXT, confidence INTEGER)`)
   T(`CREATE TABLE IF NOT EXISTS assistants (id TEXT PRIMARY KEY, name TEXT, icon TEXT, desc TEXT, scope TEXT, enabled INTEGER, draft TEXT, version INTEGER)`)
   T(`CREATE TABLE IF NOT EXISTS assistant_versions (id TEXT PRIMARY KEY, assistantId TEXT, version INTEGER, config TEXT, publishedAt TEXT)`)
+  T(`CREATE TABLE IF NOT EXISTS chat_sessions (id TEXT PRIMARY KEY, title TEXT, source TEXT, createdAt TEXT, userId TEXT)`)
+  T(`CREATE TABLE IF NOT EXISTS chat_messages (id TEXT PRIMARY KEY, sessionId TEXT, role TEXT, content TEXT, answerId TEXT, createdAt TEXT)`)
 }

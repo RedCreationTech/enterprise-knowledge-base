@@ -428,6 +428,66 @@ export const AssistantPatch = z.object({
 export type AssistantCreateBodyInput = z.infer<typeof AssistantCreateBody>
 export type AssistantPatchInput = z.infer<typeof AssistantPatch>
 
+// ---------- 对话/历史域 ----------
+
+/** 聊天会话响应（GET /chat/sessions 列表项 / POST /chat/sessions 返回值；messageCount 聚合自消息表）。 */
+export const ChatSessionResponse = z.object({
+  id: z.string(),
+  title: z.string(),
+  source: z.string(),
+  createdAt: z.string(),
+  userId: z.string(),
+  messageCount: z.number().int().min(0),
+})
+
+/** GET /chat/sessions 响应：会话数组（createdAt 倒序，非 {items} 信封）。 */
+export const ChatSessionListResponse = z.array(ChatSessionResponse)
+
+/** POST /chat/sessions 请求体：title/source/userId 均可选（默认 新对话/工作台/u-1）。 */
+export const ChatSessionCreateBody = z.object({
+  title: z.string().optional(),
+  source: z.string().optional(),
+  userId: z.string().optional(),
+})
+
+/** 聊天消息响应（GET /chat/sessions/:id/messages 列表项；answerId 命中答案池时非空）。 */
+export const ChatMessageResponse = z.object({
+  id: z.string(),
+  sessionId: z.string(),
+  role: z.enum(['user', 'assistant']),
+  content: z.string(),
+  answerId: z.string().nullable(),
+  createdAt: z.string(),
+})
+
+/** GET /chat/sessions/:id/messages 响应：消息数组（createdAt 升序）。 */
+export const ChatMessageListResponse = z.array(ChatMessageResponse)
+
+/** POST /chat/sessions/:id/messages 请求体：仅接受 role=user（assistant 回复由服务端生成）；content 空串 400。 */
+export const ChatMessageCreateBody = z.object({
+  role: z.literal('user'),
+  content: z.string().trim().min(1),
+})
+
+/**
+ * POST /chat/sessions/:id/messages 响应：{ userMessage, assistantMessage }。
+ * assistantMessage 在基础消息结构上携带 QA 负载（镜像 B7 语义）：
+ * 命中 → answered:true + citations/confidence；未命中 → answered:false + searchedCount/missingType。
+ */
+export const ChatMessageCreateResponse = z.object({
+  userMessage: ChatMessageResponse,
+  assistantMessage: ChatMessageResponse.extend({
+    answered: z.boolean(),
+    citations: z.array(QaCitationSchema).optional(),
+    confidence: z.number().int().min(0).max(100).optional(),
+    searchedCount: z.number().int().min(0).optional(),
+    missingType: z.string().optional(),
+  }),
+})
+
+export type ChatSessionCreateBodyInput = z.infer<typeof ChatSessionCreateBody>
+export type ChatMessageCreateBodyInput = z.infer<typeof ChatMessageCreateBody>
+
 // ---------- 搜索域 ----------
 
 /** 搜索命中条目（id/name/meta/path：path 为前端路由提示，用于跳转）。 */

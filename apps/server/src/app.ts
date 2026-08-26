@@ -12,6 +12,7 @@ import { registerConnectors } from './routes/connectors.js'
 import { registerKnowledge } from './routes/knowledge.js'
 import { registerSearch } from './routes/search.js'
 import { registerAssistants } from './routes/assistants.js'
+import { registerChat } from './routes/chat.js'
 import { createSchema } from './db/schema.js'
 import { seedIfEmpty } from './db/seed.js'
 
@@ -31,6 +32,7 @@ export async function buildApp() {
     registerKnowledge(api)
     registerSearch(api)
     registerAssistants(api)
+    registerChat(api)
   }, { prefix: API_BASE })
   registerErrorHandler(app)
   return app

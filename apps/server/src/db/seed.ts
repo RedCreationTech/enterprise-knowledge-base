@@ -455,6 +455,115 @@ function seedAssistants() {
   }
 }
 
+// ---------- 对话/历史域 seed（口径对齐前端 historyData.ts CONVERSATIONS + chat-history 页） ----------
+
+/**
+ * 10 个会话 seed（口径对齐前端 chat-history 页）：
+ * - 来源渠道 4：工作台/飞书/企业微信/Web 门户（历史列表渠道筛选口径）。
+ * - 会话标题取首问（前端列表无独立标题字段，title = firstQuestion 口径）。
+ * - 消息 user/assistant 交替；assistant 回复复用答案池（turns 的池条目 id），
+ *   未命中池的追问用通用回复（镜像 historyData simpleMessages 尾段文案）。
+ * 说明：156 问累计/今日 64 为「对话分析」analytics 口径（Phase E 承接），本域只 seed 子集。
+ */
+const chatSessions: Array<{ id: string; title: string; source: string; createdAt: string; turns: Array<[string, string | null]> }> = [
+  {
+    id: 'chat-1', title: '差旅住宿标准是多少？', source: '工作台', createdAt: '2026-05-29T10:12:00',
+    turns: [
+      ['差旅住宿标准是多少？', 'ap-16'],
+      ['好的，那超出标准如何申请特批？', null],
+    ],
+  },
+  {
+    id: 'chat-2', title: '客户报价折扣超过 10% 需要谁审批？', source: 'Web 门户', createdAt: '2026-05-29T09:48:00',
+    turns: [
+      ['客户报价折扣超过 10% 需要谁审批？', 'ap-1'],
+      ['审批一般需要多长时间？', 'ap-3'],
+    ],
+  },
+  {
+    id: 'chat-3', title: '产品 X 支持哪些部署方式？', source: '企业微信', createdAt: '2026-05-29T09:20:00',
+    turns: [
+      ['产品 X 支持哪些部署方式？', 'ap-5'],
+      ['产品 X 的核心优势是什么？', 'ap-4'],
+    ],
+  },
+  {
+    id: 'chat-4', title: '工单响应时限是多久？', source: '飞书', createdAt: '2026-05-28T17:36:00',
+    turns: [
+      ['工单响应时限是多久？', 'ap-11'],
+      ['紧急工单如何升级？', 'ap-12'],
+      ['好的，明白了。', null],
+    ],
+  },
+  {
+    id: 'chat-5', title: '年假如何申请？', source: '工作台', createdAt: '2026-05-28T16:02:00',
+    turns: [['年假如何申请？', 'ap-17']],
+  },
+  {
+    id: 'chat-6', title: '标准交付周期是多久？', source: '飞书', createdAt: '2026-05-28T14:25:00',
+    turns: [
+      ['标准交付周期是多久？', 'ap-6'],
+      ['交付包含哪些服务内容？', 'ap-7'],
+    ],
+  },
+  {
+    id: 'chat-7', title: '退货政策是怎样的？', source: '企业微信', createdAt: '2026-05-28T11:26:00',
+    turns: [
+      ['退货政策是怎样的？', 'ap-8'],
+      ['退货运费由谁承担？', 'ap-9'],
+    ],
+  },
+  {
+    id: 'chat-8', title: '报销流程是怎样的？', source: 'Web 门户', createdAt: '2026-05-27T17:54:00',
+    turns: [
+      ['报销流程是怎样的？', 'ap-15'],
+      ['差旅住宿标准是多少？', 'ap-16'],
+      ['好的，谢谢。', null],
+    ],
+  },
+  {
+    id: 'chat-9', title: '考勤异常如何处理？', source: '飞书', createdAt: '2026-05-27T13:48:00',
+    turns: [
+      ['考勤异常如何处理？', 'ap-19'],
+      ['补签超过次数怎么办？', 'ap-20'],
+      ['年假可以跨年休吗？', 'ap-18'],
+    ],
+  },
+  {
+    id: 'chat-10', title: '质保期如何计算？', source: '工作台', createdAt: '2026-05-27T09:36:00',
+    turns: [['质保期如何计算？', 'ap-13']],
+  },
+]
+
+/** 未命中答案池的追问回复文案（镜像 historyData simpleMessages 尾段）。 */
+const CHAT_GENERIC_REPLY = '已为你附上相关文档链接，可在引用来源中查看完整流程。'
+
+/**
+ * 幂等：chat_sessions 已有数据则跳过。会话 10 个 + 消息 42 条：
+ * user/assistant 交替，assistant 回复复用 answerPool 的答案与 answerId；
+ * 消息 createdAt 按会话起始时间逐分钟递增。
+ */
+function seedChat() {
+  const has = (db.prepare('SELECT COUNT(*) c FROM chat_sessions').get() as { c: number }).c
+  if (has > 0) return
+  const poolById = new Map<string, (typeof answerPool)[number]>(answerPool.map((a) => [a.id, a]))
+  const insSession = db.prepare('INSERT INTO chat_sessions (id, title, source, createdAt, userId) VALUES (?,?,?,?,?)')
+  const insMessage = db.prepare('INSERT INTO chat_messages (id, sessionId, role, content, answerId, createdAt) VALUES (?,?,?,?,?,?)')
+
+  let seq = 0
+  for (const s of chatSessions) {
+    insSession.run(s.id, s.title, s.source, s.createdAt, 'u-1')
+    const base = Date.parse(s.createdAt)
+    s.turns.forEach(([question, poolId], i) => {
+      seq += 1
+      const t = new Date(base + i * 60_000).toISOString()
+      const pool = poolId ? poolById.get(poolId) : undefined
+      insMessage.run(`cm-${seq}u`, s.id, 'user', question, null, t)
+      insMessage.run(`cm-${seq}a`, s.id, 'assistant', pool ? pool.answer : CHAT_GENERIC_REPLY, poolId ?? null, t)
+    })
+  }
+}
+
 export function seedIfEmpty() {
   const n = (db.prepare('SELECT COUNT(*) c FROM org').get() as { c: number }).c
   if (n > 0) return
@@ -468,4 +577,5 @@ export function seedIfEmpty() {
   seedConnectorsAndTasks()
   seedKnowledgeDomain()
   seedAssistants()
+  seedChat()
 }

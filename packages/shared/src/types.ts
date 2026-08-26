@@ -145,6 +145,32 @@ export interface Assistant {
   version: number
 }
 
+// ---------- 对话/历史域 ----------
+
+/**
+ * 聊天会话（设计 §6 口径：id/title/source/createdAt/userId）。
+ * - source 为来源渠道（seed 4 渠道：工作台/飞书/企业微信/Web 门户，对齐 chat-history 页）。
+ * - messageCount 由 chat_messages 聚合（含 user + assistant 全部消息）。
+ */
+export interface ChatSession {
+  id: string
+  title: string
+  source: string
+  createdAt: string
+  userId: string
+  messageCount: number
+}
+
+/** 聊天消息（id/sessionId/role/content/answerId/createdAt；answerId 命中答案池时非空）。 */
+export interface ChatMessage {
+  id: string
+  sessionId: string
+  role: 'user' | 'assistant'
+  content: string
+  answerId: string | null
+  createdAt: string
+}
+
 // ---------- 搜索域 ----------
 
 /** 搜索命中条目：id/name/meta/path（path 为前端路由提示，用于跳转）。 */
