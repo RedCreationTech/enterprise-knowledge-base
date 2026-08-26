@@ -4,6 +4,9 @@
   "type": "module",
   "workspaces": ["apps/*", "packages/*"],
   "scripts": {
+    "predev": "npm run build --workspace @kb/shared",
+    "prelint": "npm run build --workspace @kb/shared",
+    "pretest": "npm run build --workspace @kb/shared",
     "dev:web": "npm run dev --workspace @kb/web",
     "dev:server": "npm run dev --workspace @kb/server",
     "dev": "npm run dev:web & npm run dev:server",
