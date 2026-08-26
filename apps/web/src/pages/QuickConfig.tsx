@@ -384,7 +384,7 @@ export default function QuickConfig() {
             selectedChip={selectedChip}
             onChipSelect={handleChip}
             composerPlaceholder="请输入你的问题或描述你的需求…"
-            className="sticky top-20 h-[calc(100dvh-320px)] min-h-[520px]"
+            className="sticky top-20 h-[calc(100dvh-256px)] overflow-hidden"
           />
         </motion.div>
 
