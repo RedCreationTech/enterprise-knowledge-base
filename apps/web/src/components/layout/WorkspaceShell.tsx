@@ -7,9 +7,9 @@
  * V1.3：「工作台」升级为分组（工作台 + 每日待办，待办带蓝 pill 计数，与 store 任务联动）；
  * 应用中心路由迁入 /workspace/apps；试用期简洁变体（NAV_SIMPLE）已废弃移除。
  */
-import { useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
-import { NavLink, Outlet } from 'react-router'
+import { NavLink, Outlet, useLocation } from 'react-router'
 import {
   Bot,
   Blocks,
@@ -154,43 +154,73 @@ function WorkspaceHeader({ onOpenCopilot }: { onOpenCopilot: () => void }) {
 
 function NavList({ groups }: { groups: NavGroup[] }) {
   const { state } = useAppStore()
+  const location = useLocation()
   // 每日待办计数：与 store 任务同源（待处理 + 进行中），完成自动 -1
   const todoOpen = state.tasks.filter((t) => t.status === '待处理' || t.status === '进行中').length
+  // 当前路由所在分组（用于默认展开 + 路由切换时自动展开）——手风琴：同一时间仅展开一个一级目录
+  const activeGroup = useMemo(() => {
+    const found = groups.find((g) => g.section && g.items.some((i) => i.path === location.pathname))
+    return found?.section ?? groups[0]?.section ?? null
+  }, [groups, location.pathname])
+  const [expanded, setExpanded] = useState<string | null>(activeGroup)
+  // 路由切换时，自动展开当前分组（收起其他），保证用户始终能看到所在栏目
+  useEffect(() => {
+    setExpanded(activeGroup)
+  }, [activeGroup])
+  const toggleGroup = (section: string) =>
+    setExpanded((prev) => (prev === section ? null : section)) // 点开已展开的分组 → 收起（允许全部收起）
+
   return (
-    <nav className="flex flex-col gap-4 px-3">
-      {groups.map((group, gi) => (
-        <div key={group.section ?? `g-${gi}`}>
-          {group.section && (
-            <p className="mb-1 px-3 text-caption font-medium text-neutral-500">{group.section}</p>
-          )}
-          <ul className="flex flex-col gap-0.5">
-            {group.items.map((item) => (
-              <li key={item.label}>
-                <NavLink
-                  to={item.path}
-                  end={item.path === '/workspace/dashboard'}
-                  className={({ isActive }) =>
-                    cn(
-                      'flex h-10 items-center gap-2 rounded-md px-3 text-body transition-colors duration-micro ease-brand',
-                      isActive
-                        ? 'bg-brand-100 font-medium text-brand-600'
-                        : 'text-neutral-700 hover:bg-neutral-100',
-                    )
-                  }
-                >
-                  <item.icon className="h-4 w-4 shrink-0" />
-                  <span className="truncate">{item.label}</span>
-                  {item.todoPill && todoOpen > 0 && (
-                    <span className="ml-auto shrink-0 rounded-pill bg-brand-600 px-1.5 py-0.5 text-[10px] font-semibold leading-none text-white">
-                      {todoOpen}
-                    </span>
-                  )}
-                </NavLink>
-              </li>
-            ))}
-          </ul>
-        </div>
-      ))}
+    <nav className="flex flex-col gap-1 px-3">
+      {groups.map((group, gi) => {
+        const section = group.section
+        const isOpen = expanded === section
+        return (
+          <div key={section ?? `g-${gi}`}>
+            {section && (
+              <button
+                type="button"
+                onClick={() => toggleGroup(section)}
+                aria-expanded={isOpen}
+                className="flex h-8 w-full items-center justify-between rounded-md px-3 text-caption font-medium text-neutral-500 transition-colors duration-micro ease-brand hover:bg-neutral-50 hover:text-neutral-700"
+              >
+                <span>{section}</span>
+                <ChevronDown
+                  className={cn('h-4 w-4 shrink-0 text-neutral-400 transition-transform duration-comp ease-brand', isOpen && 'rotate-180')}
+                />
+              </button>
+            )}
+            {isOpen && (
+              <ul className="flex flex-col gap-0.5">
+                {group.items.map((item) => (
+                  <li key={item.label}>
+                    <NavLink
+                      to={item.path}
+                      end={item.path === '/workspace/dashboard'}
+                      className={({ isActive }) =>
+                        cn(
+                          'flex h-10 items-center gap-2 rounded-md px-3 text-body transition-colors duration-micro ease-brand',
+                          isActive
+                            ? 'bg-brand-100 font-medium text-brand-600'
+                            : 'text-neutral-700 hover:bg-neutral-100',
+                        )
+                      }
+                    >
+                      <item.icon className="h-4 w-4 shrink-0" />
+                      <span className="truncate">{item.label}</span>
+                      {item.todoPill && todoOpen > 0 && (
+                        <span className="ml-auto shrink-0 rounded-pill bg-brand-600 px-1.5 py-0.5 text-[10px] font-semibold leading-none text-white">
+                          {todoOpen}
+                        </span>
+                      )}
+                    </NavLink>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        )
+      })}
     </nav>
   )
 }
