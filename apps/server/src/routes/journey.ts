@@ -1,5 +1,15 @@
 import type { FastifyInstance } from 'fastify'
-import { JourneyResponse, JourneyPatch, TrialApplyBody, OtpSendBody, OtpVerifyBody } from '@kb/shared'
+import {
+  JourneyResponse,
+  JourneyPatch,
+  TrialApplyBody,
+  OtpSendBody,
+  OtpVerifyBody,
+  TrialApplyResponse,
+  OtpSendResponse,
+  OtpVerifyResponse,
+  DemoDataResponse,
+} from '@kb/shared'
 import { getJourney, patchJourney, applyTrial, sendOtp, verifyOtp, setDemoData, resetDemoData } from '../services/journey.js'
 import { parseBody } from '../utils/validate.js'
 import { httpError } from '../utils/http-error.js'
@@ -21,27 +31,27 @@ export function registerJourney(app: FastifyInstance) {
   app.post('/auth/trial/apply', async (req) => {
     const body = parseBody(TrialApplyBody, req.body)
     const { id } = applyTrial(body)
-    return { ok: true, data: { id } }
+    return { ok: true, data: TrialApplyResponse.parse({ id }) }
   })
 
   app.post('/auth/otp/send', async (req) => {
     const body = parseBody(OtpSendBody, req.body)
-    return { ok: true, data: sendOtp(body) }
+    return { ok: true, data: OtpSendResponse.parse(sendOtp(body)) }
   })
 
   app.post('/auth/otp/verify', async (req) => {
     const body = parseBody(OtpVerifyBody, req.body)
     if (!verifyOtp(body.code)) throw httpError(400, '验证码错误', 'INVALID_CODE')
-    return { ok: true, data: { verified: true } }
+    return { ok: true, data: OtpVerifyResponse.parse({ verified: true }) }
   })
 
   app.post('/demo-data', async () => {
     setDemoData()
-    return { ok: true, data: { demoData: true } }
+    return { ok: true, data: DemoDataResponse.parse({ demoData: true }) }
   })
 
   app.post('/demo-data/reset', async () => {
     resetDemoData()
-    return { ok: true, data: { demoData: false } }
+    return { ok: true, data: DemoDataResponse.parse({ demoData: false }) }
   })
 }

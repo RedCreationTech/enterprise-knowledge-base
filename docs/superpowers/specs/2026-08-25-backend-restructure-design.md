@@ -112,7 +112,7 @@ app/                          # 仓库根（现有 git 仓库）
 | 域 | 端点 |
 |---|---|
 | 健康/演示 | `GET /health`、`POST /auth/demo-login`、`POST /demo-data`、`POST /demo-data/reset` |
-| 认证/旅程 | `POST /auth/otp/send`、`POST /auth/otp/verify`、`POST /trial/apply`、`GET /journey`、`PATCH /journey` |
+| 认证/旅程 | `POST /auth/otp/send`、`POST /auth/otp/verify`、`POST /auth/trial/apply`、`GET /auth/journey`、`PATCH /auth/journey` |
 | 组织 | `GET /org`、`PATCH /org`、`GET /org/members`、`POST /org/members`、`PATCH /org/members/:id`、`DELETE /org/members/:id`、`GET /plan` |
 | 知识空间 | `GET /spaces`、`POST /spaces`、`PATCH /spaces/:id`、`DELETE /spaces/:id`、`POST /spaces/:id/upload` |
 | 文档 | `GET /docs?space&search&type&status&category&page&size`、`POST /docs/upload`、`PATCH /docs/:id`、`DELETE /docs/:id`、`POST /docs/batch-archive`、`POST /docs/batch-move` |

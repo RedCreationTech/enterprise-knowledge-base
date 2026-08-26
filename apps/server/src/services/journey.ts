@@ -48,6 +48,17 @@ function rowToJourney(row: JourneyRow): Journey {
 const BOOL_COLS = new Set(['activated', 'invitesSent'])
 const ARRAY_COLS = new Set(['installedApps', 'uninstalledApps', 'userInstalledApps'])
 
+/** JourneyPatch 键 → trial_journey 列名的显式白名单：SQL 列名只允许来自此固定映射，杜绝动态拼接。 */
+const COLUMNS: Record<keyof JourneyPatchInput, string> = {
+  activated: 'activated',
+  step: 'step',
+  installedApps: 'installedApps',
+  uninstalledApps: 'uninstalledApps',
+  userInstalledApps: 'userInstalledApps',
+  invitesSent: 'invitesSent',
+  configProgress: 'configProgress',
+}
+
 export function getJourney(): Journey | null {
   const row = db.prepare('SELECT * FROM trial_journey WHERE id = 1').get() as JourneyRow | undefined
   return row ? rowToJourney(row) : null
@@ -59,16 +70,18 @@ export function patchJourney(patch: JourneyPatchInput): Journey | null {
 
   const sets: string[] = []
   const values: unknown[] = []
-  for (const [col, value] of Object.entries(patch)) {
+  for (const [key, value] of Object.entries(patch)) {
     if (value === undefined) continue
-    if (BOOL_COLS.has(col)) {
-      sets.push(`${col} = ?`)
+    const column = COLUMNS[key as keyof JourneyPatchInput]
+    if (!column) continue // 未知键防御（zod 已剔除未知键，此处双保险）
+    if (BOOL_COLS.has(column)) {
+      sets.push(`${column} = ?`)
       values.push(value ? 1 : 0)
-    } else if (ARRAY_COLS.has(col)) {
-      sets.push(`${col} = ?`)
+    } else if (ARRAY_COLS.has(column)) {
+      sets.push(`${column} = ?`)
       values.push(JSON.stringify(value))
     } else {
-      sets.push(`${col} = ?`)
+      sets.push(`${column} = ?`)
       values.push(value)
     }
   }
@@ -102,8 +115,9 @@ export function setDemoData(): void {
   ).run(JSON.stringify(MATURE_INSTALLED_APPS), JSON.stringify(MATURE_USER_INSTALLED_APPS))
 }
 
-/** 回到空态起点：旅程重置为 seed 口径、org.demoData=0；幂等。 */
+/** 回到空态起点：清空申请记录、旅程重置为 seed 口径、org.demoData=0；幂等。 */
 export function resetDemoData(): void {
+  db.prepare('DELETE FROM trial_applications').run()
   db.prepare(`UPDATE org SET demoData = 0 WHERE id = 'org-1'`).run()
   db.prepare(
     `UPDATE trial_journey SET activated = 0, step = 0, installedApps = ?, uninstalledApps = '[]', userInstalledApps = '[]', invitesSent = 0, configProgress = 0 WHERE id = 1`,

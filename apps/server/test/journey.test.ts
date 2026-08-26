@@ -73,6 +73,28 @@ test('PATCH /auth/journey 非法 body -> 400', async () => {
   assert.equal(body.error.code, 'BAD_REQUEST')
 })
 
+test('GET/PATCH /auth/journey 行缺失 -> 409', async () => {
+  db.prepare('DELETE FROM trial_journey').run()
+  try {
+    const getRes = await app.inject({ method: 'GET', url: `${API_BASE}/auth/journey` })
+    assert.equal(getRes.statusCode, 409)
+    assert.equal(getRes.json().error.code, 'CONFLICT')
+
+    const patchRes = await app.inject({
+      method: 'PATCH',
+      url: `${API_BASE}/auth/journey`,
+      payload: { step: 2 },
+    })
+    assert.equal(patchRes.statusCode, 409)
+    assert.equal(patchRes.json().error.code, 'CONFLICT')
+  } finally {
+    // 恢复 seed 行，保持后续用例隔离
+    db.prepare(
+      `INSERT INTO trial_journey (id, activated, step, installedApps, uninstalledApps, userInstalledApps, invitesSent, configProgress) VALUES (1, 0, 0, '["wecom-qa","custom-api","sso"]', '[]', '[]', 0, 0)`,
+    ).run()
+  }
+})
+
 test('POST /auth/trial/apply -> 落库申请记录', async () => {
   const res = await app.inject({
     method: 'POST',
@@ -94,6 +116,18 @@ test('POST /auth/trial/apply -> 落库申请记录', async () => {
   assert.equal(row.agreeToTerms, 1)
 })
 
+test('POST /auth/trial/apply 非法 body -> 400', async () => {
+  const res = await app.inject({
+    method: 'POST',
+    url: `${API_BASE}/auth/trial/apply`,
+    payload: { companyName: '示例科技有限公司' }, // 缺 contact / agreeToTerms
+  })
+  assert.equal(res.statusCode, 400)
+  const body = res.json()
+  assert.equal(body.ok, false)
+  assert.equal(body.error.code, 'BAD_REQUEST')
+})
+
 test('POST /auth/otp/send -> 演示态返回成功', async () => {
   const res = await app.inject({
     method: 'POST',
@@ -104,6 +138,18 @@ test('POST /auth/otp/send -> 演示态返回成功', async () => {
   const body = res.json()
   assert.equal(body.ok, true)
   assert.equal(body.data.sent, true)
+})
+
+test('POST /auth/otp/send 非法 body -> 400', async () => {
+  const res = await app.inject({
+    method: 'POST',
+    url: `${API_BASE}/auth/otp/send`,
+    payload: { channel: 'phone' }, // 缺 target
+  })
+  assert.equal(res.statusCode, 400)
+  const body = res.json()
+  assert.equal(body.ok, false)
+  assert.equal(body.error.code, 'BAD_REQUEST')
 })
 
 test('POST /auth/otp/verify 固定码 123456 -> ok', async () => {
@@ -166,4 +212,22 @@ test('POST /demo-data/reset -> 幂等（两次均 ok 且状态一致）', async 
   assert.equal(journey2.activated, false)
   assert.equal(journey2.step, 0)
   assert.deepEqual(journey2.installedApps, ['wecom-qa', 'custom-api', 'sso'])
+})
+
+test('POST /demo-data/reset -> 清空 trial_applications（seed 为空表）', async () => {
+  // 先写入一条申请记录
+  await app.inject({
+    method: 'POST',
+    url: `${API_BASE}/auth/trial/apply`,
+    payload: { companyName: '示例科技有限公司', contact: '13800138000', agreeToTerms: true },
+  })
+  const before = (db.prepare('SELECT COUNT(*) c FROM trial_applications').get() as { c: number }).c
+  assert.equal(before, 1)
+
+  const res = await app.inject({ method: 'POST', url: `${API_BASE}/demo-data/reset` })
+  assert.equal(res.statusCode, 200)
+  assert.deepEqual(res.json(), { ok: true, data: { demoData: false } })
+
+  const after = (db.prepare('SELECT COUNT(*) c FROM trial_applications').get() as { c: number }).c
+  assert.equal(after, 0)
 })
