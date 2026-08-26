@@ -4,6 +4,7 @@ import { API_BASE } from '@kb/shared'
 import { registerErrorHandler } from './middleware/error-handler.js'
 import { registerHealth } from './routes/health.js'
 import { registerAuth } from './routes/auth.js'
+import { registerJourney } from './routes/journey.js'
 import { createSchema } from './db/schema.js'
 import { seedIfEmpty } from './db/seed.js'
 
@@ -15,6 +16,7 @@ export async function buildApp() {
   app.register(async (api) => {
     registerHealth(api)
     registerAuth(api)
+    registerJourney(api)
   }, { prefix: API_BASE })
   registerErrorHandler(app)
   return app

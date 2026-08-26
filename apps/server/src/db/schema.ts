@@ -6,4 +6,5 @@ export function createSchema() {
   T(`CREATE TABLE IF NOT EXISTS members (id TEXT PRIMARY KEY, name TEXT, email TEXT, role TEXT, dept TEXT, status TEXT, joinedAt TEXT)`)
   T(`CREATE TABLE IF NOT EXISTS users (id TEXT PRIMARY KEY, memberId TEXT, email TEXT, passwordHash TEXT, role TEXT)`)
   T(`CREATE TABLE IF NOT EXISTS trial_journey (id INTEGER PRIMARY KEY CHECK (id = 1), activated INTEGER, step INTEGER, installedApps TEXT, uninstalledApps TEXT, userInstalledApps TEXT, invitesSent INTEGER, configProgress INTEGER)`)
+  T(`CREATE TABLE IF NOT EXISTS trial_applications (id INTEGER PRIMARY KEY AUTOINCREMENT, companyName TEXT NOT NULL, contact TEXT NOT NULL, agreeToTerms INTEGER NOT NULL, createdAt TEXT NOT NULL)`)
 }

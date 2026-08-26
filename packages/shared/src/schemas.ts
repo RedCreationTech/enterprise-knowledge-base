@@ -13,3 +13,43 @@ export function parseOk<T>(body: unknown, schema: z.ZodType<T>): T {
 export function parseErr(body: unknown) { return errorSchema.parse((envelopeSchema.parse(body) as { ok: false; error: unknown }).error) }
 export const HealthResponse = okSchema
 export const DemoLoginResponse = z.object({ token: z.string(), user: z.object({ id: z.string(), name: z.string(), role: z.string() }) })
+
+// ---------- 认证/旅程域 ----------
+
+/** trial_journey 行（布尔/数组字段已从 SQLite 的 INTEGER/TEXT 解析为 JSON 友好形态） */
+export const JourneyResponse = z.object({
+  activated: z.boolean(),
+  step: z.number(),
+  installedApps: z.array(z.string()),
+  uninstalledApps: z.array(z.string()),
+  userInstalledApps: z.array(z.string()),
+  invitesSent: z.boolean(),
+  configProgress: z.number(),
+})
+
+/** PATCH /auth/journey：任意字段可选，数组为 string[]、布尔为 boolean */
+export const JourneyPatch = z.object({
+  activated: z.boolean().optional(),
+  step: z.number().optional(),
+  installedApps: z.array(z.string()).optional(),
+  uninstalledApps: z.array(z.string()).optional(),
+  userInstalledApps: z.array(z.string()).optional(),
+  invitesSent: z.boolean().optional(),
+  configProgress: z.number().optional(),
+})
+
+/** POST /auth/trial/apply 请求体 */
+export const TrialApplyBody = z.object({
+  companyName: z.string(),
+  contact: z.string(),
+  agreeToTerms: z.boolean(),
+})
+
+/** POST /auth/otp/send 请求体 */
+export const OtpSendBody = z.object({ channel: z.string(), target: z.string() })
+
+/** POST /auth/otp/verify 请求体 */
+export const OtpVerifyBody = z.object({ channel: z.string(), target: z.string(), code: z.string() })
+
+export type JourneyPatchInput = z.infer<typeof JourneyPatch>
+export type TrialApplyBodyInput = z.infer<typeof TrialApplyBody>
