@@ -14,4 +14,6 @@ export function createSchema() {
   T(`CREATE TABLE IF NOT EXISTS knowledge_map (id TEXT PRIMARY KEY, category TEXT, docId TEXT, position TEXT, relations TEXT)`)
   T(`CREATE TABLE IF NOT EXISTS knowledge_site (id TEXT PRIMARY KEY, title TEXT, content TEXT, category TEXT, updatedAt TEXT, status TEXT)`)
   T(`CREATE TABLE IF NOT EXISTS answer_pool (id TEXT PRIMARY KEY, question TEXT, answer TEXT, citations TEXT, confidence INTEGER)`)
+  T(`CREATE TABLE IF NOT EXISTS assistants (id TEXT PRIMARY KEY, name TEXT, icon TEXT, desc TEXT, scope TEXT, enabled INTEGER, draft TEXT, version INTEGER)`)
+  T(`CREATE TABLE IF NOT EXISTS assistant_versions (id TEXT PRIMARY KEY, assistantId TEXT, version INTEGER, config TEXT, publishedAt TEXT)`)
 }

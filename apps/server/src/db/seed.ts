@@ -432,6 +432,29 @@ function seedKnowledgeDomain() {
   }
 }
 
+// ---------- 助手域 seed（口径对齐前端 aiAssistant.mock.ts assistants：企业知识助手/销售问答助手） ----------
+
+/**
+ * 2 个内置助手（镜像 mock 的 name/icon/desc/scope）：
+ * - desc 镜像 mock 的「受众 · 知识范围」前缀（mock 里拼在 desc 尾部的 v1.2/v0.9 版本号
+ *   由独立 version 列承载，seed 统一 version=1，不重复拼进 desc）。
+ * - enabled=true（已发布可用）、draft=''（无未发布草稿）。
+ */
+const assistants = [
+  { id: 'asst-kb', name: '企业知识助手', icon: '🤖', desc: '全员 · 全部知识空间', scope: '全部知识空间', enabled: 1, version: 1 },
+  { id: 'asst-sales', name: '销售问答助手', icon: '💼', desc: '销售+售前 · 产品与报价知识', scope: '产品与报价知识', enabled: 1, version: 1 },
+] as const
+
+/** 幂等：assistants 已有数据则跳过（其他域测试 resetSeed 不清 assistants，重复插会 UNIQUE 冲突）。 */
+function seedAssistants() {
+  const has = (db.prepare('SELECT COUNT(*) c FROM assistants').get() as { c: number }).c
+  if (has > 0) return
+  const ins = db.prepare('INSERT INTO assistants (id, name, icon, desc, scope, enabled, draft, version) VALUES (?,?,?,?,?,?,?,?)')
+  for (const a of assistants) {
+    ins.run(a.id, a.name, a.icon, a.desc, a.scope, a.enabled, '', a.version)
+  }
+}
+
 export function seedIfEmpty() {
   const n = (db.prepare('SELECT COUNT(*) c FROM org').get() as { c: number }).c
   if (n > 0) return
@@ -444,4 +467,5 @@ export function seedIfEmpty() {
   seedSpacesAndDocs()
   seedConnectorsAndTasks()
   seedKnowledgeDomain()
+  seedAssistants()
 }

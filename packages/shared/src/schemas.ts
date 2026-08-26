@@ -387,6 +387,47 @@ export const QaResponse = z.discriminatedUnion('answered', [QaHitResponse, QaRef
 export type KnowledgeSiteSearchBodyInput = z.infer<typeof KnowledgeSiteSearchBody>
 export type QaBodyInput = z.infer<typeof QaBody>
 
+// ---------- 助手域 ----------
+
+/** 助手响应（GET /assistants 列表项 / POST / PATCH / publish 返回值）。 */
+export const AssistantResponse = z.object({
+  id: z.string(),
+  name: z.string(),
+  icon: z.string(),
+  desc: z.string(),
+  scope: z.string(),
+  enabled: z.boolean(),
+  draft: z.string(),
+  version: z.number().int().min(1),
+})
+
+/** GET /assistants 响应：助手数组（服务端返回裸数组，非 {items} 信封）。 */
+export const AssistantListResponse = z.array(AssistantResponse)
+
+/** POST /assistants 请求体：name 必填；icon/desc/scope 可选（默认 ✨/''/''；enabled=true、draft=''、version=1）。 */
+export const AssistantCreateBody = z.object({
+  name: z.string().min(1),
+  icon: z.string().optional(),
+  desc: z.string().optional(),
+  scope: z.string().optional(),
+})
+
+/**
+ * PATCH /assistants/:id 请求体：name/icon/desc/scope/enabled/draft 显式白名单。
+ * 草稿编辑（写 draft）不升 version——发布时才生成新版本（见 publish 语义）。
+ */
+export const AssistantPatch = z.object({
+  name: z.string().min(1).optional(),
+  icon: z.string().optional(),
+  desc: z.string().optional(),
+  scope: z.string().optional(),
+  enabled: z.boolean().optional(),
+  draft: z.string().optional(),
+})
+
+export type AssistantCreateBodyInput = z.infer<typeof AssistantCreateBody>
+export type AssistantPatchInput = z.infer<typeof AssistantPatch>
+
 // ---------- 搜索域 ----------
 
 /** 搜索命中条目（id/name/meta/path：path 为前端路由提示，用于跳转）。 */

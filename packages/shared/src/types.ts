@@ -126,6 +126,25 @@ export interface QaRefusal {
 
 export type QaResult = QaHit | QaRefusal
 
+// ---------- 助手域 ----------
+
+/**
+ * AI 助手（设计 §6 口径：id/name/icon/desc/scope/enabled/draft/version）。
+ * - enabled 从 SQLite INTEGER 映射为布尔（是否启用）。
+ * - draft 为未发布草稿的 JSON 配置文本（'' 表示无草稿）；发布时应用到 live 字段并生成版本。
+ * - version 为已发布版本号（数字，seed 从 1 起；发布成功 version+1）。
+ */
+export interface Assistant {
+  id: string
+  name: string
+  icon: string
+  desc: string
+  scope: string
+  enabled: boolean
+  draft: string
+  version: number
+}
+
 // ---------- 搜索域 ----------
 
 /** 搜索命中条目：id/name/meta/path（path 为前端路由提示，用于跳转）。 */
