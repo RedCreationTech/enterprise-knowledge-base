@@ -3,12 +3,17 @@ import react from "@vitejs/plugin-react"
 import { defineConfig } from "vite"
 import { inspectAttr } from 'plugin-inspect-react-code'
 
+// 后端 API 代理目标，可通过环境变量覆盖（例如本机 8080 被占用时）：
+//   VITE_PROXY_TARGET=http://localhost:18080 npm run dev:web
+const API_PROXY_TARGET = process.env.VITE_PROXY_TARGET ?? 'http://localhost:8080'
+
 // https://vite.dev/config/
 export default defineConfig({
   base: './',
   plugins: [inspectAttr(), react()],
   server: {
     port: 3000,
+    proxy: { '/api': { target: API_PROXY_TARGET, changeOrigin: true } },
   },
   resolve: {
     alias: {
