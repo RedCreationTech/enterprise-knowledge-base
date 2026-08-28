@@ -675,4 +675,43 @@ export function seedIfEmpty() {
   seedAssistants()
   seedChat()
   seedInstructions()
+  seedApps()
+}
+
+function seedApps() {
+  const now = '2026-05-29T10:00:00'
+  const appRows: [string, string, string, string, string, string, string, string, string][] = [
+    ['feishu-qa','飞书问答插件','在飞书对话中直接提问企业知识','问答助手','/logo-feishu.svg','可试用','[]','[]',''],
+    ['wecom-qa','企业微信知识助手','企业微信会话内的可信问答入口','问答助手','/logo-wecom.svg','已安装','[]','[]',''],
+    ['webchat','官网客服组件','嵌入官网的在线客服问答组件','客户服务','/logo-webchat.svg','可试用','[]','[]',''],
+    ['dingtalk-bot','钉钉机器人','钉钉群聊中的知识问答机器人','问答助手','/logo-dingtalk.svg','可试用','[]','[]',''],
+    ['custom-api','自定义API','通过 API 将可信答案接入自有系统','开发集成','/logo-api.svg','已安装','[]','[]',''],
+    ['daily-report','知识日报','每日推送知识使用与待办摘要','运营分析','/logo-report.svg','可试用','[]','[]',''],
+    ['feishu-doc','飞书文档插件','在飞书文档内引用与校验知识','文档协同','/logo-doc-plugin.svg','可试用','[]','[]',''],
+    ['sso','单点登录SSO','企业统一身份认证与权限同步','安全集成','/logo-sso.svg','已安装','[]','[]',''],
+  ]
+  const ins = db.prepare(`INSERT OR IGNORE INTO apps (id,name,desc,category,logo,status,permissions,scenes,previewUrl) VALUES (?,?,?,?,?,?,?,?,?)`)
+  for (const row of appRows) ins.run(...row)
+  const insInst = db.prepare(`INSERT OR IGNORE INTO app_installs (id,appId,installedAt,installedBy,uninstalledAt) VALUES (?,?,?,?,NULL)`)
+  for (const [appId] of appRows.filter(([, , , , , s]) => s === '已安装')) {
+    insInst.run(`inst-${appId}`, appId, now, 'u-1')
+  }
+  // 集成（4 个，飞书+企微 connected，钉钉+SSO 不同态）
+  const intRows: [string,string,string,number,number,string,string,string,number][] = [
+    ['feishu','飞书文档','oauth',1,0,'','健康','飞书接口正常',0],
+    ['wecom','企业微信','oauth',1,0,'','健康','企微会话正常',0],
+    ['dingtalk','钉钉文档','oauth',0,0,'','未连接','',0],
+    ['sso','单点登录SSO','oauth',0,1,'','健康','SSO 已停用',0],
+  ]
+  const insInt = db.prepare(`INSERT OR IGNORE INTO integrations (id,name,kind,connected,disabled,config,health,healthNote,notifiedDays) VALUES (?,?,?,?,?,?,?,?,?)`)
+  for (const row of intRows) insInt.run(...row)
+  // API Keys（2 把，一活一吊销）
+  const keyRows: [string,string,string,string,string,string,number,number][] = [
+    ['key-prod','生产环境主 Key','mk-****-8a3b','["read","write"]','生效中','',0,0],
+    ['key-test','测试环境 Key','mk-****-c9ef','["read"]','已吊销','',0,0],
+  ]
+  const insKey = db.prepare(`INSERT OR IGNORE INTO api_keys (id,name,maskedKey,permissions,status,lastCalledAt,usage,calledThisMonth) VALUES (?,?,?,?,?,?,?,?)`)
+  for (const row of keyRows) insKey.run(...row)
+  // Webhooks（1 条演示）
+  db.prepare(`INSERT OR IGNORE INTO webhooks (id,name,url,events,subscribed) VALUES ('wh-1','反馈通知 Webhook','https://example.com/webhook','["feedback.created","feedback.resolved"]',1)`).run()
 }

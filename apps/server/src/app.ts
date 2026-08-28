@@ -14,6 +14,9 @@ import { registerSearch } from './routes/search.js'
 import { registerAssistants } from './routes/assistants.js'
 import { registerChat } from './routes/chat.js'
 import { registerInstructions } from './routes/instructions.js'
+import { registerApps } from './routes/apps.js'
+import { registerIntegrations } from './routes/integrations.js'
+import { registerApiKeys } from './routes/apikeys.js'
 import { createSchema } from './db/schema.js'
 import { seedIfEmpty } from './db/seed.js'
 
@@ -35,6 +38,9 @@ export async function buildApp() {
     registerAssistants(api)
     registerChat(api)
     registerInstructions(api)
+    registerApps(api)
+    registerIntegrations(api)
+    registerApiKeys(api)
   }, { prefix: API_BASE })
   registerErrorHandler(app)
   return app

@@ -20,4 +20,10 @@ export function createSchema() {
   T(`CREATE TABLE IF NOT EXISTS chat_messages (id TEXT PRIMARY KEY, sessionId TEXT, role TEXT, content TEXT, answerId TEXT, createdAt TEXT)`)
   T(`CREATE TABLE IF NOT EXISTS instructions (id TEXT PRIMARY KEY, name TEXT, text TEXT, scope TEXT, status TEXT, version INTEGER, readonly INTEGER, createdAt TEXT)`)
   T(`CREATE TABLE IF NOT EXISTS instruction_versions (id TEXT PRIMARY KEY, instructionId TEXT, version INTEGER, text TEXT, diff TEXT, publishedAt TEXT)`)
+  T(`CREATE TABLE IF NOT EXISTS apps (id TEXT PRIMARY KEY, name TEXT NOT NULL, desc TEXT, category TEXT, logo TEXT, status TEXT NOT NULL, permissions TEXT, scenes TEXT, previewUrl TEXT)`)
+  T(`CREATE TABLE IF NOT EXISTS app_installs (id TEXT PRIMARY KEY, appId TEXT NOT NULL, installedAt TEXT NOT NULL, installedBy TEXT, uninstalledAt TEXT)`)
+  T(`CREATE TABLE IF NOT EXISTS integrations (id TEXT PRIMARY KEY, name TEXT NOT NULL, kind TEXT, connected INTEGER NOT NULL, disabled INTEGER, config TEXT, health TEXT, healthNote TEXT, lastSyncAt TEXT, notifiedDays INTEGER)`)
+  T(`CREATE TABLE IF NOT EXISTS api_keys (id TEXT PRIMARY KEY, name TEXT NOT NULL, maskedKey TEXT NOT NULL, permissions TEXT, status TEXT NOT NULL, lastCalledAt TEXT, usage INTEGER NOT NULL DEFAULT 0, calledThisMonth INTEGER NOT NULL DEFAULT 0)`)
+  T(`CREATE TABLE IF NOT EXISTS custom_apis (id TEXT PRIMARY KEY, name TEXT NOT NULL, baseUrl TEXT NOT NULL, method TEXT NOT NULL, headersJson TEXT, authType TEXT, status TEXT NOT NULL)`)
+  T(`CREATE TABLE IF NOT EXISTS webhooks (id TEXT PRIMARY KEY, name TEXT NOT NULL, url TEXT NOT NULL, events TEXT NOT NULL, subscribed INTEGER NOT NULL)`)
 }
